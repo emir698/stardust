@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stardust — Box Office</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#0f0f0f;--sf:#1a1a1a;--sf2:#242424;--bd:#2a2a2a;--bd2:#3a3a3a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--gd:rgba(74,222,128,0.08);--rd:#f87171;--rdd:rgba(248,113,113,0.08);--bl:#60a5fa;--mo:'IBM Plex Mono',monospace;--sa:'DM Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--sa);min-height:100vh}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.login-box{background:var(--sf);border:1px solid var(--bd2);border-radius:16px;padding:2.5rem;width:360px;max-width:100%}
+.login-logo{font-family:var(--mo);font-size:11px;color:var(--ac);letter-spacing:3px;margin-bottom:2rem;text-align:center}
+.login-title{font-size:20px;font-weight:600;margin-bottom:2rem;text-align:center}
+.form-group{margin-bottom:1rem}
+.form-label{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;color:var(--tx);font-family:var(--sa);font-size:14px;outline:none;transition:border .15s}
+.form-input:focus{border-color:var(--ac)}
+.btn-login{width:100%;padding:12px;background:var(--ac);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sa);transition:background .15s;margin-top:.5rem}
+.btn-login:hover{background:#f0cf5a}
+.btn-login:disabled{opacity:.6;cursor:default}
+.login-err{font-size:13px;color:var(--rd);text-align:center;margin-top:1rem;min-height:20px}
+.app{display:none}
+.topbar{border-bottom:1px solid var(--bd);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10}
+.logo{font-family:var(--mo);font-size:12px;color:var(--ac);letter-spacing:2px}
+.top-right{display:flex;gap:8px;align-items:center}
+.user-badge{font-size:12px;color:var(--mu);font-family:var(--mo);padding:4px 10px;border:1px solid var(--bd);border-radius:20px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block;margin-right:6px}
+.main{max-width:1300px;margin:0 auto;padding:2rem}
+.tabs{display:flex;gap:2px;margin-bottom:2rem;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:4px;width:fit-content;flex-wrap:wrap}
+.tab{padding:7px 18px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;color:var(--mu);border:none;background:transparent;transition:all .15s}
+.tab.active{background:var(--ac);color:#000;font-weight:600}
+.tab:not(.active):hover{color:var(--tx);background:var(--sf2)}
+.admin-only{display:none !important}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;font-size:13px;font-family:var(--sa);font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--sf);color:var(--tx);transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--bd2);background:var(--sf2)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn-ac{background:var(--ac);color:#000;border-color:var(--ac);font-weight:600}
+.btn-ac:hover{background:#f0cf5a}
+.btn-r{color:var(--rd);border-color:rgba(248,113,113,.25)}
+.btn-r:hover{background:var(--rdd);border-color:var(--rd)}
+.btn-g{color:var(--gn);border-color:rgba(74,222,128,.25)}
+.btn-g:hover{background:var(--gd);border-color:var(--gn)}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+select{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;cursor:pointer}
+.tw{border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:var(--sf)}
+th{padding:11px 14px;text-align:left;font-size:11px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd)}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--sf)}
+td{padding:10px 14px}
+.cc{font-family:var(--mo);font-size:13px;color:var(--ac);letter-spacing:.5px}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;font-family:var(--mo)}
+.ba{background:rgba(74,222,128,.08);color:var(--gn);border:1px solid rgba(74,222,128,.2)}
+.bdd{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.2)}
+.dc{font-size:12px;color:var(--mu);font-family:var(--mo)}
+.pag{display:flex;align-items:center;justify-content:space-between;margin-top:1.25rem;flex-wrap:wrap;gap:10px}
+.pi{font-size:12px;color:var(--mu);font-family:var(--mo)}
+.toolbar{display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.sw{position:relative;flex:1;min-width:200px}
+.sw input{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:9px 12px 9px 34px;color:var(--tx);font-family:var(--mo);font-size:13px;outline:none;transition:border .15s}
+.sw input:focus{border-color:var(--ac)}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);pointer-events:none}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
+.kpi-label{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.kpi-val{font-size:28px;font-weight:600;font-family:var(--mo);line-height:1}
+.kpi-sub{font-size:12px;color:var(--mu);margin-top:6px}
+.kpi-val.ac{color:var(--ac)}.kpi-val.gn{color:var(--gn)}.kpi-val.rd{color:var(--rd)}.kpi-val.bl{color:var(--bl)}
+.dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:1.5rem}
+.panel{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
+.panel-title{font-size:13px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1.25rem}
+.mini-bars{display:flex;align-items:flex-end;gap:4px;height:100px}
+.mini-bar-wrap{display:flex;flex-direction:column;align-items:center;flex:1;gap:3px;cursor:pointer}
+.mini-bar-wrap:hover .mini-bar{opacity:.7}
+.mini-bar{width:100%;border-radius:3px 3px 0 0;background:var(--ac);min-height:2px;transition:height .3s}
+.mini-bar.active{background:var(--gn)}
+.mini-bar.zero{background:var(--bd2)}
+.mini-lbl{font-size:8px;color:var(--mu);font-family:var(--mo)}
+.mini-val{font-size:8px;color:var(--mu);font-family:var(--mo);min-height:10px}
+.donut-wrap{display:flex;align-items:center;gap:1.5rem}
+.donut-legend{display:flex;flex-direction:column;gap:10px;flex:1}
+.donut-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.donut-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.donut-pct{font-family:var(--mo);font-size:12px;color:var(--mu);margin-left:auto}
+.date-filter{display:flex;align-items:center;gap:10px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:.75rem 1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.date-filter label{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.date-input{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;color:var(--tx);font-family:var(--mo);font-size:13px;outline:none;cursor:pointer}
+.date-input:focus{border-color:var(--ac)}
+.page-section{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.section-title{font-size:12px;font-weight:600;margin-bottom:1.25rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.tarih-row{display:flex;gap:8px;flex-wrap:wrap}
+.tarih-btn{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);transition:all .15s;white-space:nowrap}
+.tarih-btn:hover{border-color:var(--ac);color:var(--ac)}
+.tarih-btn.active{background:var(--ac);color:#000;border-color:var(--ac);font-weight:600}
+.tarih-custom{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;cursor:pointer}
+.tarih-custom:focus{border-color:var(--ac)}
+.seans-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.seans-card{background:var(--sf2);border:2px solid var(--bd);border-radius:10px;padding:1rem;cursor:pointer;transition:all .2s;text-align:center}
+.seans-card:hover{border-color:var(--ac)}
+.seans-card.selected{border-color:var(--ac);background:rgba(232,197,71,.08)}
+.seans-no{font-size:28px;font-weight:600;font-family:var(--mo);color:var(--ac)}
+.seans-label{font-size:11px;color:var(--mu);margin-top:2px}
+.seans-sold{font-size:13px;color:var(--tx);margin-top:6px;font-family:var(--mo)}
+.musteri-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.bilet-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--bd)}
+.bilet-row:last-child{border-bottom:none}
+.bilet-type-name{font-size:14px;font-weight:500}
+.bilet-type-sub{font-size:11px;color:var(--mu);margin-top:2px}
+.bilet-price{font-size:14px;font-family:var(--mo);color:var(--ac);white-space:nowrap}
+.bilet-qty{display:flex;align-items:center;gap:10px}
+.qty-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.qty-btn:hover{border-color:var(--ac);color:var(--ac)}
+.qty-num{font-size:16px;font-weight:600;font-family:var(--mo);min-width:28px;text-align:center}
+.ozet-box{background:var(--bg);border-radius:8px;padding:1rem;margin-top:1.25rem}
+.ozet-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--bd)}
+.ozet-row:last-child{border-bottom:none;font-size:15px;font-weight:600;color:var(--ac);margin-top:4px;padding-top:8px}
+.kapi-wrap{max-width:600px;margin:0 auto}
+.scan-input{width:100%;background:var(--sf);border:2px solid var(--ac);border-radius:12px;padding:16px 20px;color:var(--tx);font-family:var(--mo);font-size:18px;outline:none;text-align:center;letter-spacing:2px}
+.scan-result{margin-top:1.5rem;border-radius:12px;padding:1.5rem;text-align:center;display:none}
+.scan-result.valid{background:rgba(74,222,128,.08);border:2px solid var(--gn)}
+.scan-result.invalid{background:rgba(248,113,113,.08);border:2px solid var(--rd)}
+.scan-icon{font-size:48px;margin-bottom:12px;line-height:1}
+.scan-msg{font-size:20px;font-weight:600;margin-bottom:8px}
+.scan-detail{font-size:13px;color:var(--mu);line-height:1.8}
+.bilet-preview{background:#fff;color:#000;border-radius:10px;padding:1.25rem;margin-bottom:10px;font-family:var(--sa);border:1px solid #eee}
+.bilet-header{font-size:10px;letter-spacing:3px;color:#888;text-align:center;margin-bottom:4px}
+.bilet-event{font-size:18px;font-weight:700;text-align:center;margin-bottom:2px}
+.bilet-meta{font-size:12px;color:#555;text-align:center;margin-bottom:8px}
+.bilet-musteri{font-size:13px;font-weight:600;text-align:center;margin-bottom:12px;color:#333}
+.bilet-qr{display:flex;justify-content:center;margin:10px 0}
+.bilet-type-badge{display:inline-block;padding:4px 16px;border-radius:20px;font-size:12px;font-weight:600;margin:6px 0;text-align:center;width:100%}
+.bilet-tam{background:#e8f5e9;color:#2e7d32}
+.bilet-cocuk{background:#e3f2fd;color:#1565c0}
+.bilet-yabanci{background:#fff3e0;color:#e65100}
+.bilet-no{font-size:9px;color:#aaa;text-align:center;margin-top:6px;font-family:monospace}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:2rem}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
+.card-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--mu);margin-bottom:1rem}
+.card-stat{font-size:22px;font-weight:600;font-family:var(--mo);color:var(--ac)}
+.user-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+.user-row:last-child{border-bottom:none}
+.user-name{font-size:13px;font-weight:500}
+.user-role-txt{font-size:11px;color:var(--mu);margin-top:2px}
+.role-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-family:var(--mo)}
+.role-admin{background:rgba(232,197,71,.12);color:var(--ac);border:1px solid rgba(232,197,71,.3)}
+.role-gise{background:rgba(74,222,128,.08);color:var(--gn);border:1px solid rgba(74,222,128,.2)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd2);border-radius:14px;padding:1.75rem;width:500px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:12px}
+.modal p{font-size:13px;color:var(--mu);margin-bottom:1rem;line-height:1.6}
+.modal input,.modal textarea,.modal select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;margin-bottom:.75rem;resize:none;transition:border .15s}
+.modal input:focus,.modal select:focus{border-color:var(--ac)}
+.modal label{font-size:12px;color:var(--mu);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:1rem}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;padding:12px 18px;font-size:13px;z-index:300;transform:translateY(20px);opacity:0;transition:all .25s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(74,222,128,.4);color:var(--gn)}
+.toast.err{border-color:rgba(248,113,113,.4);color:var(--rd)}
+.toast.warn{border-color:rgba(232,197,71,.4);color:var(--ac)}
+@media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}.seans-grid{grid-template-columns:repeat(2,1fr)}.musteri-grid{grid-template-columns:1fr}.main{padding:1rem}.topbar{padding:0 1rem}}
+@media print{body *{visibility:hidden}.print-area,.print-area *{visibility:visible}.print-area{position:fixed;left:0;top:0;width:100%}}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">✦ STARDUST ✦</div>
+    <div class="login-title">Box Office Tracking System</div>
+    <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" type="email" id="loginEmail" placeholder="ornek@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label class="form-label">Şifre</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div class="app" id="appWrap">
+  <div class="topbar">
+    <span class="logo">✦ Stardust ✦</span>
+    <div class="top-right">
+      <span class="user-badge"><span class="sync-dot"></span><span id="userLabel">-</span></span>
+      <button class="btn btn-ac admin-only" onclick="doExport()">Yedek Al</button>
+      <button class="btn" onclick="doLogout()">Çıkış</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" id="tab-sat" onclick="switchTab('sat')">🎫 Bilet Sat</button>
+      <button class="tab" id="tab-kapi" onclick="switchTab('kapi')">🚪 Kapı</button>
+      <button class="tab admin-only" id="tab-dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+      <button class="tab admin-only" id="tab-indirim" onclick="switchTab('indirim')">🏷️ İndirim Kodları</button>
+      <button class="tab admin-only" id="tab-admin" onclick="switchTab('admin')">⚙️ Admin</button>
+    </div>
+
+    <!-- BİLET SAT -->
+    <div id="page-sat">
+      <div class="page-section">
+        <div class="section-title">Tarih Seç</div>
+        <div class="tarih-row" id="tarihBtns"></div>
+      </div>
+      <div class="page-section" id="seansSection" style="display:none">
+        <div class="section-title">Seans Seç — <span id="secilenTarihLabel" style="color:var(--ac);text-transform:none"></span></div>
+        <div class="seans-grid" id="seansGrid"></div>
+      </div>
+      <div class="page-section" id="biletSection" style="display:none">
+        <div class="section-title">Müşteri Bilgileri</div>
+        <div class="musteri-grid">
+          <div><label class="form-label">Ad</label><input class="form-input" type="text" id="musteriAd" placeholder="Ad"></div>
+          <div><label class="form-label">Soyad</label><input class="form-input" type="text" id="musteriSoyad" placeholder="Soyad"></div>
+          <div><label class="form-label">Telefon</label><input class="form-input" type="tel" id="musteriTel" placeholder="+90 555 000 00 00"></div>
+          <div><label class="form-label">E-posta</label><input class="form-input" type="email" id="musteriMail" placeholder="musteri@mail.com"></div>
+        </div>
+        <div class="section-title" style="margin-top:1rem">Bilet Türü — Seans <span id="secilenSeansLabel" style="color:var(--ac);text-transform:none"></span></div>
+        <div class="bilet-row">
+          <div><div class="bilet-type-name">Tam</div><div class="bilet-type-sub">18 yaş üstü</div></div>
+          <div class="bilet-price">1.500 ₺</div>
+          <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('tam',-1)">−</button><span class="qty-num" id="qty-tam">0</span><button class="qty-btn" onclick="changeQty('tam',1)">+</button></div>
+        </div>
+        <div class="bilet-row">
+          <div><div class="bilet-type-name">Çocuk</div><div class="bilet-type-sub">4–18 yaş</div></div>
+          <div class="bilet-price">1.200 ₺</div>
+          <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('cocuk',-1)">−</button><span class="qty-num" id="qty-cocuk">0</span><button class="qty-btn" onclick="changeQty('cocuk',1)">+</button></div>
+        </div>
+        <div class="bilet-row">
+          <div><div class="bilet-type-name">Yabancı</div><div class="bilet-type-sub">Tüm yaşlar</div></div>
+          <div class="bilet-price">2.200 ₺</div>
+          <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('yabanci',-1)">−</button><span class="qty-num" id="qty-yabanci">0</span><button class="qty-btn" onclick="changeQty('yabanci',1)">+</button></div>
+        </div>
+        <div class="ozet-box" id="ozetBox" style="display:none"></div>
+        <div style="display:flex;gap:10px;margin-top:1.25rem">
+          <button class="btn" onclick="resetForm()">İptal</button>
+          <button class="btn btn-ac" id="satBtn" onclick="openSatisModal()" disabled>Satışı Tamamla</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KAPI -->
+    <div id="page-kapi" style="display:none">
+      <div class="kapi-wrap">
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Kapı Kontrol</div>
+          <div style="font-size:13px;color:var(--mu)">PNR kodu veya bilet numarası girin — sorgulayın, sonra giriş verin</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:1rem">
+          <input class="scan-input" type="text" id="scanInput" placeholder="PNR-XXXXXXXX veya SD-X-XXXXX..." style="flex:1;font-size:14px;letter-spacing:1px" autocomplete="off" onkeydown="if(event.key==='Enter')sorgulaKod()">
+          <button class="btn btn-ac" onclick="sorgulaKod()" style="padding:12px 20px;font-size:15px">Sorgula</button>
+        </div>
+        <div class="scan-result" id="scanResult">
+          <div class="scan-icon" id="scanIcon"></div>
+          <div class="scan-msg" id="scanMsg"></div>
+          <div class="scan-detail" id="scanDetail"></div>
+          <div id="girisVerBtn" style="margin-top:1rem;display:none">
+            <button class="btn btn-ac" onclick="girisVer()" style="font-size:15px;padding:12px 32px">✓ Giriş Ver</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1.5rem">
+          <div class="kpi"><div class="kpi-label">Toplam Bilet</div><div class="kpi-val ac" id="kapiTotal">0</div></div>
+          <div class="kpi"><div class="kpi-label">Giriş Yapıldı</div><div class="kpi-val gn" id="kapiGiris">0</div></div>
+        </div>
+        <div style="margin-top:1.5rem" class="tw">
+          <table><thead><tr><th>PNR / Bilet No</th><th>Ad Soyad</th><th>Seans</th><th>Tür</th><th>Tarih</th><th>Saat</th></tr></thead>
+          <tbody id="kapiLog"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" style="display:none">
+      <div class="date-filter">
+        <label>Tarih Aralığı:</label>
+        <input type="date" class="date-input" id="dashStart">
+        <span style="color:var(--mu)">—</span>
+        <input type="date" class="date-input" id="dashEnd">
+        <button class="btn btn-ac" onclick="renderDashboard()">Filtrele</button>
+        <button class="btn" onclick="resetDateFilter()">Bugün</button>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-title">Günlük Bilet Satışı</div>
+          <div style="display:flex;align-items:flex-end;gap:4px;height:100px" id="dailyBars"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--mu);font-family:var(--mo)" id="dailyLabels"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Bilet Türü Dağılımı</div>
+          <div class="donut-wrap" id="donutWrap"></div>
+        </div>
+      </div>
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-title">Günlük Gelir (₺)</div>
+          <div style="display:flex;align-items:flex-end;gap:4px;height:100px" id="ciroBars"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--mu);font-family:var(--mo)" id="ciroLabels"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Seans Bazlı Satış</div>
+          <div id="seansSatisPanel"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Satış Geçmişi</div>
+      <div class="tw">
+        <table><thead><tr><th>Tarih</th><th>Müşteri</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Kişi</th><th>Gelir</th></tr></thead>
+        <tbody id="dashSatislar"></tbody>
+      </table></div>
+    </div>
+
+    <!-- İNDİRİM KODLARI -->
+    <div id="page-indirim" style="display:none">
+      <div class="kpi-grid" id="indirim-stats"></div>
+      <div class="toolbar">
+        <div class="sw"><span class="si">🔍</span><input type="text" id="si1" placeholder="Kod ara..." oninput="applyFilter()"></div>
+        <select id="sf1" onchange="applyFilter()"><option value="hepsi">Tüm Kodlar</option><option value="aktif">Sadece Aktif</option><option value="deaktif">Sadece Deaktif</option></select>
+        <button class="btn btn-r" onclick="openBulk()">Toplu Deaktif</button>
+      </div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Kod</th><th>İndirim</th><th>Durum</th><th>Kullanım Tarihi</th><th>İşlem</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      <div class="pag"><span class="pi" id="pi1"></span><div style="display:flex;gap:8px"><button class="btn" id="pb1" onclick="changePg(-1)">← Önceki</button><button class="btn" id="nb1" onclick="changePg(1)">Sonraki →</button></div></div>
+    </div>
+
+    <!-- ADMİN -->
+    <div id="page-admin" style="display:none">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Kullanıcılar</div>
+          <div class="card-sub">Sisteme erişimi olan kişiler</div>
+          <div id="userList"></div>
+          <button class="btn btn-ac" style="margin-top:1rem;width:100%" onclick="openAddUser()">+ Kullanıcı Ekle</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Sistem Özeti</div>
+          <div class="card-sub">Genel istatistikler</div>
+          <div style="margin-top:.5rem">
+            <div style="font-size:12px;color:var(--mu);margin-bottom:4px">Toplam Bilet</div><div class="card-stat" id="adminTotalTickets">-</div>
+            <div style="font-size:12px;color:var(--mu);margin-bottom:4px;margin-top:.75rem">Toplam Gelir</div><div class="card-stat" style="color:var(--gn);font-size:18px" id="adminTotalGelir">-</div>
+            <div style="font-size:12px;color:var(--mu);margin-bottom:4px;margin-top:.75rem">Aktif İndirim Kodu</div><div class="card-stat" id="adminAktifKod">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SATIŞ ONAY -->
+<div class="overlay" id="ov-satis" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal"><h3>Satışı Onayla</h3><div id="satisOzetModal" style="margin-bottom:1rem"></div>
+    <div class="mbtns"><button class="btn" onclick="document.getElementById('ov-satis').classList.remove('open')">İptal</button><button class="btn btn-ac" onclick="tamamlaSatis()">✓ Onayla ve Bilet Oluştur</button></div>
+  </div>
+</div>
+
+<!-- BİLET GÖRÜNTÜLE -->
+<div class="overlay" id="ov-bilet">
+  <div class="modal" style="width:520px"><h3>🎟️ Biletler Hazır</h3><p>Yazdır butonuna basarak biletleri alın.</p>
+    <div id="biletlerWrap"></div>
+    <div class="mbtns"><button class="btn" onclick="closeBiletModal()">Kapat</button><button class="btn btn-ac" onclick="window.print()">🖨️ Yazdır</button></div>
+  </div>
+</div>
+
+<!-- TOPLU DEAKTİF -->
+<div class="overlay" id="ov3" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal"><h3>Toplu Deaktif</h3><p>Virgülle ayırarak kodları girin.</p>
+    <textarea id="bki" rows="4" placeholder="FFE5B8C7207, ABC1234DEF5, ..."></textarea>
+    <div class="mbtns"><button class="btn" onclick="document.getElementById('ov3').classList.remove('open')">İptal</button><button class="btn btn-r" onclick="bulkDo()">Deaktif Et</button></div>
+  </div>
+</div>
+
+<!-- KULLANICI EKLE -->
+<div class="overlay" id="ov-adduser" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal"><h3>Yeni Kullanıcı Ekle</h3>
+    <label>E-posta</label><input type="email" id="nu-email" placeholder="ornek@email.com">
+    <label>Şifre</label><input type="password" id="nu-pass" placeholder="En az 6 karakter">
+    <label>Kullanıcı Adı</label><input type="text" id="nu-name" placeholder="Ahmet">
+    <label>Rol</label><select id="nu-role"><option value="gise">Gişe Çalışanı</option><option value="admin">Admin</option></select>
+    <div class="mbtns"><button class="btn" onclick="document.getElementById('ov-adduser').classList.remove('open')">İptal</button><button class="btn btn-ac" onclick="addUser()">Ekle</button></div>
+  </div>
+</div>
+
+<div class="print-area" id="printArea" style="display:none"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+var firebaseConfig={
+  apiKey:"AIzaSyDcmS7qpzMvc6JIsudyIAROvMy052R0bPs",
+  authDomain:"box-office-discount.firebaseapp.com",
+  databaseURL:"https://box-office-discount-default-rtdb.firebaseio.com",
+  projectId:"box-office-discount",
+  storageBucket:"box-office-discount.firebasestorage.app",
+  messagingSenderId:"835296643878",
+  appId:"1:835296643878:web:44e7a86658b37328ee0fe7"
+};
+firebase.initializeApp(firebaseConfig);
+var auth=firebase.auth(),db=firebase.database();
+var codesRef=db.ref('codes'),usersRef=db.ref('users'),ticketsRef=db.ref('tickets'),biletlerRef=db.ref('biletler');
+var PRICES={tam:1500,cocuk:1200,yabanci:2200},CAPACITY=250;
+
+function pad(x){return x<10?'0'+x:String(x);}
+function todayStr(){var n=new Date();return pad(n.getDate())+'.'+pad(n.getMonth()+1)+'.'+n.getFullYear();}
+function dateToInput(ds){if(!ds)return '';var p=ds.split('.');return p[2]+'-'+p[1]+'-'+p[0];}
+function inputToDate(s){if(!s)return '';var p=s.split('-');return pad(parseInt(p[2]))+'.'+pad(parseInt(p[1]))+'.'+p[0];}
+function fmtMoney(n){return n.toLocaleString('tr-TR')+'₺';}
+function genID(){return Date.now().toString(36).toUpperCase()+Math.random().toString(36).substr(2,5).toUpperCase();}
+function addDays(ds,n){var p=ds.split('.');var d=new Date(p[2],p[1]-1,p[0]);d.setDate(d.getDate()+n);return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();}
+function getDayName(ds){var p=ds.split('.');return['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][new Date(p[2],p[1]-1,p[0]).getDay()];}
+function dateInRange(ds,start,end){
+  if(!start&&!end)return true;
+  var p=ds.split('.');var d=new Date(p[2],p[1]-1,p[0]);
+  if(start){var sp=start.split('.');var sd=new Date(sp[2],sp[1]-1,sp[0]);if(d<sd)return false;}
+  if(end){var ep=end.split('.');var ed=new Date(ep[2],ep[1]-1,ep[0]);if(d>ed)return false;}
+  return true;
+}
+
+var codes=[],tickets=[],biletler={},fil=[],pg=1,PG=30;
+var currentUser=null,currentRole=null,currentName=null;
+var selectedTarih=null,selectedSeans=null,qty={tam:0,cocuk:0,yabanci:0};
+var seansTickets={},kapiLogs=[];
+
+// AUTH
+auth.onAuthStateChanged(function(user){
+  if(user){
+    currentUser=user;
+    usersRef.child(user.uid).once('value',function(snap){
+      var ud=snap.val();
+      currentRole=ud?ud.role:'gise';
+      currentName=ud?ud.name:user.email;
+      showApp();
+    });
+  } else {showLogin();}
+});
+
+function showLogin(){document.getElementById('loginWrap').style.display='flex';document.getElementById('appWrap').style.display='none';}
+function showApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  document.getElementById('userLabel').textContent=(currentName||'')+' · '+(currentRole==='admin'?'Admin':'Gişe');
+  document.querySelectorAll('.admin-only').forEach(function(el){
+    if(currentRole==='admin'){el.classList.remove('admin-only');el.classList.add('admin-visible');}
+  });
+  loadCodes();loadTickets();loadBiletler();buildTarihBtns();
+  if(currentRole==='admin'){loadUserList();initDateFilter();}
+}
+function doLogin(){
+  var email=document.getElementById('loginEmail').value.trim();
+  var pass=document.getElementById('loginPass').value;
+  var btn=document.getElementById('loginBtn');
+  document.getElementById('loginErr').textContent='';
+  if(!email||!pass){document.getElementById('loginErr').textContent='E-posta ve şifre girin.';return;}
+  btn.textContent='Giriş yapılıyor...';btn.disabled=true;
+  auth.signInWithEmailAndPassword(email,pass).catch(function(err){
+    btn.textContent='Giriş Yap';btn.disabled=false;
+    var msg='Giriş başarısız.';
+    if(err.code==='auth/wrong-password'||err.code==='auth/user-not-found'||err.code==='auth/invalid-credential')msg='E-posta veya şifre hatalı.';
+    else if(err.code==='auth/too-many-requests')msg='Çok fazla deneme. Bekleyin.';
+    document.getElementById('loginErr').textContent=msg;
+  });
+}
+function doLogout(){auth.signOut();}
+
+// VERİ
+function loadCodes(){
+  codesRef.on('value',function(snap){
+    var data=snap.val();
+    if(data){codes=Object.values(data);}
+    fil=codes.slice();
+    if(document.getElementById('page-indirim').style.display!=='none'){renderIndirim();renderIndirimStats();}
+  });
+}
+function loadTickets(){
+  ticketsRef.on('value',function(snap){
+    var data=snap.val()||{};
+    tickets=Object.values(data);
+    buildSeansTickets();
+    if(document.getElementById('page-sat').style.display!=='none')refreshSeansGrid();
+    if(document.getElementById('page-dashboard').style.display!=='none')renderDashboard();
+    updateKapiStats();
+  });
+}
+function loadBiletler(){
+  biletlerRef.on('value',function(snap){
+    biletler=snap.val()||{};
+    updateKapiStats();
+  });
+}
+function buildSeansTickets(){
+  seansTickets={};
+  tickets.forEach(function(t){
+    if(!t)return;
+    var key=t.tarih+'_'+t.seans;
+    if(!seansTickets[key])seansTickets[key]={tam:0,cocuk:0,yabanci:0,gelir:0};
+    seansTickets[key].tam+=(t.tam||0);seansTickets[key].cocuk+=(t.cocuk||0);
+    seansTickets[key].yabanci+=(t.yabanci||0);seansTickets[key].gelir+=(t.toplam||0);
+  });
+}
+
+function updateKapiStats(){
+  var vals=Object.values(biletler);
+  var total=vals.length;
+  var giris=vals.filter(function(b){return b&&b.kullanildi;}).length;
+  var elT=document.getElementById('kapiTotal');
+  var elG=document.getElementById('kapiGiris');
+  if(elT)elT.textContent=total;
+  if(elG)elG.textContent=giris;
+}
+
+// SEKMELER
+function switchTab(id){
+  ['sat','kapi','dashboard','indirim','admin'].forEach(function(p){
+    var el=document.getElementById('page-'+p);if(el)el.style.display=p===id?'block':'none';
+    var tb=document.getElementById('tab-'+p);if(tb)tb.classList.toggle('active',p===id);
+  });
+  if(id==='indirim'){renderIndirim();renderIndirimStats();}
+  if(id==='dashboard')renderDashboard();
+  if(id==='admin')renderAdminPage();
+  if(id==='kapi'){updateKapiStats();setTimeout(function(){document.getElementById('scanInput').focus();},100);}
+}
+
+// DATE FILTER
+function initDateFilter(){
+  var today=todayStr();
+  document.getElementById('dashStart').value=dateToInput(today);
+  document.getElementById('dashEnd').value=dateToInput(today);
+}
+function resetDateFilter(){
+  initDateFilter();renderDashboard();
+}
+function getDateRange(){
+  var s=inputToDate(document.getElementById('dashStart').value);
+  var e=inputToDate(document.getElementById('dashEnd').value);
+  return {start:s,end:e};
+}
+
+// TARİH
+function buildTarihBtns(){
+  var today=todayStr();
+  var container=document.getElementById('tarihBtns');container.innerHTML='';
+  for(var i=0;i<7;i++){
+    var d=addDays(today,i);
+    var label=i===0?'Bugün':(i===1?'Yarın':getDayName(d)+' '+parseInt(d.split('.')[0])+'.'+parseInt(d.split('.')[1]));
+    var btn=document.createElement('button');
+    btn.className='tarih-btn'+(selectedTarih===d?' active':'');
+    btn.textContent=label;
+    (function(date){btn.onclick=function(){selectTarih(date);};})(d);
+    container.appendChild(btn);
+  }
+  var inp=document.createElement('input');
+  inp.type='date';inp.className='tarih-custom';inp.title='Özel tarih';
+  inp.onchange=function(){if(this.value){var p=this.value.split('-');selectTarih(pad(parseInt(p[2]))+'.'+pad(parseInt(p[1]))+'.'+p[0]);}};
+  container.appendChild(inp);
+  if(!selectedTarih)selectTarih(today);
+}
+
+function selectTarih(d){
+  selectedTarih=d;selectedSeans=null;qty={tam:0,cocuk:0,yabanci:0};
+  buildTarihBtns();
+  document.getElementById('secilenTarihLabel').textContent=getDayName(d)+', '+d;
+  document.getElementById('seansSection').style.display='block';
+  document.getElementById('biletSection').style.display='none';
+  refreshSeansGrid();
+}
+
+function refreshSeansGrid(){
+  if(!selectedTarih)return;
+  var html='';
+  for(var i=1;i<=4;i++){
+    var key=selectedTarih+'_'+i;
+    var sd=seansTickets[key]||{tam:0,cocuk:0,yabanci:0};
+    var sold=sd.tam+sd.cocuk+sd.yabanci;
+    var sel=selectedSeans===i?' selected':'';
+    html+='<div class="seans-card'+sel+'" data-seans="'+i+'"><div class="seans-no">'+i+'</div><div class="seans-label">Seans</div><div class="seans-sold">'+sold+' / '+CAPACITY+'</div></div>';
+  }
+  document.getElementById('seansGrid').innerHTML=html;
+  document.querySelectorAll('.seans-card').forEach(function(el){
+    el.onclick=function(){selectSeans(parseInt(this.getAttribute('data-seans')));};
+  });
+}
+
+function selectSeans(n){
+  selectedSeans=n;qty={tam:0,cocuk:0,yabanci:0};
+  document.getElementById('qty-tam').textContent='0';
+  document.getElementById('qty-cocuk').textContent='0';
+  document.getElementById('qty-yabanci').textContent='0';
+  document.getElementById('secilenSeansLabel').textContent=n+' — '+selectedTarih;
+  document.getElementById('biletSection').style.display='block';
+  document.getElementById('ozetBox').style.display='none';
+  document.getElementById('satBtn').disabled=true;
+  refreshSeansGrid();
+}
+
+function changeQty(type,delta){
+  qty[type]=Math.max(0,qty[type]+delta);
+  document.getElementById('qty-'+type).textContent=qty[type];
+  updateOzet();
+}
+
+function updateOzet(){
+  var total=qty.tam+qty.cocuk+qty.yabanci;
+  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci;
+  document.getElementById('satBtn').disabled=total===0;
+  var box=document.getElementById('ozetBox');
+  if(total===0){box.style.display='none';return;}
+  box.style.display='block';
+  var html='';
+  if(qty.tam>0)html+='<div class="ozet-row"><span>Tam × '+qty.tam+'</span><span>'+fmtMoney(qty.tam*PRICES.tam)+'</span></div>';
+  if(qty.cocuk>0)html+='<div class="ozet-row"><span>Çocuk × '+qty.cocuk+'</span><span>'+fmtMoney(qty.cocuk*PRICES.cocuk)+'</span></div>';
+  if(qty.yabanci>0)html+='<div class="ozet-row"><span>Yabancı × '+qty.yabanci+'</span><span>'+fmtMoney(qty.yabanci*PRICES.yabanci)+'</span></div>';
+  html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(gelir)+'</span></div>';
+  box.innerHTML=html;
+}
+
+function resetForm(){
+  selectedSeans=null;qty={tam:0,cocuk:0,yabanci:0};
+  document.getElementById('biletSection').style.display='none';
+  document.getElementById('musteriAd').value='';
+  document.getElementById('musteriSoyad').value='';
+  document.getElementById('musteriTel').value='';
+  document.getElementById('musteriMail').value='';
+  refreshSeansGrid();
+}
+
+function openSatisModal(){
+  var ad=document.getElementById('musteriAd').value.trim();
+  var soyad=document.getElementById('musteriSoyad').value.trim();
+  if(!ad||!soyad){toast('Ad ve soyad giriniz!','err');return;}
+  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci;
+  var html='<div style="background:var(--bg);border-radius:8px;padding:1rem;font-size:13px">';
+  html+='<div style="margin-bottom:10px"><strong>'+ad+' '+soyad+'</strong></div>';
+  html+='<div style="margin-bottom:10px;font-size:14px">'+selectedTarih+' — Seans '+selectedSeans+'</div>';
+  if(qty.tam>0)html+='<div style="padding:4px 0">Tam: '+qty.tam+' × 1.500₺ = '+fmtMoney(qty.tam*PRICES.tam)+'</div>';
+  if(qty.cocuk>0)html+='<div style="padding:4px 0">Çocuk: '+qty.cocuk+' × 1.200₺ = '+fmtMoney(qty.cocuk*PRICES.cocuk)+'</div>';
+  if(qty.yabanci>0)html+='<div style="padding:4px 0">Yabancı: '+qty.yabanci+' × 2.200₺ = '+fmtMoney(qty.yabanci*PRICES.yabanci)+'</div>';
+  html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--ac)">Toplam: '+fmtMoney(gelir)+'</div></div>';
+  document.getElementById('satisOzetModal').innerHTML=html;
+  document.getElementById('ov-satis').classList.add('open');
+}
+
+function tamamlaSatis(){
+  document.getElementById('ov-satis').classList.remove('open');
+  var ad=document.getElementById('musteriAd').value.trim();
+  var soyad=document.getElementById('musteriSoyad').value.trim();
+  var tel=document.getElementById('musteriTel').value.trim();
+  var mail=document.getElementById('musteriMail').value.trim();
+  var adSoyad=ad+' '+soyad;
+  var now=new Date();
+  var pnr='PNR-'+genID().substr(0,8);
+  var satis={
+    id:genID(),pnr:pnr,seans:selectedSeans,tarih:selectedTarih,
+    saat:pad(now.getHours())+':'+pad(now.getMinutes()),
+    tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,
+    toplam:qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci,
+    kasiyerAd:currentName,
+    musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,
+    biletler:[]
+  };
+  var biletlerArr=[];
+  var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'}];
+  types.forEach(function(tp){
+    for(var i=0;i<qty[tp.k];i++){
+      var bNo='SD-'+selectedSeans+'-'+genID();
+      biletlerArr.push({no:bNo,pnr:pnr,seans:selectedSeans,tur:tp.l,cls:tp.cls,tarih:selectedTarih,saat:satis.saat,musteriAd:adSoyad});
+      satis.biletler.push(bNo);
+    }
+  });
+  ticketsRef.child(satis.id).set(satis);
+  db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:selectedTarih,seans:selectedSeans,tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,toplam:satis.toplam,biletler:satis.biletler,kullanildi:false});
+  biletlerArr.forEach(function(b){
+    biletlerRef.child(b.no).set({no:b.no,pnr:b.pnr,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:b.saat,musteriAd:b.musteriAd,kullanildi:false});
+  });
+  gosterBiletler(biletlerArr,adSoyad,pnr);
+  resetForm();
+  toast('Satış tamamlandı! '+biletlerArr.length+' bilet oluşturuldu.','ok');
+}
+
+function gosterBiletler(biletlerArr,adSoyad,pnr){
+  var wrap=document.getElementById('biletlerWrap');wrap.innerHTML='';
+  biletlerArr.forEach(function(b,idx){
+    var div=document.createElement('div');div.className='bilet-preview';
+    div.innerHTML='<div class="bilet-header">✦ STARDUST ✦</div>'+
+      '<div class="bilet-event">Box Office</div>'+
+      '<div class="bilet-meta">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
+      '<div class="bilet-musteri">'+adSoyad+'</div>'+
+      '<div style="font-size:10px;color:#888;text-align:center;margin-bottom:4px;font-family:monospace">PNR: '+pnr+'</div>'+
+      '<div class="bilet-qr" id="qr-'+idx+'"></div>'+
+      '<div class="bilet-type-badge '+b.cls+'">'+b.tur+'</div>'+
+      '<div class="bilet-no">'+b.no+'</div>';
+    wrap.appendChild(div);
+    setTimeout(function(i,no){try{new QRCode(document.getElementById('qr-'+i),{text:no,width:110,height:110,colorDark:'#000',colorLight:'#fff'});}catch(e){}}.bind(null,idx,b.no),150);
+  });
+  document.getElementById('printArea').innerHTML=wrap.innerHTML;
+  document.getElementById('ov-bilet').classList.add('open');
+}
+function closeBiletModal(){document.getElementById('ov-bilet').classList.remove('open');}
+
+// KAPI
+var currentSorgu=null; // {type:'pnr'/'bilet', data:...}
+
+function sorgulaKod(){
+  var val=document.getElementById('scanInput').value.trim().toUpperCase();
+  if(!val){toast('Kod giriniz','err');return;}
+  var res=document.getElementById('scanResult');
+  res.style.display='none';
+  currentSorgu=null;
+  document.getElementById('girisVerBtn').style.display='none';
+
+  if(val.startsWith('PNR-')){
+    // PNR sorgusu
+    db.ref('pnrler/'+val).once('value',function(snap){
+      var p=snap.val();
+      res.style.display='block';
+      if(!p){
+        res.className='scan-result invalid';
+        document.getElementById('scanIcon').textContent='✗';
+        document.getElementById('scanMsg').textContent='PNR Bulunamadı';
+        document.getElementById('scanDetail').textContent='Bu PNR sistemde kayıtlı değil.';
+        return;
+      }
+      if(p.kullanildi){
+        res.className='scan-result invalid';
+        document.getElementById('scanIcon').textContent='✗';
+        document.getElementById('scanMsg').textContent='PNR Kullanılmış';
+        document.getElementById('scanDetail').innerHTML=
+          '<strong>'+p.musteriAd+'</strong><br>'+
+          'Tarih: '+p.tarih+' · Seans: '+p.seans+'<br>'+
+          'Tam: '+p.tam+' · Çocuk: '+p.cocuk+' · Yabancı: '+p.yabanci+'<br>'+
+          'Toplam: '+fmtMoney(p.toplam)+'<br>'+
+          '<span style="color:var(--rd)">Daha önce giriş verildi.</span>';
+        return;
+      }
+      res.className='scan-result valid';
+      document.getElementById('scanIcon').textContent='📋';
+      document.getElementById('scanMsg').textContent='PNR Bulundu';
+      document.getElementById('scanDetail').innerHTML=
+        '<strong>'+p.musteriAd+'</strong><br>'+
+        (p.musteriTel?'Tel: '+p.musteriTel+'<br>':'')+
+        'Tarih: '+p.tarih+' · Seans: '+p.seans+'<br>'+
+        'Tam: '+p.tam+' · Çocuk: '+p.cocuk+' · Yabancı: '+p.yabanci+'<br>'+
+        'Toplam Kişi: '+((p.tam||0)+(p.cocuk||0)+(p.yabanci||0))+' · '+fmtMoney(p.toplam);
+      document.getElementById('girisVerBtn').style.display='block';
+      currentSorgu={type:'pnr',pnr:val,data:p};
+    });
+  } else {
+    // Tekil bilet sorgusu
+    biletlerRef.child(val).once('value',function(snap){
+      var b=snap.val();
+      res.style.display='block';
+      if(!b){
+        res.className='scan-result invalid';
+        document.getElementById('scanIcon').textContent='✗';
+        document.getElementById('scanMsg').textContent='Geçersiz Bilet';
+        document.getElementById('scanDetail').textContent='Bu bilet numarası sistemde bulunamadı.';
+        return;
+      }
+      if(b.kullanildi){
+        res.className='scan-result invalid';
+        document.getElementById('scanIcon').textContent='✗';
+        document.getElementById('scanMsg').textContent='Bilet Kullanılmış';
+        document.getElementById('scanDetail').innerHTML=
+          '<strong>'+(b.musteriAd||'')+'</strong><br>'+
+          'Seans: '+b.seans+' · '+b.tur+'<br>'+
+          '<span style="color:var(--rd)">'+b.kullanildiSaat+' saatinde giriş yapıldı.</span>';
+        return;
+      }
+      res.className='scan-result valid';
+      document.getElementById('scanIcon').textContent='🎫';
+      document.getElementById('scanMsg').textContent='Bilet Geçerli';
+      document.getElementById('scanDetail').innerHTML=
+        '<strong>'+(b.musteriAd||'')+'</strong><br>'+
+        'PNR: '+(b.pnr||'-')+'<br>'+
+        'Seans: '+b.seans+' · '+b.tur+' · '+b.tarih;
+      document.getElementById('girisVerBtn').style.display='block';
+      currentSorgu={type:'bilet',no:val,data:b};
+    });
+  }
+}
+
+function girisVer(){
+  if(!currentSorgu){return;}
+  var now=new Date();
+  var saat=pad(now.getHours())+':'+pad(now.getMinutes());
+  if(currentSorgu.type==='pnr'){
+    var p=currentSorgu.data;
+    // Tüm biletleri deaktif et
+    var biletNoList=p.biletler||[];
+    biletNoList.forEach(function(bno){
+      biletlerRef.child(bno).update({kullanildi:true,kullanildiSaat:saat});
+    });
+    db.ref('pnrler/'+currentSorgu.pnr).update({kullanildi:true,kullanildiSaat:saat});
+    kapiLogs.unshift({no:currentSorgu.pnr,seans:p.seans,tur:'PNR ('+((p.tam||0)+(p.cocuk||0)+(p.yabanci||0))+' kişi)',tarih:p.tarih,saat:saat,musteriAd:p.musteriAd||'-'});
+    toast('Giriş verildi! '+((p.tam||0)+(p.cocuk||0)+(p.yabanci||0))+' kişi','ok');
+  } else {
+    var b=currentSorgu.data;
+    biletlerRef.child(currentSorgu.no).update({kullanildi:true,kullanildiSaat:saat});
+    kapiLogs.unshift({no:currentSorgu.no,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:saat,musteriAd:b.musteriAd||'-'});
+    toast('Giriş verildi!','ok');
+  }
+  if(kapiLogs.length>15)kapiLogs.pop();
+  renderKapiLog();
+  document.getElementById('girisVerBtn').style.display='none';
+  document.getElementById('scanInput').value='';
+  document.getElementById('scanResult').style.display='none';
+  currentSorgu=null;
+  updateKapiStats();
+}
+
+function renderKapiLog(){
+  var rows='';
+  kapiLogs.forEach(function(l){
+    rows+='<tr><td class="cc" style="font-size:11px">'+l.no+'</td><td style="font-size:12px">'+l.musteriAd+'</td><td>Seans '+l.seans+'</td><td style="font-size:12px">'+l.tur+'</td><td class="dc">'+l.tarih+'</td><td class="dc">'+l.saat+'</td></tr>';
+  });
+  document.getElementById('kapiLog').innerHTML=rows||'<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--mu)">Henüz giriş yok</td></tr>';
+}
+
+// DASHBOARD
+function renderDashboard(){
+  var range=getDateRange();
+  var filtered=tickets.filter(function(t){return t&&t.tarih&&dateInRange(t.tarih,range.start,range.end);});
+  var bugunBilet=filtered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
+  var bugunGelir=filtered.reduce(function(a,t){return a+(t.toplam||0);},0);
+  var toplamBilet=tickets.reduce(function(a,t){return a+(t?((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)):0);},0);
+  var toplamGelir=tickets.reduce(function(a,t){return a+(t?(t.toplam||0):0);},0);
+
+  document.getElementById('kpiGrid').innerHTML=
+    '<div class="kpi"><div class="kpi-label">Seçili Dönem Bilet</div><div class="kpi-val ac">'+bugunBilet+'</div><div class="kpi-sub">kişi</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Seçili Dönem Gelir</div><div class="kpi-val gn">'+fmtMoney(bugunGelir)+'</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Toplam Bilet</div><div class="kpi-val bl">'+toplamBilet+'</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Toplam Gelir</div><div class="kpi-val ac">'+fmtMoney(toplamGelir)+'</div></div>';
+
+  // Günlük bilet ve ciro grafikleri
+  var days=[];
+  if(range.start&&range.end){
+    var cur=range.start;
+    while(cur<=range.end&&days.length<60){days.push(cur);cur=addDays(cur,1);}
+  } else {
+    var today=todayStr();
+    for(var i=13;i>=0;i--)days.push(addDays(today,-i));
+  }
+
+  var biletData=days.map(function(d){return filtered.filter(function(t){return t.tarih===d;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);});
+  var ciroData=days.map(function(d){return filtered.filter(function(t){return t.tarih===d;}).reduce(function(a,t){return a+(t.toplam||0);},0);});
+  var maxB=Math.max.apply(null,biletData)||1;
+  var maxC=Math.max.apply(null,ciroData)||1;
+  var today=todayStr();
+
+  var bHtml='',bLHtml='',cHtml='',cLHtml='';
+  days.forEach(function(d,i){
+    var vb=biletData[i],vc=ciroData[i];
+    var hb=vb>0?Math.max(Math.round((vb/maxB)*95),4):2;
+    var hc=vc>0?Math.max(Math.round((vc/maxC)*95),4):2;
+    var lbl=parseInt(d.split('.')[0]);
+    var isToday=d===today;
+    bHtml+='<div class="mini-bar-wrap"><div class="mini-val">'+(vb>0?vb:'')+'</div><div class="mini-bar'+(isToday?' active':vb>0?'':' zero')+'" style="height:'+hb+'px" title="'+d+': '+vb+' bilet"></div><div class="mini-lbl">'+lbl+'</div></div>';
+    cHtml+='<div class="mini-bar-wrap"><div class="mini-val">'+(vc>0?Math.round(vc/1000)+'K':'')+'</div><div class="mini-bar'+(isToday?' active':vc>0?'':' zero')+'" style="height:'+hc+'px;background:'+(isToday?'var(--gn)':'var(--bl)')+'" title="'+d+': '+fmtMoney(vc)+'"></div><div class="mini-lbl">'+lbl+'</div></div>';
+  });
+  document.getElementById('dailyBars').innerHTML=bHtml;
+  document.getElementById('ciroBars').innerHTML=cHtml;
+
+  // Bilet türü donut
+  var totTam=filtered.reduce(function(a,t){return a+(t.tam||0);},0);
+  var totCocuk=filtered.reduce(function(a,t){return a+(t.cocuk||0);},0);
+  var totYab=filtered.reduce(function(a,t){return a+(t.yabanci||0);},0);
+  renderDonut(totTam,totCocuk,totYab);
+
+  // Seans bazlı satış
+  var spHtml='';
+  for(var i=1;i<=4;i++){
+    var st=filtered.filter(function(t){return t.seans===i;});
+    var stB=st.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
+    var stG=st.reduce(function(a,t){return a+(t.toplam||0);},0);
+    spHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)">'+
+      '<div style="font-size:13px">Seans '+i+'</div>'+
+      '<div style="font-family:var(--mo);font-size:13px;color:var(--ac)">'+stB+' kişi</div>'+
+      '<div style="font-family:var(--mo);font-size:12px;color:var(--gn)">'+fmtMoney(stG)+'</div>'+
+    '</div>';
+  }
+  document.getElementById('seansSatisPanel').innerHTML=spHtml;
+
+  // Satış geçmişi
+  var sorted=filtered.sort(function(a,b){
+    return (b.tarih.split('.').reverse().join('')+(b.saat||'')).localeCompare(a.tarih.split('.').reverse().join('')+(a.saat||''));
+  });
+  var rows='';
+  sorted.slice(0,50).forEach(function(t){
+    rows+='<tr>'+
+      '<td class="dc">'+t.tarih+'</td>'+
+      '<td style="font-size:12px">'+(t.musteriAd||'-')+'</td>'+
+      '<td class="dc">'+(t.musteriTel||'-')+'</td>'+
+      '<td>Seans '+t.seans+'</td>'+
+      '<td>'+(t.tam||0)+'</td><td>'+(t.cocuk||0)+'</td><td>'+(t.yabanci||0)+'</td>'+
+      '<td>'+((t.tam||0)+(t.cocuk||0)+(t.yabanci||0))+'</td>'+
+      '<td style="color:var(--ac);font-family:var(--mo)">'+fmtMoney(t.toplam||0)+'</td>'+
+    '</tr>';
+  });
+  document.getElementById('dashSatislar').innerHTML=rows||'<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mu)">Seçili tarih aralığında satış yok</td></tr>';
+}
+
+function renderDonut(tam,cocuk,yab){
+  var total=tam+cocuk+yab||1;
+  var r=50,cx=60,cy=60,circ=2*Math.PI*r;
+  function arc(pct,offset,color){var dash=pct*circ;return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="18" stroke-dasharray="'+dash+' '+circ+'" stroke-dashoffset="'+(-offset*circ)+'" transform="rotate(-90 '+cx+' '+cy+')" />';}
+  var pT=tam/total,pC=cocuk/total,pY=yab/total;
+  var svg='<svg width="120" height="120"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--bd)" stroke-width="18"/>'+
+    (total>0?arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80'):'')+
+    '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" fill="var(--tx)" font-size="14" font-weight="600" font-family="var(--mo)">'+total+'</text></svg>';
+  var legend='<div class="donut-legend">'+
+    '<div class="donut-item"><div class="donut-dot" style="background:#e8c547"></div><span>Tam</span><span class="donut-pct">'+tam+' (%'+Math.round(pT*100)+')</span></div>'+
+    '<div class="donut-item"><div class="donut-dot" style="background:#60a5fa"></div><span>Çocuk</span><span class="donut-pct">'+cocuk+' (%'+Math.round(pC*100)+')</span></div>'+
+    '<div class="donut-item"><div class="donut-dot" style="background:#4ade80"></div><span>Yabancı</span><span class="donut-pct">'+yab+' (%'+Math.round(pY*100)+')</span></div></div>';
+  document.getElementById('donutWrap').innerHTML=svg+legend;
+}
+
+// İNDİRİM
+function renderIndirimStats(){
+  var t=codes.length,a=codes.filter(function(c){return c&&c.status==='aktif';}).length,d=t-a;
+  document.getElementById('indirim-stats').innerHTML=
+    '<div class="kpi"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+t.toLocaleString('tr-TR')+'</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Aktif</div><div class="kpi-val gn">'+a.toLocaleString('tr-TR')+'</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+d.toLocaleString('tr-TR')+'</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Bugün Kullanılan</div><div class="kpi-val bl">'+codes.filter(function(c){return c&&c.date===todayStr();}).length+'</div></div>';
+}
+function applyFilter(){
+  var q=document.getElementById('si1').value.trim().toUpperCase();
+  var s=document.getElementById('sf1').value;
+  fil=codes.filter(function(c){return c&&(!q||c.code.indexOf(q)>=0)&&(s==='hepsi'||(s==='aktif'&&c.status==='aktif')||(s==='deaktif'&&c.status==='deaktif'));});
+  pg=1;renderIndirim();
+}
+function renderIndirim(){
+  var tb=document.getElementById('tbody'),start=(pg-1)*PG,page=fil.slice(start,start+PG);
+  if(!page.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--mu)">Sonuç bulunamadı</td></tr>';updatePag();return;}
+  var rows='';
+  for(var i=0;i<page.length;i++){
+    var c=page[i],gi=-1;
+    for(var j=0;j<codes.length;j++){if(codes[j]&&codes[j].code===c.code){gi=j;break;}}
+    var badge=c.status==='aktif'?'<span class="badge ba">AKTİF</span>':'<span class="badge bdd">DEAKTİF</span>';
+    var btn=c.status==='aktif'?'<button class="btn btn-sm btn-r" onclick="confDe('+gi+')">Deaktif</button>':'<button class="btn btn-sm btn-g" onclick="reAk('+gi+')">Aktif Et</button>';
+    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td style="color:var(--mu)">%10</td><td>'+badge+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
+  }
+  tb.innerHTML=rows;updatePag();
+}
+function updatePag(){
+  var t=fil.length,pages=Math.ceil(t/PG)||1;
+  document.getElementById('pi1').textContent=t.toLocaleString('tr-TR')+' sonuç — Sayfa '+pg+' / '+pages;
+  document.getElementById('pb1').disabled=pg<=1;document.getElementById('nb1').disabled=pg>=pages;
+}
+function changePg(d){pg+=d;renderIndirim();}
+function confDe(idx){if(!confirm('"'+codes[idx].code+'" deaktif edilsin mi?'))return;db.ref('codes/'+idx).update({status:'deaktif',date:todayStr()},function(err){if(!err)toast('Deaktif edildi','ok');});}
+function reAk(idx){db.ref('codes/'+idx).update({status:'aktif',date:''},function(err){if(!err)toast('Aktif edildi','ok');});}
+function openBulk(){document.getElementById('bki').value='';document.getElementById('ov3').classList.add('open');}
+function bulkDo(){
+  var list=document.getElementById('bki').value.split(',').map(function(s){return s.trim().toUpperCase();}).filter(Boolean);
+  var count=0,now=todayStr();
+  for(var i=0;i<list.length;i++)for(var j=0;j<codes.length;j++)if(codes[j]&&codes[j].code===list[i]&&codes[j].status==='aktif'){db.ref('codes/'+j).update({status:'deaktif',date:now});count++;break;}
+  document.getElementById('ov3').classList.remove('open');toast(count+' kod deaktif edildi','ok');
+}
+
+// ADMİN
+function renderAdminPage(){
+  document.getElementById('adminTotalTickets').textContent=tickets.reduce(function(a,t){return a+(t?((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)):0);},0).toLocaleString('tr-TR');
+  document.getElementById('adminTotalGelir').textContent=fmtMoney(tickets.reduce(function(a,t){return a+(t?(t.toplam||0):0);},0));
+  document.getElementById('adminAktifKod').textContent=codes.filter(function(c){return c&&c.status==='aktif';}).length.toLocaleString('tr-TR');
+  loadUserList();
+}
+function loadUserList(){
+  usersRef.once('value',function(snap){
+    var data=snap.val()||{},html='';
+    Object.keys(data).forEach(function(uid){
+      var u=data[uid];
+      var rb=u.role==='admin'?'<span class="role-badge role-admin">Admin</span>':'<span class="role-badge role-gise">Gişe</span>';
+      html+='<div class="user-row"><div><div class="user-name">'+u.name+'</div><div class="user-role-txt">'+u.email+'</div></div>'+rb+'</div>';
+    });
+    var el=document.getElementById('userList');if(el)el.innerHTML=html||'<div style="color:var(--mu);font-size:13px;padding:1rem 0">Henüz kullanıcı yok</div>';
+  });
+}
+function openAddUser(){document.getElementById('ov-adduser').classList.add('open');}
+function addUser(){
+  var email=document.getElementById('nu-email').value.trim();
+  var pass=document.getElementById('nu-pass').value;
+  var name=document.getElementById('nu-name').value.trim();
+  var role=document.getElementById('nu-role').value;
+  if(!email||!pass||!name){toast('Tüm alanları doldurun','err');return;}
+  var sa=firebase.initializeApp(firebaseConfig,'sec_'+Date.now());
+  sa.auth().createUserWithEmailAndPassword(email,pass)
+    .then(function(c){return usersRef.child(c.user.uid).set({name:name,email:email,role:role});})
+    .then(function(){sa.delete();document.getElementById('ov-adduser').classList.remove('open');toast(name+' eklendi!','ok');loadUserList();})
+    .catch(function(err){sa.delete();toast(err.code==='auth/email-already-in-use'?'Bu e-posta zaten kayıtlı.':'Hata: '+err.message,'err');});
+}
+
+function doExport(){
+  var data={tarih:todayStr(),tickets:tickets};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='stardust_yedek_'+todayStr().replace(/\./g,'-')+'.json';a.click();
+  toast('Yedek alındı!','ok');
+}
+
+var tt;
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},3500);}
+</script>
+</body>
+</html>
