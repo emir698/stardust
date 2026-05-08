@@ -247,10 +247,10 @@ td{padding:10px 14px}
       <div class="kapi-wrap">
         <div style="margin-bottom:1.5rem">
           <div style="font-size:15px;font-weight:600;margin-bottom:6px">Kapı Kontrol</div>
-          <div style="font-size:13px;color:var(--mu)">PNR kodu veya bilet numarası girin — sorgulayın, sonra giriş verin</div>
+          <div style="font-size:13px;color:var(--mu)">PNR, bilet numarası veya ad soyad ile sorgulayın</div>
         </div>
         <div style="display:flex;gap:10px;margin-bottom:1rem">
-          <input class="scan-input" type="text" id="scanInput" placeholder="PNR-XXXXXXXX veya SD-X-XXXXX..." style="flex:1;font-size:14px;letter-spacing:1px" autocomplete="off" onkeydown="if(event.key==='Enter')sorgulaKod()">
+          <input class="scan-input" type="text" id="scanInput" placeholder="PNR / Bilet No / Ad Soyad..." style="flex:1;font-size:14px;letter-spacing:0" autocomplete="off" onkeydown="if(event.key==='Enter')sorgulaKod()">
           <button class="btn btn-ac" onclick="sorgulaKod()" style="padding:12px 20px;font-size:15px">Sorgula</button>
         </div>
         <div class="scan-result" id="scanResult">
@@ -702,14 +702,51 @@ function closeBiletModal(){document.getElementById('ov-bilet').classList.remove(
 var currentSorgu=null; // {type:'pnr'/'bilet', data:...}
 
 function sorgulaKod(){
-  var val=document.getElementById('scanInput').value.trim().toUpperCase();
-  if(!val){toast('Kod giriniz','err');return;}
+  var val=document.getElementById('scanInput').value.trim();
+  if(!val){toast('Kod veya isim giriniz','err');return;}
   var res=document.getElementById('scanResult');
   res.style.display='none';
   currentSorgu=null;
   document.getElementById('girisVerBtn').style.display='none';
 
-  if(val.startsWith('PNR-')){
+  var valUpper=val.toUpperCase();
+
+  // Ad soyad ile arama
+  if(!valUpper.startsWith('PNR-')&&!valUpper.startsWith('SD-')){
+    var aramaStr=val.toLowerCase().trim();
+    var bulunanlar=tickets.filter(function(t){
+      return t&&t.musteriAd&&t.musteriAd.toLowerCase().indexOf(aramaStr)>=0;
+    });
+    if(bulunanlar.length===0){
+      res.style.display='block';
+      res.className='scan-result invalid';
+      document.getElementById('scanIcon').textContent='✗';
+      document.getElementById('scanMsg').textContent='Kayıt Bulunamadı';
+      document.getElementById('scanDetail').textContent='"'+val+'" adında kayıtlı bilet yok.';
+      return;
+    }
+    res.style.display='block';
+    res.className='scan-result valid';
+    document.getElementById('scanIcon').textContent='🔍';
+    document.getElementById('scanMsg').textContent=bulunanlar.length+' Kayıt Bulundu';
+    var detailHtml='';
+    bulunanlar.forEach(function(t){
+      var kullanildi=t.biletler&&t.biletler.length>0?false:false;
+      detailHtml+='<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-top:8px;text-align:left">'+
+        '<div style="font-weight:600;margin-bottom:4px">'+t.musteriAd+'</div>'+
+        '<div style="font-size:12px;color:var(--mu)">'+t.tarih+' · Seans '+t.seans+' · '+(t.musteriTel||'')+'</div>'+
+        '<div style="font-size:12px;margin-top:4px">Tam: '+(t.tam||0)+' · Çocuk: '+(t.cocuk||0)+' · Yabancı: '+(t.yabanci||0)+'</div>'+
+        '<div style="font-size:12px;color:var(--ac);font-family:var(--mo);margin-top:4px">PNR: '+(t.pnr||'-')+'</div>'+
+        (t.pnr?'<button class="btn btn-ac btn-sm" onclick="sorguPNR(''+t.pnr+'')" style="margin-top:8px">Bu PNR'ı Seç</button>':'')+
+      '</div>';
+    });
+    document.getElementById('scanDetail').innerHTML=detailHtml;
+    document.getElementById('girisVerBtn').style.display='none';
+    return;
+  }
+
+  if(valUpper.startsWith('PNR-')){
+    val=valUpper;
     // PNR sorgusu
     db.ref('pnrler/'+val).once('value',function(snap){
       var p=snap.val();
@@ -747,6 +784,7 @@ function sorgulaKod(){
     });
   } else {
     // Tekil bilet sorgusu
+    val=valUpper;
     biletlerRef.child(val).once('value',function(snap){
       var b=snap.val();
       res.style.display='block';
@@ -778,6 +816,11 @@ function sorgulaKod(){
       currentSorgu={type:'bilet',no:val,data:b};
     });
   }
+}
+
+function sorguPNR(pnr){
+  document.getElementById('scanInput').value=pnr;
+  sorgulaKod();
 }
 
 function girisVer(){
