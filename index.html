@@ -729,15 +729,12 @@ function sorgulaKod(){
     res.className='scan-result valid';
     document.getElementById('scanIcon').textContent='🔍';
     document.getElementById('scanMsg').textContent=bulunanlar.length+' Kayıt Bulundu';
-    var detailHtml='';
     bulunanlar.forEach(function(t){
-      var kullanildi=t.biletler&&t.biletler.length>0?false:false;
       detailHtml+='<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-top:8px;text-align:left">'+
         '<div style="font-weight:600;margin-bottom:4px">'+t.musteriAd+'</div>'+
         '<div style="font-size:12px;color:var(--mu)">'+t.tarih+' · Seans '+t.seans+' · '+(t.musteriTel||'')+'</div>'+
         '<div style="font-size:12px;margin-top:4px">Tam: '+(t.tam||0)+' · Çocuk: '+(t.cocuk||0)+' · Yabancı: '+(t.yabanci||0)+'</div>'+
         '<div style="font-size:12px;color:var(--ac);font-family:var(--mo);margin-top:4px">PNR: '+(t.pnr||'-')+'</div>'+
-        (t.pnr?'<button class="btn btn-ac btn-sm" onclick="sorguPNR(''+t.pnr+'')" style="margin-top:8px">Bu PNR'ı Seç</button>':'')+
       '</div>';
     });
     // detailEl already populated above
