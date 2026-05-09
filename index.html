@@ -740,7 +740,7 @@ function sorgulaKod(){
         (t.pnr?'<button class="btn btn-ac btn-sm" onclick="sorguPNR(''+t.pnr+'')" style="margin-top:8px">Bu PNR'ı Seç</button>':'')+
       '</div>';
     });
-    document.getElementById('scanDetail').innerHTML=detailHtml;
+    // detailEl already populated above
     document.getElementById('girisVerBtn').style.display='none';
     return;
   }
