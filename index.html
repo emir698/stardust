@@ -188,6 +188,7 @@ td{padding:10px 14px}
     <div class="top-right">
       <span class="user-badge"><span class="sync-dot"></span><span id="userLabel">-</span></span>
       <button class="btn btn-ac admin-only" onclick="doExport()">Yedek Al</button>
+      <button class="btn btn-r admin-only" onclick="sifirlaVeriler()">🗑️ Veriyi Sıfırla</button>
       <button class="btn" onclick="doLogout()">Çıkış</button>
     </div>
   </div>
@@ -1375,6 +1376,26 @@ function addUser(){
     .then(function(c){return usersRef.child(c.user.uid).set({name:name,email:email,role:role});})
     .then(function(){sa.delete();document.getElementById('ov-adduser').classList.remove('open');toast(name+' eklendi!','ok');loadUserList();})
     .catch(function(err){sa.delete();toast(err.code==='auth/email-already-in-use'?'Bu e-posta zaten kayıtlı.':'Hata: '+err.message,'err');});
+}
+
+function sifirlaVeriler(){
+  if(!confirm('TÜM bilet ve satış verileri silinecek! Bu işlem geri alınamaz. Emin misiniz?')) return;
+  if(!confirm('Son kez onaylıyorsunuz. Tüm veriler silinsin mi?')) return;
+  var updates={};
+  updates['tickets']=null;
+  updates['biletler']=null;
+  updates['pnrler']=null;
+  db.ref().update(updates,function(err){
+    if(err){toast('Hata: '+err.message,'err');}
+    else{
+      tickets=[];
+      biletler={};
+      buildSeansTickets();
+      toast('Tüm veriler sıfırlandı!','ok');
+      if(document.getElementById('page-dashboard').style.display!=='none') renderDashboard();
+      if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
+    }
+  });
 }
 
 function doExport(){
