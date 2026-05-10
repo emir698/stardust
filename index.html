@@ -244,32 +244,77 @@ td{padding:10px 14px}
 
     <!-- KAPI -->
     <div id="page-kapi" style="display:none">
-      <div class="kapi-wrap">
-        <div style="margin-bottom:1.5rem">
-          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Kapı Kontrol</div>
-          <div style="font-size:13px;color:var(--mu)">PNR, bilet numarası veya ad soyad ile sorgulayın</div>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:1rem">
-          <input class="scan-input" type="text" id="scanInput" placeholder="PNR / Bilet No / Ad Soyad..." style="flex:1;font-size:14px;letter-spacing:0" autocomplete="off" onkeydown="if(event.key==='Enter')sorgulaKod()">
-          <button class="btn btn-ac" onclick="sorgulaKod()" style="padding:12px 20px;font-size:15px">Sorgula</button>
-        </div>
-        <div class="scan-result" id="scanResult">
-          <div class="scan-icon" id="scanIcon"></div>
-          <div class="scan-msg" id="scanMsg"></div>
-          <div class="scan-detail" id="scanDetail"></div>
-          <div id="girisVerBtn" style="margin-top:1rem;display:none">
-            <button class="btn btn-ac" onclick="girisVer()" style="font-size:15px;padding:12px 32px">✓ Giriş Ver</button>
+
+      <!-- Tarih Seçici -->
+      <div class="page-section">
+        <div class="section-title">Gün Seç</div>
+        <div class="tarih-row" id="kapiTarihBtns"></div>
+      </div>
+
+      <!-- İstatistikler -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem">
+        <div class="kpi"><div class="kpi-label">Seçili Gün Toplam Bilet</div><div class="kpi-val ac" id="kapiTotal">0</div></div>
+        <div class="kpi"><div class="kpi-label">Giriş Yapıldı</div><div class="kpi-val gn" id="kapiGiris">0</div></div>
+      </div>
+
+      <!-- Sorgulama Bölümleri -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:1.5rem">
+
+        <!-- PNR Sorgula -->
+        <div class="page-section" style="margin-bottom:0">
+          <div class="section-title">PNR ile Sorgula</div>
+          <div style="display:flex;gap:8px;flex-direction:column">
+            <input type="text" id="pnrInput" class="form-input" placeholder="PNR-XXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaPNR()">
+            <button class="btn btn-ac" onclick="sorgulaPNR()">Sorgula</button>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1.5rem">
-          <div class="kpi"><div class="kpi-label">Toplam Bilet</div><div class="kpi-val ac" id="kapiTotal">0</div></div>
-          <div class="kpi"><div class="kpi-label">Giriş Yapıldı</div><div class="kpi-val gn" id="kapiGiris">0</div></div>
+
+        <!-- Bilet No Sorgula -->
+        <div class="page-section" style="margin-bottom:0">
+          <div class="section-title">Bilet No ile Sorgula</div>
+          <div style="display:flex;gap:8px;flex-direction:column">
+            <input type="text" id="biletNoInput" class="form-input" placeholder="SD-X-XXXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaBiletNo()">
+            <button class="btn btn-ac" onclick="sorgulaBiletNo()">Sorgula</button>
+          </div>
         </div>
-        <div style="margin-top:1.5rem" class="tw">
-          <table><thead><tr><th>PNR / Bilet No</th><th>Ad Soyad</th><th>Seans</th><th>Tür</th><th>Tarih</th><th>Saat</th></tr></thead>
-          <tbody id="kapiLog"></tbody></table>
+
+        <!-- Ad Soyad Sorgula -->
+        <div class="page-section" style="margin-bottom:0">
+          <div class="section-title">Ad Soyad ile Sorgula</div>
+          <div style="display:flex;gap:8px;flex-direction:column">
+            <input type="text" id="isimInput" class="form-input" placeholder="Ad veya soyad..." onkeydown="if(event.key==='Enter')sorgulaIsim()">
+            <button class="btn btn-ac" onclick="sorgulaIsim()">Sorgula</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sorgu Sonucu -->
+      <div class="scan-result" id="scanResult" style="margin-bottom:1.5rem">
+        <div class="scan-icon" id="scanIcon"></div>
+        <div class="scan-msg" id="scanMsg"></div>
+        <div class="scan-detail" id="scanDetail"></div>
+        <div id="girisVerBtn" style="margin-top:1rem;display:none">
+          <button class="btn btn-ac" onclick="girisVer()" style="font-size:15px;padding:12px 32px">✓ Giriş Ver</button>
         </div>
       </div>
+
+      <!-- Seçili Günün Biletleri -->
+      <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Seçili Günün Biletleri</div>
+      <div class="tw" style="margin-bottom:1.5rem">
+        <table>
+          <thead><tr><th>PNR</th><th>Ad Soyad</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Durum</th><th>İşlem</th></tr></thead>
+          <tbody id="kapiGunBiletler"></tbody>
+        </table>
+      </div>
+
+      <!-- Son Girişler -->
+      <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Son Girişler</div>
+      <div class="tw">
+        <table><thead><tr><th>PNR / Bilet No</th><th>Ad Soyad</th><th>Seans</th><th>Tür</th><th>Saat</th></tr></thead>
+        <tbody id="kapiLog"></tbody>
+      </table></div>
+
     </div>
 
     <!-- DASHBOARD -->
@@ -866,6 +911,40 @@ function sorgulaPNR(){
   });
 }
 
+function sorgulaBiletNo(){
+  var val=document.getElementById('biletNoInput').value.trim().toUpperCase();
+  if(!val){toast('Bilet numarası giriniz','err');return;}
+  resetSorgu();
+  biletlerRef.child(val).once('value',function(snap){
+    var b=snap.val();
+    var res=document.getElementById('scanResult');
+    res.style.display='block';
+    if(!b){
+      res.className='scan-result invalid';
+      document.getElementById('scanIcon').textContent='✗';
+      document.getElementById('scanMsg').textContent='Geçersiz Bilet';
+      document.getElementById('scanDetail').textContent='Bu bilet numarası sistemde bulunamadı.';
+      return;
+    }
+    if(b.kullanildi){
+      res.className='scan-result invalid';
+      document.getElementById('scanIcon').textContent='✗';
+      document.getElementById('scanMsg').textContent='Bilet Kullanılmış';
+      document.getElementById('scanDetail').innerHTML='<strong>'+(b.musteriAd||'')+'</strong><br>Seans: '+b.seans+' · '+b.tur+'<br><span style="color:var(--rd)">'+b.kullanildiSaat+' saatinde giriş yapıldı.</span>';
+      return;
+    }
+    res.className='scan-result valid';
+    document.getElementById('scanIcon').textContent='🎫';
+    document.getElementById('scanMsg').textContent='Bilet Geçerli';
+    document.getElementById('scanDetail').innerHTML=
+      '<strong>'+(b.musteriAd||'')+'</strong><br>'+
+      'PNR: '+(b.pnr||'-')+'<br>'+
+      'Seans: '+b.seans+' · '+b.tur+' · '+b.tarih;
+    document.getElementById('girisVerBtn').style.display='block';
+    currentSorgu={type:'bilet',no:val,data:b};
+  });
+}
+
 function sorgulaIsim(){
   var val=document.getElementById('isimInput').value.trim();
   if(!val){toast('İsim giriniz','err');return;}
@@ -918,7 +997,13 @@ function resetSorgu(){
 }
 
 function sorgulaKod(){
-  var val=document.getElementById('scanInput').value.trim();
+  // Legacy - redirect to appropriate function
+  var val=document.getElementById('pnrInput')?document.getElementById('pnrInput').value.trim():'';
+  if(val) sorgulaPNR();
+}
+
+function _sorgulaKodOld(){
+  var val='';
   if(!val){toast('Kod veya isim giriniz','err');return;}
   var res=document.getElementById('scanResult');
   res.style.display='none';
@@ -1251,3 +1336,4 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 </script>
 </body>
 </html>
+
