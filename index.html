@@ -319,6 +319,7 @@ td{padding:10px 14px}
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" style="display:none">
+      <!-- Tarih filtresi -->
       <div class="date-filter">
         <label>Tarih Aralığı:</label>
         <input type="date" class="date-input" id="dashStart">
@@ -327,34 +328,27 @@ td{padding:10px 14px}
         <button class="btn btn-ac" onclick="renderDashboard()">Filtrele</button>
         <button class="btn" onclick="resetDateFilter()">Bugün</button>
       </div>
+
+      <!-- KPI Kartları -->
       <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- Ay Seçici -->
+      <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap" id="aySecici"></div>
+
+      <!-- Ay KPI -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem" id="ayKpiGrid"></div>
+
+      <!-- Bilet Türü + Seans Bazlı -->
       <div class="dash-grid">
-        <div class="panel">
-          <div class="panel-title">Günlük Bilet Satışı</div>
-          <div style="display:flex;align-items:flex-end;gap:4px;height:100px" id="dailyBars"></div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--mu);font-family:var(--mo)" id="dailyLabels"></div>
-        </div>
         <div class="panel">
           <div class="panel-title">Bilet Türü Dağılımı</div>
           <div class="donut-wrap" id="donutWrap"></div>
-        </div>
-      </div>
-      <div class="dash-grid">
-        <div class="panel">
-          <div class="panel-title">Günlük Gelir (₺)</div>
-          <div style="display:flex;align-items:flex-end;gap:4px;height:100px" id="ciroBars"></div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--mu);font-family:var(--mo)" id="ciroLabels"></div>
         </div>
         <div class="panel">
           <div class="panel-title">Seans Bazlı Satış</div>
           <div id="seansSatisPanel"></div>
         </div>
       </div>
-      <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Satış Geçmişi</div>
-      <div class="tw">
-        <table><thead><tr><th>Tarih</th><th>Müşteri</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Kişi</th><th>Gelir</th></tr></thead>
-        <tbody id="dashSatislar"></tbody>
-      </table></div>
     </div>
 
     <!-- İNDİRİM KODLARI -->
@@ -1222,86 +1216,74 @@ function renderKapiLog(){
 }
 
 // DASHBOARD
+var selectedAy=null;
+var AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
 function renderDashboard(){
   var range=getDateRange();
   var filtered=tickets.filter(function(t){return t&&t.tarih&&dateInRange(t.tarih,range.start,range.end);});
   var bugunBilet=filtered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
   var bugunGelir=filtered.reduce(function(a,t){return a+(t.toplam||0);},0);
-  var toplamBilet=tickets.reduce(function(a,t){return a+(t?((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)):0);},0);
-  var toplamGelir=tickets.reduce(function(a,t){return a+(t?(t.toplam||0):0);},0);
+  var today=todayStr();
+  var todayBilet=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
+  var todayGelir=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.toplam||0);},0);
 
   document.getElementById('kpiGrid').innerHTML=
     '<div class="kpi"><div class="kpi-label">Seçili Dönem Bilet</div><div class="kpi-val ac">'+bugunBilet+'</div><div class="kpi-sub">kişi</div></div>'+
     '<div class="kpi"><div class="kpi-label">Seçili Dönem Gelir</div><div class="kpi-val gn">'+fmtMoney(bugunGelir)+'</div></div>'+
-    '<div class="kpi"><div class="kpi-label">Toplam Bilet</div><div class="kpi-val bl">'+toplamBilet+'</div></div>'+
-    '<div class="kpi"><div class="kpi-label">Toplam Gelir</div><div class="kpi-val ac">'+fmtMoney(toplamGelir)+'</div></div>';
+    '<div class="kpi"><div class="kpi-label">Bugün Bilet</div><div class="kpi-val bl">'+todayBilet+'</div><div class="kpi-sub">kişi</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Bugün Gelir</div><div class="kpi-val ac">'+fmtMoney(todayGelir)+'</div></div>';
 
-  // Günlük bilet ve ciro grafikleri
-  var days=[];
-  if(range.start&&range.end){
-    var cur=range.start;
-    while(cur<=range.end&&days.length<60){days.push(cur);cur=addDays(cur,1);}
-  } else {
-    var today=todayStr();
-    for(var i=13;i>=0;i--)days.push(addDays(today,-i));
+  // Ay seçici - hangi ayların verisi var?
+  var yil=new Date().getFullYear();
+  var aySecEl=document.getElementById('aySecici');
+  aySecEl.innerHTML='';
+  for(var m=1;m<=12;m++){
+    var mm=pad(m);
+    var ayTickets=tickets.filter(function(t){return t&&t.tarih&&t.tarih.slice(3,5)===mm&&t.tarih.slice(6)===String(yil);});
+    if(ayTickets.length===0&&m!==new Date().getMonth()+1) continue;
+    (function(month,mmStr){
+      var btn=document.createElement('button');
+      var isSelected=selectedAy===month;
+      btn.className='tarih-btn'+(isSelected?' active':'');
+      btn.textContent=AYLAR[month-1]+' '+yil;
+      btn.onclick=function(){selectedAy=month;renderDashboard();};
+      aySecEl.appendChild(btn);
+    })(m,mm);
   }
+  if(!selectedAy) selectedAy=new Date().getMonth()+1;
 
-  var biletData=days.map(function(d){return filtered.filter(function(t){return t.tarih===d;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);});
-  var ciroData=days.map(function(d){return filtered.filter(function(t){return t.tarih===d;}).reduce(function(a,t){return a+(t.toplam||0);},0);});
-  var maxB=Math.max.apply(null,biletData)||1;
-  var maxC=Math.max.apply(null,ciroData)||1;
-  var today=todayStr();
+  // Seçili ay verisi
+  var ayMm=pad(selectedAy);
+  var ayFiltered=tickets.filter(function(t){return t&&t.tarih&&t.tarih.slice(3,5)===ayMm&&t.tarih.slice(6)===String(yil);});
+  var ayBilet=ayFiltered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
+  var ayGelir=ayFiltered.reduce(function(a,t){return a+(t.toplam||0);},0);
 
-  var bHtml='',bLHtml='',cHtml='',cLHtml='';
-  days.forEach(function(d,i){
-    var vb=biletData[i],vc=ciroData[i];
-    var hb=vb>0?Math.max(Math.round((vb/maxB)*95),4):2;
-    var hc=vc>0?Math.max(Math.round((vc/maxC)*95),4):2;
-    var lbl=parseInt(d.split('.')[0]);
-    var isToday=d===today;
-    bHtml+='<div class="mini-bar-wrap"><div class="mini-val">'+(vb>0?vb:'')+'</div><div class="mini-bar'+(isToday?' active':vb>0?'':' zero')+'" style="height:'+hb+'px" title="'+d+': '+vb+' bilet"></div><div class="mini-lbl">'+lbl+'</div></div>';
-    cHtml+='<div class="mini-bar-wrap"><div class="mini-val">'+(vc>0?Math.round(vc/1000)+'K':'')+'</div><div class="mini-bar'+(isToday?' active':vc>0?'':' zero')+'" style="height:'+hc+'px;background:'+(isToday?'var(--gn)':'var(--bl)')+'" title="'+d+': '+fmtMoney(vc)+'"></div><div class="mini-lbl">'+lbl+'</div></div>';
-  });
-  document.getElementById('dailyBars').innerHTML=bHtml;
-  document.getElementById('ciroBars').innerHTML=cHtml;
+  document.getElementById('ayKpiGrid').innerHTML=
+    '<div class="kpi"><div class="kpi-label">'+AYLAR[selectedAy-1]+' Toplam Bilet</div><div class="kpi-val bl">'+ayBilet+'</div><div class="kpi-sub">kişi</div></div>'+
+    '<div class="kpi"><div class="kpi-label">'+AYLAR[selectedAy-1]+' Toplam Gelir</div><div class="kpi-val" style="color:var(--ac)">'+fmtMoney(ayGelir)+'</div></div>';
 
-  // Bilet türü donut
+  // Bilet türü donut - seçili dönem
   var totTam=filtered.reduce(function(a,t){return a+(t.tam||0);},0);
   var totCocuk=filtered.reduce(function(a,t){return a+(t.cocuk||0);},0);
   var totYab=filtered.reduce(function(a,t){return a+(t.yabanci||0);},0);
   renderDonut(totTam,totCocuk,totYab);
 
-  // Seans bazlı satış
-  var spHtml='';
-  for(var i=1;i<=4;i++){
-    var st=filtered.filter(function(t){return t.seans===i;});
+  // Seans bazlı satış - gerçek saatler
+  var tumSaatler=['20:45','21:00','21:30','22:00','22:30'];
+  var spEl=document.getElementById('seansSatisPanel');
+  spEl.innerHTML='';
+  tumSaatler.forEach(function(saat,idx){
+    var st=filtered.filter(function(t){return t.seans===saat;});
     var stB=st.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
     var stG=st.reduce(function(a,t){return a+(t.toplam||0);},0);
-    spHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)">'+
-      '<div style="font-size:13px">Seans '+i+'</div>'+
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:10px 0;'+(idx<tumSaatler.length-1?'border-bottom:1px solid var(--bd)':'');
+    row.innerHTML='<div style="font-size:13px;font-family:var(--mo)">'+saat+'</div>'+
       '<div style="font-family:var(--mo);font-size:13px;color:var(--ac)">'+stB+' kişi</div>'+
-      '<div style="font-family:var(--mo);font-size:12px;color:var(--gn)">'+fmtMoney(stG)+'</div>'+
-    '</div>';
-  }
-  document.getElementById('seansSatisPanel').innerHTML=spHtml;
-
-  // Satış geçmişi
-  var sorted=filtered.sort(function(a,b){
-    return (b.tarih.split('.').reverse().join('')+(b.saat||'')).localeCompare(a.tarih.split('.').reverse().join('')+(a.saat||''));
+      '<div style="font-family:var(--mo);font-size:12px;color:var(--gn)">'+fmtMoney(stG)+'</div>';
+    spEl.appendChild(row);
   });
-  var rows='';
-  sorted.slice(0,50).forEach(function(t){
-    rows+='<tr>'+
-      '<td class="dc">'+t.tarih+'</td>'+
-      '<td style="font-size:12px">'+(t.musteriAd||'-')+'</td>'+
-      '<td class="dc">'+(t.musteriTel||'-')+'</td>'+
-      '<td>Seans '+t.seans+'</td>'+
-      '<td>'+(t.tam||0)+'</td><td>'+(t.cocuk||0)+'</td><td>'+(t.yabanci||0)+'</td>'+
-      '<td>'+((t.tam||0)+(t.cocuk||0)+(t.yabanci||0))+'</td>'+
-      '<td style="color:var(--ac);font-family:var(--mo)">'+fmtMoney(t.toplam||0)+'</td>'+
-    '</tr>';
-  });
-  document.getElementById('dashSatislar').innerHTML=rows||'<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mu)">Seçili tarih aralığında satış yok</td></tr>';
 }
 
 function renderDonut(tam,cocuk,yab){
