@@ -945,15 +945,6 @@ function sorgulaKod(){
     res.className='scan-result valid';
     document.getElementById('scanIcon').textContent='🔍';
     document.getElementById('scanMsg').textContent=bulunanlar.length+' Kayıt Bulundu';
-    bulunanlar.forEach(function(t){
-      detailHtml+='<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-top:8px;text-align:left">'+
-        '<div style="font-weight:600;margin-bottom:4px">'+t.musteriAd+'</div>'+
-        '<div style="font-size:12px;color:var(--mu)">'+t.tarih+' · Seans '+t.seans+' · '+(t.musteriTel||'')+'</div>'+
-        '<div style="font-size:12px;margin-top:4px">Tam: '+(t.tam||0)+' · Çocuk: '+(t.cocuk||0)+' · Yabancı: '+(t.yabanci||0)+'</div>'+
-        '<div style="font-size:12px;color:var(--ac);font-family:var(--mo);margin-top:4px">PNR: '+(t.pnr||'-')+'</div>'+
-      '</div>';
-    });
-    // detailEl already populated above
     document.getElementById('girisVerBtn').style.display='none';
     return;
   }
