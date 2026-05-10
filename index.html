@@ -480,7 +480,7 @@ function loadTickets(){
     buildSeansTickets();
     if(document.getElementById('page-sat').style.display!=='none')refreshSeansGrid();
     if(document.getElementById('page-dashboard').style.display!=='none')renderDashboard();
-    updateKapiStats();
+    if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
   });
 }
 function loadBiletler(){
@@ -502,8 +502,9 @@ function buildSeansTickets(){
 
 function updateKapiStats(){
   var vals=Object.values(biletler);
-  var total=vals.length;
-  var giris=vals.filter(function(b){return b&&b.kullanildi;}).length;
+  var gunVals=kapiSelectedTarih?vals.filter(function(b){return b&&b.tarih===kapiSelectedTarih;}):vals;
+  var total=gunVals.length;
+  var giris=gunVals.filter(function(b){return b&&b.kullanildi;}).length;
   var elT=document.getElementById('kapiTotal');
   var elG=document.getElementById('kapiGiris');
   if(elT)elT.textContent=total;
@@ -519,7 +520,7 @@ function switchTab(id){
   if(id==='indirim'){renderIndirim();renderIndirimStats();}
   if(id==='dashboard')renderDashboard();
   if(id==='admin')renderAdminPage();
-  if(id==='kapi'){updateKapiStats();setTimeout(function(){document.getElementById('scanInput').focus();},100);}
+  if(id==='kapi'){buildKapiTarihBtns();updateKapiStats();renderKapiGunBiletler();}
 }
 
 // DATE FILTER
@@ -538,23 +539,63 @@ function getDateRange(){
 }
 
 // TARİH
+// Etkinlik takvimi
+var OZEL_GUNLER={
+  '19.05.2026':['20:45','21:00','21:30','22:00'],
+  '28.05.2026':['20:45','21:00','21:30','22:00','22:30']
+};
+var HAFTA_SEANS={
+  5:['20:45','21:00','21:30','22:00','22:30'], // Cuma
+  6:['20:45','21:00','21:30','22:00','22:30'], // Cumartesi
+  0:['20:45','21:00','21:30','22:00','22:30']  // Pazar
+};
+
+function getSaatler(ds){
+  if(OZEL_GUNLER[ds]) return OZEL_GUNLER[ds];
+  var p=ds.split('.');
+  var gun=new Date(p[2],p[1]-1,p[0]).getDay();
+  return HAFTA_SEANS[gun]||null;
+}
+
+function isEtkinlikGunu(ds){
+  return getSaatler(ds)!==null;
+}
+
 function buildTarihBtns(){
   var today=todayStr();
-  var container=document.getElementById('tarihBtns');container.innerHTML='';
-  for(var i=0;i<7;i++){
+  var container=document.getElementById('tarihBtns');
+  container.innerHTML='';
+  // Sonraki 30 gün içinde etkinlik günlerini bul
+  var etkinlikGunler=[];
+  for(var i=0;i<=30;i++){
     var d=addDays(today,i);
-    var label=i===0?'Bugün':(i===1?'Yarın':getDayName(d)+' '+parseInt(d.split('.')[0])+'.'+parseInt(d.split('.')[1]));
+    if(isEtkinlikGunu(d)) etkinlikGunler.push(d);
+    if(etkinlikGunler.length>=8) break;
+  }
+  etkinlikGunler.forEach(function(d){
+    var p=d.split('.');
+    var gun=new Date(p[2],p[1]-1,p[0]).getDay();
+    var gunAd=['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+    var label=d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(p[0])+'.'+parseInt(p[1]));
+    if(OZEL_GUNLER[d]) label+=' ⭐';
     var btn=document.createElement('button');
     btn.className='tarih-btn'+(selectedTarih===d?' active':'');
     btn.textContent=label;
     (function(date){btn.onclick=function(){selectTarih(date);};})(d);
     container.appendChild(btn);
-  }
+  });
   var inp=document.createElement('input');
   inp.type='date';inp.className='tarih-custom';inp.title='Özel tarih';
-  inp.onchange=function(){if(this.value){var p=this.value.split('-');selectTarih(pad(parseInt(p[2]))+'.'+pad(parseInt(p[1]))+'.'+p[0]);}};
+  inp.onchange=function(){
+    if(this.value){
+      var p=this.value.split('-');
+      var d=pad(parseInt(p[2]))+'.'+pad(parseInt(p[1]))+'.'+p[0];
+      if(!isEtkinlikGunu(d)){toast('Bu tarihte etkinlik yok!','err');return;}
+      selectTarih(d);
+    }
+  };
   container.appendChild(inp);
-  if(!selectedTarih)selectTarih(today);
+  if(!selectedTarih&&etkinlikGunler.length>0) selectTarih(etkinlikGunler[0]);
 }
 
 function selectTarih(d){
@@ -568,26 +609,31 @@ function selectTarih(d){
 
 function refreshSeansGrid(){
   if(!selectedTarih)return;
+  var saatler=getSaatler(selectedTarih)||[];
   var html='';
-  for(var i=1;i<=4;i++){
-    var key=selectedTarih+'_'+i;
+  saatler.forEach(function(saat){
+    var key=selectedTarih+'_'+saat;
     var sd=seansTickets[key]||{tam:0,cocuk:0,yabanci:0};
     var sold=sd.tam+sd.cocuk+sd.yabanci;
-    var sel=selectedSeans===i?' selected':'';
-    html+='<div class="seans-card'+sel+'" data-seans="'+i+'"><div class="seans-no">'+i+'</div><div class="seans-label">Seans</div><div class="seans-sold">'+sold+' / '+CAPACITY+'</div></div>';
-  }
+    var sel=selectedSeans===saat?' selected':'';
+    html+='<div class="seans-card'+sel+'" data-seans="'+saat+'">'+
+      '<div class="seans-no" style="font-size:20px">'+saat+'</div>'+
+      '<div class="seans-label">Seans</div>'+
+      '<div class="seans-sold">'+sold+' / '+CAPACITY+'</div>'+
+    '</div>';
+  });
   document.getElementById('seansGrid').innerHTML=html;
   document.querySelectorAll('.seans-card').forEach(function(el){
-    el.onclick=function(){selectSeans(parseInt(this.getAttribute('data-seans')));};
+    el.onclick=function(){selectSeans(this.getAttribute('data-seans'));};
   });
 }
 
-function selectSeans(n){
-  selectedSeans=n;qty={tam:0,cocuk:0,yabanci:0};
+function selectSeans(saat){
+  selectedSeans=saat;qty={tam:0,cocuk:0,yabanci:0};
   document.getElementById('qty-tam').textContent='0';
   document.getElementById('qty-cocuk').textContent='0';
   document.getElementById('qty-yabanci').textContent='0';
-  document.getElementById('secilenSeansLabel').textContent=n+' — '+selectedTarih;
+  document.getElementById('secilenSeansLabel').textContent=saat+' — '+selectedTarih;
   document.getElementById('biletSection').style.display='block';
   document.getElementById('ozetBox').style.display='none';
   document.getElementById('satBtn').disabled=true;
@@ -699,7 +745,169 @@ function gosterBiletler(biletlerArr,adSoyad,pnr){
 function closeBiletModal(){document.getElementById('ov-bilet').classList.remove('open');}
 
 // KAPI
-var currentSorgu=null; // {type:'pnr'/'bilet', data:...}
+var currentSorgu=null;
+var kapiSelectedTarih=null;
+
+function buildKapiTarihBtns(){
+  var today=todayStr();
+  var container=document.getElementById('kapiTarihBtns');
+  if(!container)return;
+  container.innerHTML='';
+  var gunler=[];
+  for(var i=-3;i<=14;i++){
+    var d=addDays(today,i);
+    if(isEtkinlikGunu(d)) gunler.push(d);
+    if(gunler.length>=10) break;
+  }
+  gunler.forEach(function(d){
+    var p=d.split('.');
+    var gun=new Date(p[2],p[1]-1,p[0]).getDay();
+    var gunAd=['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+    var label=d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(p[0])+'.'+parseInt(p[1]));
+    var btn=document.createElement('button');
+    btn.className='tarih-btn'+(kapiSelectedTarih===d?' active':'');
+    btn.textContent=label;
+    (function(date){btn.onclick=function(){selectKapiTarih(date);};})(d);
+    container.appendChild(btn);
+  });
+  if(!kapiSelectedTarih&&gunler.length>0) selectKapiTarih(gunler[0]);
+}
+
+function selectKapiTarih(d){
+  kapiSelectedTarih=d;
+  buildKapiTarihBtns();
+  updateKapiStats();
+  renderKapiGunBiletler();
+}
+
+function renderKapiGunBiletler(){
+  if(!kapiSelectedTarih)return;
+  var el=document.getElementById('kapiGunBiletler');
+  if(!el)return;
+  var gunTickets=tickets.filter(function(t){return t&&t.tarih===kapiSelectedTarih;});
+  if(!gunTickets.length){
+    el.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mu)">Bu gün için satış yok</td></tr>';
+    return;
+  }
+  var rows='';
+  gunTickets.forEach(function(t){
+    var kullanildi=false;
+    if(t.biletler&&t.biletler.length>0){
+      var hepsiKullanildi=t.biletler.every(function(bno){return biletler[bno]&&biletler[bno].kullanildi;});
+      kullanildi=hepsiKullanildi;
+    }
+    var durum=kullanildi?
+      '<span class="badge bdd">Kullanıldı</span>':
+      '<span class="badge ba">Bekliyor</span>';
+    var islemBtn=kullanildi?'':
+      '<button class="btn btn-sm btn-ac" onclick="hizliGiris(''+t.pnr+'')">Giriş Ver</button>';
+    rows+='<tr>'+
+      '<td><span class="cc" style="font-size:11px">'+(t.pnr||'-')+'</span></td>'+
+      '<td style="font-size:12px">'+(t.musteriAd||'-')+'</td>'+
+      '<td class="dc">'+(t.musteriTel||'-')+'</td>'+
+      '<td class="dc">'+(t.seans||'-')+'</td>'+
+      '<td>'+(t.tam||0)+'</td>'+
+      '<td>'+(t.cocuk||0)+'</td>'+
+      '<td>'+(t.yabanci||0)+'</td>'+
+      '<td>'+durum+'</td>'+
+      '<td>'+islemBtn+'</td>'+
+    '</tr>';
+  });
+  el.innerHTML=rows;
+}
+
+function hizliGiris(pnr){
+  if(!pnr)return;
+  document.getElementById('pnrInput').value=pnr;
+  sorgulaPNR();
+}
+
+function sorgulaPNR(){
+  var val=document.getElementById('pnrInput').value.trim().toUpperCase();
+  if(!val){toast('PNR giriniz','err');return;}
+  resetSorgu();
+  db.ref('pnrler/'+val).once('value',function(snap){
+    var p=snap.val();
+    var res=document.getElementById('scanResult');
+    res.style.display='block';
+    if(!p){
+      res.className='scan-result invalid';
+      document.getElementById('scanIcon').textContent='✗';
+      document.getElementById('scanMsg').textContent='PNR Bulunamadı';
+      document.getElementById('scanDetail').textContent='Bu PNR sistemde kayıtlı değil.';
+      return;
+    }
+    if(p.kullanildi){
+      res.className='scan-result invalid';
+      document.getElementById('scanIcon').textContent='✗';
+      document.getElementById('scanMsg').textContent='Zaten Kullanılmış';
+      document.getElementById('scanDetail').innerHTML='<strong>'+p.musteriAd+'</strong><br>'+p.tarih+' · '+p.seans+'<br><span style="color:var(--rd)">'+p.kullanildiSaat+' saatinde giriş yapıldı.</span>';
+      return;
+    }
+    res.className='scan-result valid';
+    document.getElementById('scanIcon').textContent='📋';
+    document.getElementById('scanMsg').textContent='PNR Bulundu';
+    document.getElementById('scanDetail').innerHTML=
+      '<strong>'+p.musteriAd+'</strong><br>'+
+      (p.musteriTel?'Tel: '+p.musteriTel+'<br>':'')+
+      p.tarih+' · Seans '+p.seans+'<br>'+
+      'Tam: '+p.tam+' · Çocuk: '+p.cocuk+' · Yabancı: '+p.yabanci+'<br>'+
+      'Toplam: '+((p.tam||0)+(p.cocuk||0)+(p.yabanci||0))+' kişi · '+fmtMoney(p.toplam);
+    document.getElementById('girisVerBtn').style.display='block';
+    currentSorgu={type:'pnr',pnr:val,data:p};
+  });
+}
+
+function sorgulaIsim(){
+  var val=document.getElementById('isimInput').value.trim();
+  if(!val){toast('İsim giriniz','err');return;}
+  resetSorgu();
+  var aramaStr=val.toLowerCase();
+  var bulunanlar=tickets.filter(function(t){
+    return t&&t.musteriAd&&t.musteriAd.toLowerCase().indexOf(aramaStr)>=0;
+  });
+  var res=document.getElementById('scanResult');
+  res.style.display='block';
+  if(!bulunanlar.length){
+    res.className='scan-result invalid';
+    document.getElementById('scanIcon').textContent='✗';
+    document.getElementById('scanMsg').textContent='Kayıt Bulunamadı';
+    document.getElementById('scanDetail').textContent='"'+val+'" için kayıt yok.';
+    return;
+  }
+  res.className='scan-result valid';
+  document.getElementById('scanIcon').textContent='🔍';
+  document.getElementById('scanMsg').textContent=bulunanlar.length+' Kayıt Bulundu';
+  var dc=document.getElementById('scanDetail');
+  dc.innerHTML='';
+  bulunanlar.forEach(function(t){
+    var d=document.createElement('div');
+    d.style.cssText='background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-top:8px;text-align:left';
+    d.innerHTML='<div style="font-weight:600">'+t.musteriAd+'</div>'+
+      '<div style="font-size:12px;color:var(--mu)">'+t.tarih+' · Seans '+t.seans+' · '+(t.musteriTel||'')+'</div>'+
+      '<div style="font-size:12px">Tam:'+(t.tam||0)+' Çocuk:'+(t.cocuk||0)+' Yabancı:'+(t.yabanci||0)+'</div>'+
+      '<div style="font-size:12px;color:var(--ac)">PNR: '+(t.pnr||'-')+'</div>';
+    if(t.pnr){
+      var btn=document.createElement('button');
+      btn.className='btn btn-ac btn-sm';
+      btn.style.marginTop='8px';
+      btn.textContent='Bu PNR ile Sorgula';
+      btn.dataset.pnr=t.pnr;
+      btn.addEventListener('click',function(){
+        document.getElementById('pnrInput').value=this.dataset.pnr;
+        sorgulaPNR();
+      });
+      d.appendChild(btn);
+    }
+    dc.appendChild(d);
+  });
+}
+
+function resetSorgu(){
+  currentSorgu=null;
+  document.getElementById('girisVerBtn').style.display='none';
+  document.getElementById('scanResult').style.display='none';
+}
 
 function sorgulaKod(){
   var val=document.getElementById('scanInput').value.trim();
