@@ -789,7 +789,8 @@ function renderKapiGunBiletler(){
     el.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mu)">Bu gün için satış yok</td></tr>';
     return;
   }
-  var rows='';
+  var tbEl=document.getElementById('kapiGunBiletler');
+  tbEl.innerHTML='';
   gunTickets.forEach(function(t){
     var kullanildi=false;
     if(t.biletler&&t.biletler.length>0){
@@ -799,9 +800,8 @@ function renderKapiGunBiletler(){
     var durum=kullanildi?
       '<span class="badge bdd">Kullanıldı</span>':
       '<span class="badge ba">Bekliyor</span>';
-    var islemBtn=kullanildi?'':
-      '<button class="btn btn-sm btn-ac" onclick="hizliGiris(''+t.pnr+'')">Giriş Ver</button>';
-    rows+='<tr>'+
+    var tr=document.createElement('tr');
+    tr.innerHTML=
       '<td><span class="cc" style="font-size:11px">'+(t.pnr||'-')+'</span></td>'+
       '<td style="font-size:12px">'+(t.musteriAd||'-')+'</td>'+
       '<td class="dc">'+(t.musteriTel||'-')+'</td>'+
@@ -810,10 +810,18 @@ function renderKapiGunBiletler(){
       '<td>'+(t.cocuk||0)+'</td>'+
       '<td>'+(t.yabanci||0)+'</td>'+
       '<td>'+durum+'</td>'+
-      '<td>'+islemBtn+'</td>'+
-    '</tr>';
+      '<td></td>';
+    if(!kullanildi&&t.pnr){
+      var gb=document.createElement('button');
+      gb.className='btn btn-sm btn-ac';
+      gb.textContent='Giriş Ver';
+      gb.dataset.pnr=t.pnr;
+      gb.addEventListener('click',function(){hizliGiris(this.dataset.pnr);});
+      tr.querySelector('td:last-child').appendChild(gb);
+    }
+    tbEl.appendChild(tr);
   });
-  el.innerHTML=rows;
+  // rows rendered via DOM above
 }
 
 function hizliGiris(pnr){
