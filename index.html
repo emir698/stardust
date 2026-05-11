@@ -137,6 +137,7 @@ td{padding:10px 14px}
 .bilet-tam{background:#e8f5e9;color:#2e7d32}
 .bilet-cocuk{background:#e3f2fd;color:#1565c0}
 .bilet-yabanci{background:#fff3e0;color:#e65100}
+.bilet-aile{background:#f3e5f5;color:#7b1fa2}
 .bilet-no{font-size:9px;color:#aaa;text-align:center;margin-top:6px;font-family:monospace}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:2rem}
 .card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
@@ -232,8 +233,13 @@ td{padding:10px 14px}
         </div>
         <div class="bilet-row">
           <div><div class="bilet-type-name">Yabancı</div><div class="bilet-type-sub">Tüm yaşlar</div></div>
-          <div class="bilet-price">2.200 ₺</div>
+          <div class="bilet-price">2.250 ₺</div>
           <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('yabanci',-1)">−</button><span class="qty-num" id="qty-yabanci">0</span><button class="qty-btn" onclick="changeQty('yabanci',1)">+</button></div>
+        </div>
+        <div class="bilet-row">
+          <div><div class="bilet-type-name">Aile Paketi</div><div class="bilet-type-sub">2 Tam + 1 Çocuk veya 1 Tam + 2 Çocuk</div></div>
+          <div class="bilet-price">3.900 ₺</div>
+          <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('aile',-1)">−</button><span class="qty-num" id="qty-aile">0</span><button class="qty-btn" onclick="changeQty('aile',1)">+</button></div>
         </div>
         <div class="ozet-box" id="ozetBox" style="display:none"></div>
         <div style="display:flex;gap:10px;margin-top:1.25rem">
@@ -327,7 +333,6 @@ td{padding:10px 14px}
         <span style="color:var(--mu)">—</span>
         <input type="date" class="date-input" id="dashEnd">
         <button class="btn btn-ac" onclick="renderDashboard()">Filtrele</button>
-        <button class="btn" onclick="resetDateFilter()">Bugün</button>
       </div>
 
       <!-- KPI Kartları -->
@@ -440,7 +445,7 @@ var firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 var auth=firebase.auth(),db=firebase.database();
 var codesRef=db.ref('codes'),usersRef=db.ref('users'),ticketsRef=db.ref('tickets'),biletlerRef=db.ref('biletler');
-var PRICES={tam:1500,cocuk:1200,yabanci:2200},CAPACITY=250;
+var PRICES={tam:1500,cocuk:1200,yabanci:2250,aile:3900},CAPACITY=0;
 
 function pad(x){return x<10?'0'+x:String(x);}
 function todayStr(){var n=new Date();return pad(n.getDate())+'.'+pad(n.getMonth()+1)+'.'+n.getFullYear();}
@@ -460,7 +465,7 @@ function dateInRange(ds,start,end){
 
 var codes=[],tickets=[],biletler={},fil=[],pg=1,PG=30;
 var currentUser=null,currentRole=null,currentName=null;
-var selectedTarih=null,selectedSeans=null,qty={tam:0,cocuk:0,yabanci:0};
+var selectedTarih=null,selectedSeans=null,qty={tam:0,cocuk:0,yabanci:0,aile:0};
 var seansTickets={},kapiLogs=[];
 
 // AUTH
@@ -659,7 +664,7 @@ function refreshSeansGrid(){
     html+='<div class="seans-card'+sel+'" data-seans="'+saat+'">'+
       '<div class="seans-no" style="font-size:20px">'+saat+'</div>'+
       '<div class="seans-label">Seans</div>'+
-      '<div class="seans-sold">'+sold+' / '+CAPACITY+'</div>'+
+      '<div class="seans-sold">'+sold+' kişi</div>'+
     '</div>';
   });
   document.getElementById('seansGrid').innerHTML=html;
@@ -673,6 +678,7 @@ function selectSeans(saat){
   document.getElementById('qty-tam').textContent='0';
   document.getElementById('qty-cocuk').textContent='0';
   document.getElementById('qty-yabanci').textContent='0';
+  document.getElementById('qty-aile').textContent='0';
   document.getElementById('secilenSeansLabel').textContent=saat+' — '+selectedTarih;
   document.getElementById('biletSection').style.display='block';
   document.getElementById('ozetBox').style.display='none';
@@ -687,16 +693,17 @@ function changeQty(type,delta){
 }
 
 function updateOzet(){
-  var total=qty.tam+qty.cocuk+qty.yabanci;
-  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci;
-  document.getElementById('satBtn').disabled=total===0;
+  var total=qty.tam+qty.cocuk+qty.yabanci+(qty.aile*3);
+  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci+qty.aile*PRICES.aile;
+  document.getElementById('satBtn').disabled=(qty.tam+qty.cocuk+qty.yabanci+qty.aile)===0;
   var box=document.getElementById('ozetBox');
-  if(total===0){box.style.display='none';return;}
+  if(qty.tam+qty.cocuk+qty.yabanci+qty.aile===0){box.style.display='none';return;}
   box.style.display='block';
   var html='';
   if(qty.tam>0)html+='<div class="ozet-row"><span>Tam × '+qty.tam+'</span><span>'+fmtMoney(qty.tam*PRICES.tam)+'</span></div>';
   if(qty.cocuk>0)html+='<div class="ozet-row"><span>Çocuk × '+qty.cocuk+'</span><span>'+fmtMoney(qty.cocuk*PRICES.cocuk)+'</span></div>';
   if(qty.yabanci>0)html+='<div class="ozet-row"><span>Yabancı × '+qty.yabanci+'</span><span>'+fmtMoney(qty.yabanci*PRICES.yabanci)+'</span></div>';
+  if(qty.aile>0)html+='<div class="ozet-row"><span>Aile Paketi × '+qty.aile+'</span><span>'+fmtMoney(qty.aile*PRICES.aile)+'</span></div>';
   html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(gelir)+'</span></div>';
   box.innerHTML=html;
 }
@@ -715,13 +722,14 @@ function openSatisModal(){
   var ad=document.getElementById('musteriAd').value.trim();
   var soyad=document.getElementById('musteriSoyad').value.trim();
   if(!ad||!soyad){toast('Ad ve soyad giriniz!','err');return;}
-  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci;
+  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci+qty.aile*PRICES.aile;
   var html='<div style="background:var(--bg);border-radius:8px;padding:1rem;font-size:13px">';
   html+='<div style="margin-bottom:10px"><strong>'+ad+' '+soyad+'</strong></div>';
   html+='<div style="margin-bottom:10px;font-size:14px">'+selectedTarih+' — Seans '+selectedSeans+'</div>';
   if(qty.tam>0)html+='<div style="padding:4px 0">Tam: '+qty.tam+' × 1.500₺ = '+fmtMoney(qty.tam*PRICES.tam)+'</div>';
   if(qty.cocuk>0)html+='<div style="padding:4px 0">Çocuk: '+qty.cocuk+' × 1.200₺ = '+fmtMoney(qty.cocuk*PRICES.cocuk)+'</div>';
-  if(qty.yabanci>0)html+='<div style="padding:4px 0">Yabancı: '+qty.yabanci+' × 2.200₺ = '+fmtMoney(qty.yabanci*PRICES.yabanci)+'</div>';
+  if(qty.yabanci>0)html+='<div style="padding:4px 0">Yabancı: '+qty.yabanci+' × 2.250₺ = '+fmtMoney(qty.yabanci*PRICES.yabanci)+'</div>';
+  if(qty.aile>0)html+='<div style="padding:4px 0">Aile Paketi: '+qty.aile+' × 3.900₺ = '+fmtMoney(qty.aile*PRICES.aile)+'</div>';
   html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--ac)">Toplam: '+fmtMoney(gelir)+'</div></div>';
   document.getElementById('satisOzetModal').innerHTML=html;
   document.getElementById('ov-satis').classList.add('open');
@@ -739,14 +747,14 @@ function tamamlaSatis(){
   var satis={
     id:genID(),pnr:pnr,seans:selectedSeans,tarih:selectedTarih,
     saat:pad(now.getHours())+':'+pad(now.getMinutes()),
-    tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,
-    toplam:qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci,
+    tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,aile:qty.aile,
+    toplam:qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci+qty.aile*PRICES.aile,
     kasiyerAd:currentName,
     musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,
     biletler:[]
   };
   var biletlerArr=[];
-  var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'}];
+  var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'},{k:'aile',l:'Aile Paketi',cls:'bilet-aile'}];
   types.forEach(function(tp){
     for(var i=0;i<qty[tp.k];i++){
       var bNo='SD-'+selectedSeans+'-'+genID();
@@ -755,7 +763,7 @@ function tamamlaSatis(){
     }
   });
   ticketsRef.child(satis.id).set(satis);
-  db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:selectedTarih,seans:selectedSeans,tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,toplam:satis.toplam,biletler:satis.biletler,kullanildi:false});
+  db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:selectedTarih,seans:selectedSeans,tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,aile:qty.aile,toplam:satis.toplam,biletler:satis.biletler,kullanildi:false});
   biletlerArr.forEach(function(b){
     biletlerRef.child(b.no).set({no:b.no,pnr:b.pnr,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:b.saat,musteriAd:b.musteriAd,kullanildi:false});
   });
@@ -1238,17 +1246,14 @@ function renderDashboard(){
   var aySecEl=document.getElementById('aySecici');
   aySecEl.innerHTML='';
   for(var m=1;m<=12;m++){
-    var mm=pad(m);
-    var ayTickets=tickets.filter(function(t){return t&&t.tarih&&t.tarih.slice(3,5)===mm&&t.tarih.slice(6)===String(yil);});
-    if(ayTickets.length===0&&m!==new Date().getMonth()+1) continue;
-    (function(month,mmStr){
+    (function(month){
       var btn=document.createElement('button');
       var isSelected=selectedAy===month;
       btn.className='tarih-btn'+(isSelected?' active':'');
-      btn.textContent=AYLAR[month-1]+' '+yil;
+      btn.textContent=AYLAR[month-1];
       btn.onclick=function(){selectedAy=month;renderDashboard();};
       aySecEl.appendChild(btn);
-    })(m,mm);
+    })(m);
   }
   if(!selectedAy) selectedAy=new Date().getMonth()+1;
 
