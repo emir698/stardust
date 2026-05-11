@@ -137,7 +137,6 @@ td{padding:10px 14px}
 .bilet-tam{background:#e8f5e9;color:#2e7d32}
 .bilet-cocuk{background:#e3f2fd;color:#1565c0}
 .bilet-yabanci{background:#fff3e0;color:#e65100}
-.bilet-aile{background:#f3e5f5;color:#7b1fa2}
 .bilet-no{font-size:9px;color:#aaa;text-align:center;margin-top:6px;font-family:monospace}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:2rem}
 .card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
@@ -238,6 +237,18 @@ td{padding:10px 14px}
         </div>
 
         <div class="ozet-box" id="ozetBox" style="display:none"></div>
+
+        <!-- İndirim Kodu -->
+        <div id="indirimAlani" style="display:none;margin-top:1rem;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:1rem">
+          <div style="font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">İndirim Kodu</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="indirimKoduInput" class="form-input" placeholder="Kodu girin..." style="font-family:var(--mo);font-size:13px;letter-spacing:1px;flex:1" oninput="this.value=this.value.toUpperCase()">
+            <button class="btn btn-ac" onclick="indirimUygula()" id="indirimBtn">Uygula</button>
+            <button class="btn btn-r" onclick="indirimIptal()" id="indirimIptalBtn" style="display:none">İptal</button>
+          </div>
+          <div id="indirimSonuc" style="margin-top:8px;font-size:13px;min-height:18px"></div>
+        </div>
+
         <div style="display:flex;gap:10px;margin-top:1.25rem">
           <button class="btn" onclick="resetForm()">İptal</button>
           <button class="btn btn-ac" id="satBtn" onclick="openSatisModal()" disabled>Satışı Tamamla</button>
@@ -688,29 +699,110 @@ function changeQty(type,delta){
   updateOzet();
 }
 
+var aktifIndirimKodu=null;
+var indirimOrani=0;
+
+function indirimUygula(){
+  var kod=document.getElementById('indirimKoduInput').value.trim().toUpperCase();
+  if(!kod){toast('Kod giriniz','err');return;}
+  var sonuc=document.getElementById('indirimSonuc');
+  sonuc.textContent='Kontrol ediliyor...';
+  sonuc.style.color='var(--mu)';
+  
+  codesRef.orderByChild('code').equalTo(kod).once('value',function(snap){
+    var data=snap.val();
+    if(!data){
+      sonuc.textContent='❌ Geçersiz kod.';
+      sonuc.style.color='var(--rd)';
+      return;
+    }
+    var keys=Object.keys(data);
+    var item=data[keys[0]];
+    if(item.status==='deaktif'){
+      sonuc.textContent='❌ Bu kod daha önce kullanılmış.';
+      sonuc.style.color='var(--rd)';
+      return;
+    }
+    aktifIndirimKodu={key:keys[0],code:kod};
+    indirimOrani=0.10;
+    sonuc.innerHTML='✅ %10 indirim uygulandı!';
+    sonuc.style.color='var(--gn)';
+    document.getElementById('indirimBtn').style.display='none';
+    document.getElementById('indirimIptalBtn').style.display='';
+    document.getElementById('indirimKoduInput').disabled=true;
+    updateOzet();
+  });
+}
+
+function indirimIptal(){
+  aktifIndirimKodu=null;
+  indirimOrani=0;
+  document.getElementById('indirimKoduInput').value='';
+  document.getElementById('indirimKoduInput').disabled=false;
+  document.getElementById('indirimBtn').style.display='';
+  document.getElementById('indirimIptalBtn').style.display='none';
+  document.getElementById('indirimSonuc').textContent='';
+  updateOzet();
+}
+
+function hesaplaFiyat(){
+  var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0;
+  var bestGelir=Infinity, bestA2=0, bestA1=0, bestKT=0, bestKC=0;
+  for(var a2=0; a2<=Math.floor(tam/2) && a2<=cocuk; a2++){
+    var kT2=tam-a2*2, kC2=cocuk-a2;
+    for(var a1=0; a1<=kT2 && a1<=Math.floor(kC2/2); a1++){
+      var kt=kT2-a1, kc=kC2-a1*2;
+      var g=(a2+a1)*3900 + kt*PRICES.tam + kc*PRICES.cocuk + yab*PRICES.yabanci;
+      if(g<bestGelir){bestGelir=g;bestA2=a2;bestA1=a1;bestKT=kt;bestKC=kc;}
+    }
+  }
+  return {gelir:bestGelir, aile2t1c:bestA2, aile1t2c:bestA1, kalanTam:bestKT, kalanCocuk:bestKC};
+}
+
 function updateOzet(){
-  var total=qty.tam+qty.cocuk+qty.yabanci+(qty.aile*3);
-  var gelir=qty.tam*PRICES.tam+qty.cocuk*PRICES.cocuk+qty.yabanci*PRICES.yabanci+(qty.aile||0)*PRICES.aile;
-  document.getElementById('satBtn').disabled=(qty.tam+qty.cocuk+qty.yabanci+qty.aile)===0;
+  var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0;
+  var total=tam+cocuk+yab;
+  document.getElementById('satBtn').disabled=total===0;
   var box=document.getElementById('ozetBox');
-  if(qty.tam+qty.cocuk+qty.yabanci+qty.aile===0){box.style.display='none';return;}
+  if(total===0){box.style.display='none';return;}
   box.style.display='block';
+  var h=hesaplaFiyat();
   var html='';
-  if(qty.tam>0)html+='<div class="ozet-row"><span>Tam × '+qty.tam+'</span><span>'+fmtMoney(qty.tam*PRICES.tam)+'</span></div>';
-  if(qty.cocuk>0)html+='<div class="ozet-row"><span>Çocuk × '+qty.cocuk+'</span><span>'+fmtMoney(qty.cocuk*PRICES.cocuk)+'</span></div>';
-  if(qty.yabanci>0)html+='<div class="ozet-row"><span>Yabancı × '+qty.yabanci+'</span><span>'+fmtMoney(qty.yabanci*PRICES.yabanci)+'</span></div>';
-  if(qty.aile>0)html+='<div class="ozet-row"><span>Aile ('+(qty.aileTur==='2tam1cocuk'?'2T+1Ç':'1T+2Ç')+') × '+qty.aile+'</span><span>'+fmtMoney(qty.aile*PRICES.aile)+'</span></div>';
-  html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(gelir)+'</span></div>';
+  if(h.aile2t1c>0) html+='<div class="ozet-row"><span style="color:var(--ac)">🎁 Aile (2T+1Ç) × '+h.aile2t1c+'</span><span>'+fmtMoney(h.aile2t1c*3900)+'</span></div>';
+  if(h.aile1t2c>0) html+='<div class="ozet-row"><span style="color:var(--ac)">🎁 Aile (1T+2Ç) × '+h.aile1t2c+'</span><span>'+fmtMoney(h.aile1t2c*3900)+'</span></div>';
+  if(h.kalanTam>0) html+='<div class="ozet-row"><span>Tam × '+h.kalanTam+'</span><span>'+fmtMoney(h.kalanTam*PRICES.tam)+'</span></div>';
+  if(h.kalanCocuk>0) html+='<div class="ozet-row"><span>Çocuk × '+h.kalanCocuk+'</span><span>'+fmtMoney(h.kalanCocuk*PRICES.cocuk)+'</span></div>';
+  if(yab>0) html+='<div class="ozet-row"><span>Yabancı × '+yab+'</span><span>'+fmtMoney(yab*PRICES.yabanci)+'</span></div>';
+  var sonGelir=h.gelir;
+  if(indirimOrani>0){
+    var indirimTutar=Math.round(h.gelir*indirimOrani);
+    sonGelir=h.gelir-indirimTutar;
+    html+='<div class="ozet-row"><span style="color:var(--gn)">%10 İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
+  }
+  html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(sonGelir)+'</span></div>';
   box.innerHTML=html;
+  // indirim alanını göster
+  if(total>0) document.getElementById('indirimAlani').style.display='block';
 }
 
 function resetForm(){
   selectedSeans=null;qty={tam:0,cocuk:0,yabanci:0};
+  aktifIndirimKodu=null;indirimOrani=0;
   document.getElementById('biletSection').style.display='none';
   document.getElementById('musteriAd').value='';
   document.getElementById('musteriSoyad').value='';
   document.getElementById('musteriTel').value='';
   document.getElementById('musteriMail').value='';
+  var inp=document.getElementById('indirimKoduInput');
+  if(inp){inp.value='';inp.disabled=false;}
+  var sonuc=document.getElementById('indirimSonuc');
+  if(sonuc)sonuc.textContent='';
+  var indBtn=document.getElementById('indirimBtn');
+  if(indBtn)indBtn.style.display='';
+  var iptalBtn=document.getElementById('indirimIptalBtn');
+  if(iptalBtn)iptalBtn.style.display='none';
+  var indAlani=document.getElementById('indirimAlani');
+  if(indAlani)indAlani.style.display='none';
   refreshSeansGrid();
 }
 
@@ -727,7 +819,13 @@ function openSatisModal(){
   if(h.kalanTam>0)html+='<div style="padding:4px 0">Tam: '+h.kalanTam+' × 1.500₺ = '+fmtMoney(h.kalanTam*PRICES.tam)+'</div>';
   if(h.kalanCocuk>0)html+='<div style="padding:4px 0">Çocuk: '+h.kalanCocuk+' × 1.200₺ = '+fmtMoney(h.kalanCocuk*PRICES.cocuk)+'</div>';
   if(qty.yabanci>0)html+='<div style="padding:4px 0">Yabancı: '+qty.yabanci+' × 2.250₺ = '+fmtMoney(qty.yabanci*PRICES.yabanci)+'</div>';
-  html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--ac)">Toplam: '+fmtMoney(h.gelir)+'</div></div>';
+  var sonGelirModal=h.gelir;
+  if(indirimOrani>0){
+    var ind=Math.round(h.gelir*indirimOrani);
+    sonGelirModal=h.gelir-ind;
+    html+='<div style="padding:4px 0;color:var(--gn)">%10 İndirim: -'+fmtMoney(ind)+'</div>';
+  }
+  html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--ac)">Toplam: '+fmtMoney(sonGelirModal)+'</div></div>';
   document.getElementById('satisOzetModal').innerHTML=html;
   document.getElementById('ov-satis').classList.add('open');
 }
@@ -742,12 +840,16 @@ function tamamlaSatis(){
   var now=new Date();
   var pnr='PNR-'+genID().substr(0,8);
   var h=hesaplaFiyat();
+  var indTutar=indirimOrani>0?Math.round(h.gelir*indirimOrani):0;
+  var sonToplam=h.gelir-indTutar;
   var satis={
     id:genID(),pnr:pnr,seans:selectedSeans,tarih:selectedTarih,
     saat:pad(now.getHours())+':'+pad(now.getMinutes()),
     tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,
     aile2t1c:h.aile2t1c,aile1t2c:h.aile1t2c,
-    toplam:h.gelir,
+    indirimKodu:aktifIndirimKodu?aktifIndirimKodu.code:'',
+    indirim:indTutar,
+    toplam:sonToplam,
     kasiyerAd:currentName,
     musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,
     biletler:[]
@@ -762,6 +864,12 @@ function tamamlaSatis(){
     }
   });
   ticketsRef.child(satis.id).set(satis);
+  // İndirim kodunu deaktif et
+  if(aktifIndirimKodu){
+    db.ref('codes/'+aktifIndirimKodu.key).update({status:'deaktif',date:todayStr()});
+    aktifIndirimKodu=null;
+    indirimOrani=0;
+  }
   db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:selectedTarih,seans:selectedSeans,tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,aile2t1c:h.aile2t1c,aile1t2c:h.aile1t2c,toplam:satis.toplam,biletler:satis.biletler,kullanildi:false});
   biletlerArr.forEach(function(b){
     biletlerRef.child(b.no).set({no:b.no,pnr:b.pnr,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:b.saat,musteriAd:b.musteriAd,kullanildi:false});
@@ -1230,7 +1338,7 @@ var AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos'
 function renderDashboard(){
   var range=getDateRange();
   var filtered=tickets.filter(function(t){return t&&t.tarih&&dateInRange(t.tarih,range.start,range.end);});
-  var bugunBilet=filtered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+((t.aile||0)*3);},0);
+  var bugunBilet=filtered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
   var bugunGelir=filtered.reduce(function(a,t){return a+(t.toplam||0);},0);
   var today=todayStr();
   var todayBilet=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
@@ -1259,7 +1367,7 @@ function renderDashboard(){
   // Seçili ay verisi
   var ayMm=pad(selectedAy);
   var ayFiltered=tickets.filter(function(t){return t&&t.tarih&&t.tarih.slice(3,5)===ayMm&&t.tarih.slice(6)===String(yil);});
-  var ayBilet=ayFiltered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+((t.aile||0)*3);},0);
+  var ayBilet=ayFiltered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
   var ayGelir=ayFiltered.reduce(function(a,t){return a+(t.toplam||0);},0);
 
   document.getElementById('ayKpiGrid').innerHTML=
@@ -1270,8 +1378,7 @@ function renderDashboard(){
   var totTam=filtered.reduce(function(a,t){return a+(t.tam||0);},0);
   var totCocuk=filtered.reduce(function(a,t){return a+(t.cocuk||0);},0);
   var totYab=filtered.reduce(function(a,t){return a+(t.yabanci||0);},0);
-  var totAile=filtered.reduce(function(a,t){return a+(t.aile||0);},0);
-  renderDonut(totTam,totCocuk,totYab,totAile);
+  renderDonut(totTam,totCocuk,totYab);
 
   // Seans bazlı satış - gerçek saatler
   var tumSaatler=['20:45','21:00','21:30','22:00','22:30'];
@@ -1279,7 +1386,7 @@ function renderDashboard(){
   spEl.innerHTML='';
   tumSaatler.forEach(function(saat,idx){
     var st=filtered.filter(function(t){return t.seans===saat;});
-    var stB=st.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+((t.aile||0)*3);},0);
+    var stB=st.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
     var stG=st.reduce(function(a,t){return a+(t.toplam||0);},0);
     var row=document.createElement('div');
     row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:10px 0;'+(idx<tumSaatler.length-1?'border-bottom:1px solid var(--bd)':'');
@@ -1290,20 +1397,18 @@ function renderDashboard(){
   });
 }
 
-function renderDonut(tam,cocuk,yab,aile){
-  aile=aile||0;
-  var total=tam+cocuk+yab+aile||1;
+function renderDonut(tam,cocuk,yab){
+  var total=tam+cocuk+yab||1;
   var r=50,cx=60,cy=60,circ=2*Math.PI*r;
   function arc(pct,offset,color){var dash=pct*circ;return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="18" stroke-dasharray="'+dash+' '+circ+'" stroke-dashoffset="'+(-offset*circ)+'" transform="rotate(-90 '+cx+' '+cy+')" />';}
-  var pT=tam/total,pC=cocuk/total,pY=yab/total,pA=aile/total;
+  var pT=tam/total,pC=cocuk/total,pY=yab/total;
   var svg='<svg width="120" height="120"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--bd)" stroke-width="18"/>'+
-    (total>0?arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80')+arc(pA,pT+pC+pY,'#c084fc'):'')+
+    (total>0?arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80'):'')+
     '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" fill="var(--tx)" font-size="14" font-weight="600" font-family="var(--mo)">'+total+'</text></svg>';
   var legend='<div class="donut-legend">'+
     '<div class="donut-item"><div class="donut-dot" style="background:#e8c547"></div><span>Tam</span><span class="donut-pct">'+tam+' (%'+Math.round(pT*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#60a5fa"></div><span>Çocuk</span><span class="donut-pct">'+cocuk+' (%'+Math.round(pC*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#4ade80"></div><span>Yabancı</span><span class="donut-pct">'+yab+' (%'+Math.round(pY*100)+')</span></div>'+
-    '<div class="donut-item"><div class="donut-dot" style="background:#c084fc"></div><span>Aile</span><span class="donut-pct">'+aile+' (%'+Math.round(pA*100)+')</span></div>'+
     '</div>';
   document.getElementById('donutWrap').innerHTML=svg+legend;
 }
@@ -1385,22 +1490,38 @@ function addUser(){
 }
 
 function sifirlaVeriler(){
-  if(!confirm('TÜM bilet ve satış verileri silinecek! Bu işlem geri alınamaz. Emin misiniz?')) return;
-  if(!confirm('Son kez onaylıyorsunuz. Tüm veriler silinsin mi?')) return;
+  if(!confirm('TÜM bilet, satış verileri silinecek ve indirim kodları sıfırlanacak! Bu işlem geri alınamaz. Emin misiniz?')) return;
+  if(!confirm('Son kez onaylıyorsunuz. Devam edilsin mi?')) return;
+
+  // Tickets, biletler, pnrler sil
   var updates={};
   updates['tickets']=null;
   updates['biletler']=null;
   updates['pnrler']=null;
-  db.ref().update(updates,function(err){
-    if(err){toast('Hata: '+err.message,'err');}
-    else{
-      tickets=[];
-      biletler={};
-      buildSeansTickets();
-      toast('Tüm veriler sıfırlandı!','ok');
-      if(document.getElementById('page-dashboard').style.display!=='none') renderDashboard();
-      if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
+  db.ref().update(updates);
+
+  // Tüm deaktif kodları aktife çek
+  codesRef.once('value',function(snap){
+    var data=snap.val();
+    if(!data) return;
+    var codeUpdates={};
+    Object.keys(data).forEach(function(key){
+      if(data[key]&&data[key].status==='deaktif'){
+        codeUpdates[key+'/status']='aktif';
+        codeUpdates[key+'/date']='';
+      }
+    });
+    if(Object.keys(codeUpdates).length>0){
+      codesRef.update(codeUpdates,function(err){
+        if(err){toast('Kodlar sıfırlanırken hata!','err');}
+      });
     }
+    tickets=[];
+    biletler={};
+    buildSeansTickets();
+    toast('Tüm veriler ve kodlar sıfırlandı!','ok');
+    if(document.getElementById('page-dashboard').style.display!=='none') renderDashboard();
+    if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
   });
 }
 
