@@ -754,20 +754,6 @@ function indirimIptal(){
   updateOzet();
 }
 
-function hesaplaFiyat(){
-  var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0;
-  var bestGelir=Infinity, bestA2=0, bestA1=0, bestKT=0, bestKC=0;
-  for(var a2=0; a2<=Math.floor(tam/2) && a2<=cocuk; a2++){
-    var kT2=tam-a2*2, kC2=cocuk-a2;
-    for(var a1=0; a1<=kT2 && a1<=Math.floor(kC2/2); a1++){
-      var kt=kT2-a1, kc=kC2-a1*2;
-      var g=(a2+a1)*3900 + kt*PRICES.tam + kc*PRICES.cocuk + yab*PRICES.yabanci;
-      if(g<bestGelir){bestGelir=g;bestA2=a2;bestA1=a1;bestKT=kt;bestKC=kc;}
-    }
-  }
-  return {gelir:bestGelir, aile2t1c:bestA2, aile1t2c:bestA1, kalanTam:bestKT, kalanCocuk:bestKC};
-}
-
 function updateOzet(){
   var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0;
   var total=tam+cocuk+yab;
@@ -775,22 +761,19 @@ function updateOzet(){
   var box=document.getElementById('ozetBox');
   if(total===0){box.style.display='none';return;}
   box.style.display='block';
-  var h=hesaplaFiyat();
+  var gelir=tam*PRICES.tam+cocuk*PRICES.cocuk+yab*PRICES.yabanci;
   var html='';
-  if(h.aile2t1c>0) html+='<div class="ozet-row"><span style="color:var(--ac)">🎁 Aile (2T+1Ç) × '+h.aile2t1c+'</span><span>'+fmtMoney(h.aile2t1c*3900)+'</span></div>';
-  if(h.aile1t2c>0) html+='<div class="ozet-row"><span style="color:var(--ac)">🎁 Aile (1T+2Ç) × '+h.aile1t2c+'</span><span>'+fmtMoney(h.aile1t2c*3900)+'</span></div>';
-  if(h.kalanTam>0) html+='<div class="ozet-row"><span>Tam × '+h.kalanTam+'</span><span>'+fmtMoney(h.kalanTam*PRICES.tam)+'</span></div>';
-  if(h.kalanCocuk>0) html+='<div class="ozet-row"><span>Çocuk × '+h.kalanCocuk+'</span><span>'+fmtMoney(h.kalanCocuk*PRICES.cocuk)+'</span></div>';
+  if(tam>0) html+='<div class="ozet-row"><span>Tam × '+tam+'</span><span>'+fmtMoney(tam*PRICES.tam)+'</span></div>';
+  if(cocuk>0) html+='<div class="ozet-row"><span>Çocuk × '+cocuk+'</span><span>'+fmtMoney(cocuk*PRICES.cocuk)+'</span></div>';
   if(yab>0) html+='<div class="ozet-row"><span>Yabancı × '+yab+'</span><span>'+fmtMoney(yab*PRICES.yabanci)+'</span></div>';
-  var sonGelir=h.gelir;
+  var sonGelir=gelir;
   if(indirimOrani>0){
-    var indirimTutar=Math.round(h.gelir*indirimOrani);
-    sonGelir=h.gelir-indirimTutar;
+    var indirimTutar=Math.round(gelir*indirimOrani);
+    sonGelir=gelir-indirimTutar;
     html+='<div class="ozet-row"><span style="color:var(--gn)">%10 İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
   }
   html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(sonGelir)+'</span></div>';
   box.innerHTML=html;
-  // indirim alanını göster
   if(total>0) document.getElementById('indirimAlani').style.display='block';
 }
 
@@ -819,19 +802,18 @@ function openSatisModal(){
   var ad=document.getElementById('musteriAd').value.trim();
   var soyad=document.getElementById('musteriSoyad').value.trim();
   if(!ad||!soyad){toast('Ad ve soyad giriniz!','err');return;}
-  var h=hesaplaFiyat();
+  var tam=qty.tam||0,cocuk=qty.cocuk||0,yab=qty.yabanci||0;
+  var gelir=tam*PRICES.tam+cocuk*PRICES.cocuk+yab*PRICES.yabanci;
   var html='<div style="background:var(--bg);border-radius:8px;padding:1rem;font-size:13px">';
   html+='<div style="margin-bottom:10px"><strong>'+ad+' '+soyad+'</strong></div>';
   html+='<div style="margin-bottom:10px;font-size:14px">'+selectedTarih+' — Seans '+selectedSeans+'</div>';
-  if(h.aile2t1c>0)html+='<div style="padding:4px 0;color:var(--ac)">🎁 Aile Paketi (2T+1Ç) × '+h.aile2t1c+' = '+fmtMoney(h.aile2t1c*3900)+'</div>';
-  if(h.aile1t2c>0)html+='<div style="padding:4px 0;color:var(--ac)">🎁 Aile Paketi (1T+2Ç) × '+h.aile1t2c+' = '+fmtMoney(h.aile1t2c*3900)+'</div>';
-  if(h.kalanTam>0)html+='<div style="padding:4px 0">Tam: '+h.kalanTam+' × 1.500₺ = '+fmtMoney(h.kalanTam*PRICES.tam)+'</div>';
-  if(h.kalanCocuk>0)html+='<div style="padding:4px 0">Çocuk: '+h.kalanCocuk+' × 1.200₺ = '+fmtMoney(h.kalanCocuk*PRICES.cocuk)+'</div>';
-  if(qty.yabanci>0)html+='<div style="padding:4px 0">Yabancı: '+qty.yabanci+' × 2.250₺ = '+fmtMoney(qty.yabanci*PRICES.yabanci)+'</div>';
-  var sonGelirModal=h.gelir;
+  if(tam>0)html+='<div style="padding:4px 0">Tam: '+tam+' × 1.500₺ = '+fmtMoney(tam*PRICES.tam)+'</div>';
+  if(cocuk>0)html+='<div style="padding:4px 0">Çocuk: '+cocuk+' × 1.200₺ = '+fmtMoney(cocuk*PRICES.cocuk)+'</div>';
+  if(yab>0)html+='<div style="padding:4px 0">Yabancı: '+yab+' × 2.250₺ = '+fmtMoney(yab*PRICES.yabanci)+'</div>';
+  var sonGelirModal=gelir;
   if(indirimOrani>0){
-    var ind=Math.round(h.gelir*indirimOrani);
-    sonGelirModal=h.gelir-ind;
+    var ind=Math.round(gelir*indirimOrani);
+    sonGelirModal=gelir-ind;
     html+='<div style="padding:4px 0;color:var(--gn)">%10 İndirim: -'+fmtMoney(ind)+'</div>';
   }
   html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--ac)">Toplam: '+fmtMoney(sonGelirModal)+'</div></div>';
@@ -848,14 +830,13 @@ function tamamlaSatis(){
   var adSoyad=ad+' '+soyad;
   var now=new Date();
   var pnr='PNR-'+genID().substr(0,8);
-  var h=hesaplaFiyat();
-  var indTutar=indirimOrani>0?Math.round(h.gelir*indirimOrani):0;
-  var sonToplam=h.gelir-indTutar;
+  var gelir2=(qty.tam||0)*PRICES.tam+(qty.cocuk||0)*PRICES.cocuk+(qty.yabanci||0)*PRICES.yabanci;
+  var indTutar=indirimOrani>0?Math.round(gelir2*indirimOrani):0;
+  var sonToplam=gelir2-indTutar;
   var satis={
     id:genID(),pnr:pnr,seans:selectedSeans,tarih:selectedTarih,
     saat:pad(now.getHours())+':'+pad(now.getMinutes()),
     tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,
-    aile2t1c:h.aile2t1c,aile1t2c:h.aile1t2c,
     indirimKodu:aktifIndirimKodu?aktifIndirimKodu.code:'',
     indirim:indTutar,
     toplam:sonToplam,
@@ -879,7 +860,7 @@ function tamamlaSatis(){
     aktifIndirimKodu=null;
     indirimOrani=0;
   }
-  db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:selectedTarih,seans:selectedSeans,tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,aile2t1c:h.aile2t1c,aile1t2c:h.aile1t2c,toplam:satis.toplam,biletler:satis.biletler,kullanildi:false});
+  db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:selectedTarih,seans:selectedSeans,tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,toplam:satis.toplam,biletler:satis.biletler,kullanildi:false});
   biletlerArr.forEach(function(b){
     biletlerRef.child(b.no).set({no:b.no,pnr:b.pnr,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:b.saat,musteriAd:b.musteriAd,kullanildi:false});
   });
@@ -1547,4 +1528,3 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 </script>
 </body>
 </html>
-
