@@ -1427,7 +1427,7 @@ function renderIndirim(){
     for(var j=0;j<codes.length;j++){if(codes[j]&&codes[j].code===c.code){gi=j;break;}}
     var badge=c.status==='aktif'?'<span class="badge ba">AKTİF</span>':'<span class="badge bdd">DEAKTİF</span>';
     var btn=c.status==='aktif'?'<button class="btn btn-sm btn-r" onclick="confDe('+gi+')">Deaktif</button>':'<button class="btn btn-sm btn-g" onclick="reAk('+gi+')">Aktif Et</button>';
-    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td style="color:var(--mu)">%10</td><td>'+badge+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
+    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td style="color:var(--mu)">%10</td><td>'+badge+'</td><td style="font-size:12px">'+(c.kullanan||'—')+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
   }
   tb.innerHTML=rows;updatePag();
 }
