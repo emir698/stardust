@@ -856,7 +856,7 @@ function tamamlaSatis(){
   ticketsRef.child(satis.id).set(satis);
   // İndirim kodunu deaktif et
   if(aktifIndirimKodu){
-    db.ref('codes/'+aktifIndirimKodu.key).update({status:'deaktif',date:todayStr()});
+    db.ref('codes/'+aktifIndirimKodu.key).update({status:'deaktif',date:todayStr(),kullanan:adSoyad});
     aktifIndirimKodu=null;
     indirimOrani=0;
   }
