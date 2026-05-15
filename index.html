@@ -9,6 +9,7 @@
 <title>Stardust — Box Office</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{--bg:#0f0f0f;--sf:#1a1a1a;--sf2:#242424;--bd:#2a2a2a;--bd2:#3a3a3a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--gd:rgba(74,222,128,0.08);--rd:#f87171;--rdd:rgba(248,113,113,0.08);--bl:#60a5fa;--mo:'IBM Plex Mono',monospace;--sa:'DM Sans',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -459,6 +460,7 @@ var firebaseConfig={
   appId:"1:835296643878:web:44e7a86658b37328ee0fe7"
 };
 firebase.initializeApp(firebaseConfig);
+emailjs.init('bxTBrj4JyPTee19s_');
 var auth=firebase.auth(),db=firebase.database();
 var codesRef=db.ref('codes'),usersRef=db.ref('users'),ticketsRef=db.ref('tickets'),biletlerRef=db.ref('biletler');
 var PRICES={tam:1500,cocuk:1200,yabanci:2250,davetli:0},CAPACITY=0;
