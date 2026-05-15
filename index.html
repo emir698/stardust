@@ -720,6 +720,8 @@ function changeQty(type,delta){
 }
 
 var aktifIndirimKodu=null;
+var currentBiletlerMail='';
+var currentBiletlerData=[];
 var indirimOrani=0;
 
 function indirimUygula(){
@@ -878,6 +880,8 @@ function tamamlaSatis(){
   biletlerArr.forEach(function(b){
     biletlerRef.child(b.no).set({no:b.no,pnr:b.pnr,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:b.saat,musteriAd:b.musteriAd,kullanildi:false});
   });
+  currentBiletlerMail=mail;
+  currentBiletlerData=biletlerArr;
   gosterBiletler(biletlerArr,adSoyad,pnr);
   resetForm();
   toast('Satış tamamlandı! '+biletlerArr.length+' bilet oluşturuldu.','ok');
@@ -900,8 +904,74 @@ function gosterBiletler(biletlerArr,adSoyad,pnr){
   });
   document.getElementById('printArea').innerHTML=wrap.innerHTML;
   document.getElementById('ov-bilet').classList.add('open');
+  // Mail alanını göster ve müşteri mailini doldur
+  var mailDiv=document.getElementById('mailGonderDiv');
+  var mailInput=document.getElementById('mailGonderInput');
+  var mailSonuc=document.getElementById('mailGonderSonuc');
+  if(mailDiv){mailDiv.style.display='block';}
+  if(mailInput){mailInput.value=currentBiletlerMail||'';}
+  if(mailSonuc){mailSonuc.textContent='';}
 }
 function closeBiletModal(){document.getElementById('ov-bilet').classList.remove('open');}
+
+function biletMailGonder(){
+  var mail=document.getElementById('mailGonderInput').value.trim();
+  if(!mail){toast('E-posta adresi girin','err');return;}
+  var sonuc=document.getElementById('mailGonderSonuc');
+  var btn=document.getElementById('mailGonderBtn');
+  sonuc.textContent='Gönderiliyor...';
+  sonuc.style.color='var(--mu)';
+  btn.disabled=true;
+
+  // Bilet HTML içeriği oluştur
+  var biletHtml='<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f9f9f9;padding:20px">';
+  biletHtml+='<div style="background:#0f0f0f;color:#e8c547;text-align:center;padding:20px;border-radius:8px 8px 0 0;font-size:20px;letter-spacing:3px">✦ STARDUST ✦</div>';
+  biletHtml+='<div style="background:#fff;padding:20px;border-radius:0 0 8px 8px">';
+  biletHtml+='<p style="color:#333;font-size:15px">Merhaba,</p>';
+  biletHtml+='<p style="color:#333">Biletleriniz aşağıda yer almaktadır. Kapıda bilet numaranızı veya QR kodunuzu göstermeniz yeterlidir.</p>';
+  biletHtml+='<hr style="border:1px solid #eee;margin:20px 0">';
+  
+  currentBiletlerData.forEach(function(b){
+    biletHtml+='<div style="background:#f5f5f5;border-radius:8px;padding:15px;margin-bottom:10px;border-left:4px solid #e8c547">';
+    biletHtml+='<div style="font-weight:bold;font-size:14px;color:#333">'+b.tur+' Bileti</div>';
+    biletHtml+='<div style="color:#666;font-size:13px;margin-top:5px">'+b.tarih+' — Seans '+b.seans+'</div>';
+    biletHtml+='<div style="font-family:monospace;font-size:13px;color:#e8c547;margin-top:8px;background:#222;padding:8px;border-radius:4px">'+b.no+'</div>';
+    biletHtml+='</div>';
+  });
+  
+  biletHtml+='<hr style="border:1px solid #eee;margin:20px 0">';
+  biletHtml+='<p style="color:#999;font-size:12px;text-align:center">Astra Lumina İstanbul · Stardust Box Office</p>';
+  biletHtml+='</div></div>';
+
+  fetch('https://api.mailersend.com/v1/email',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer mlsn.d2d573251919e734213dbbd0cb63a90bbadaef5b970b51494bc2ac30d6f72258'
+    },
+    body:JSON.stringify({
+      from:{email:'noreply@test-y7zpl98rro545vx6.mlsender.net',name:'Stardust Box Office'},
+      to:[{email:mail}],
+      subject:'Stardust Box Office — Biletleriniz',
+      html:biletHtml
+    })
+  }).then(function(res){
+    if(res.status===202||res.status===200){
+      sonuc.textContent='✅ Biletler '+mail+' adresine gönderildi!';
+      sonuc.style.color='var(--gn)';
+    } else {
+      return res.json().then(function(d){
+        sonuc.textContent='❌ Hata: '+(d.message||'Gönderilemedi');
+        sonuc.style.color='var(--rd)';
+        btn.disabled=false;
+      });
+    }
+  }).catch(function(err){
+    sonuc.textContent='❌ Bağlantı hatası.';
+    sonuc.style.color='var(--rd)';
+    btn.disabled=false;
+  });
+}
 
 // KAPI
 var currentSorgu=null;
