@@ -1499,6 +1499,7 @@ function sifirlaVeriler(){
       if(data[key]&&data[key].status==='deaktif'){
         codeUpdates[key+'/status']='aktif';
         codeUpdates[key+'/date']='';
+        codeUpdates[key+'/kullanan']='';
       }
     });
     if(Object.keys(codeUpdates).length>0){
