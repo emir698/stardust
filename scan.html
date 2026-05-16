@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stardust Ticket Scan</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--bg:#0a0a0a;--sf:#151515;--sf2:#1e1e1e;--bd:#2a2a2a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--rd:#f87171}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--tx);font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;max-width:480px;margin:0 auto}
+
+/* HEADER */
+.header{background:var(--sf);border-bottom:1px solid var(--bd);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:11px;letter-spacing:3px;color:var(--ac);font-weight:600}
+.logo-sub{font-size:9px;color:var(--mu);letter-spacing:1px;margin-top:2px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);display:inline-block;margin-right:6px}
+.status-text{font-size:11px;color:var(--mu)}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:2rem;width:100%}
+.login-logo{text-align:center;margin-bottom:1.5rem}
+.login-logo .star{font-size:13px;letter-spacing:4px;color:var(--ac);font-weight:600}
+.login-logo .sub{font-size:10px;color:var(--mu);letter-spacing:2px;margin-top:4px}
+.form-label{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;color:var(--tx);font-size:16px;outline:none;margin-bottom:1rem;-webkit-appearance:none}
+.form-input:focus{border-color:var(--ac)}
+.btn-login{width:100%;padding:16px;background:var(--ac);color:#000;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+.login-err{font-size:13px;color:var(--rd);text-align:center;margin-top:1rem;min-height:18px}
+
+/* MAIN */
+.main{padding:16px}
+
+/* KAMERA SCAN */
+.scan-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden;margin-bottom:16px}
+.scan-header{padding:16px;display:flex;align-items:center;justify-content:space-between}
+.scan-title{font-size:14px;font-weight:600}
+.scan-sub{font-size:12px;color:var(--mu);margin-top:2px}
+.scan-btn{background:var(--ac);color:#000;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer}
+.scan-btn.active{background:var(--rd);color:#fff}
+#qr-reader{width:100%;background:#000}
+#qr-reader video{width:100%!important;border-radius:0}
+
+/* MANUEL GİRİŞ */
+.manuel-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:16px}
+.card-title{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.input-row{display:flex;gap:8px}
+.ticket-input{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:14px;font-family:monospace;outline:none;-webkit-appearance:none}
+.ticket-input:focus{border-color:var(--ac)}
+.sorgu-btn{background:var(--ac);color:#000;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+
+/* SONUÇ */
+.result-card{border-radius:16px;padding:20px;margin-bottom:16px;display:none;text-align:center}
+.result-card.valid{background:rgba(74,222,128,.1);border:2px solid var(--gn)}
+.result-card.invalid{background:rgba(248,113,113,.1);border:2px solid var(--rd)}
+.result-icon{font-size:56px;margin-bottom:12px;line-height:1}
+.result-msg{font-size:22px;font-weight:700;margin-bottom:8px}
+.result-detail{font-size:14px;color:var(--mu);line-height:1.6;margin-bottom:16px}
+.result-name{font-size:18px;font-weight:600;color:var(--tx);margin-bottom:4px}
+
+/* BİLET LİSTESİ (PNR) */
+.bilet-list{margin-top:16px;text-align:left}
+.bilet-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;margin-bottom:8px}
+.bilet-item-left{font-size:12px;font-family:monospace;color:var(--ac)}
+.bilet-item-tur{font-size:12px;color:var(--mu);margin-top:2px}
+.bilet-item-status{font-size:11px;padding:3px 10px;border-radius:20px}
+.bilet-item-status.ok{background:rgba(74,222,128,.15);color:var(--gn)}
+.bilet-item-status.used{background:rgba(248,113,113,.15);color:var(--rd)}
+.cb-wrap{display:flex;align-items:center;gap:8px}
+.bilet-cb{width:20px;height:20px;accent-color:var(--ac);cursor:pointer}
+
+.giris-btn{width:100%;padding:16px;background:var(--gn);color:#000;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.giris-btn:disabled{opacity:.4;cursor:default}
+
+/* İSTATİSTİK */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat-box{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px;text-align:center}
+.stat-val{font-size:32px;font-weight:700;font-family:monospace}
+.stat-val.ac{color:var(--ac)}
+.stat-val.gn{color:var(--gn)}
+.stat-label{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+
+/* SON GİRİŞLER */
+.log-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.log-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd)}
+.log-item:last-child{border-bottom:none}
+.log-name{font-size:13px;font-weight:500}
+.log-detail{font-size:11px;color:var(--mu);margin-top:2px}
+.log-time{font-size:12px;color:var(--mu);font-family:monospace}
+.log-empty{padding:24px;text-align:center;color:var(--mu);font-size:13px}
+
+/* GÜN SEÇİCİ */
+.gun-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
+.gun-scroll::-webkit-scrollbar{display:none}
+.gun-btn{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:8px 16px;font-size:12px;font-weight:500;color:var(--mu);white-space:nowrap;cursor:pointer;flex-shrink:0}
+.gun-btn.active{background:var(--ac);color:#000;border-color:var(--ac);font-weight:700}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:12px 20px;font-size:14px;z-index:100;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:rgba(74,222,128,.4);color:var(--gn)}
+.toast.err{border-color:rgba(248,113,113,.4);color:var(--rd)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap" style="min-height:100vh">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="star">✦ STARDUST ✦</div>
+        <div class="sub">TICKET SCAN</div>
+      </div>
+      <label class="form-label">E-posta</label>
+      <input class="form-input" type="email" id="loginEmail" placeholder="ornek@mail.com" onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="form-label">Şifre</label>
+      <input class="form-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap" style="display:none">
+  <div class="header">
+    <div>
+      <div class="logo">✦ STARDUST ✦</div>
+      <div class="logo-sub">TICKET SCAN</div>
+    </div>
+    <div style="text-align:right">
+      <div><span class="status-dot"></span><span class="status-text" id="userLabel">-</span></div>
+      <button onclick="doLogout()" style="background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;margin-top:4px">Çıkış</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Gün seçici -->
+    <div class="gun-scroll" id="gunBtns"></div>
+
+    <!-- İstatistik -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val ac" id="statToplam">0</div>
+        <div class="stat-label">Toplam Bilet</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val gn" id="statGiris">0</div>
+        <div class="stat-label">Giriş Yapıldı</div>
+      </div>
+    </div>
+
+    <!-- Kamera Scan -->
+    <div class="scan-card">
+      <div class="scan-header">
+        <div>
+          <div class="scan-title">📷 QR Tara</div>
+          <div class="scan-sub">Biletin QR kodunu kameraya göster</div>
+        </div>
+        <button class="scan-btn" id="scanBtn" onclick="toggleKamera()">Başlat</button>
+      </div>
+      <div id="qr-reader" style="display:none"></div>
+    </div>
+
+    <!-- Manuel Giriş -->
+    <div class="manuel-card">
+      <div class="card-title">Manuel Sorgula</div>
+      <div class="input-row" style="margin-bottom:8px">
+        <input class="ticket-input" type="text" id="pnrInput" placeholder="PNR-XXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaPNR()">
+        <button class="sorgu-btn" onclick="sorgulaPNR()">PNR</button>
+      </div>
+      <div class="input-row">
+        <input class="ticket-input" type="text" id="biletNoInput" placeholder="SD-X-XXXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaBiletNo()">
+        <button class="sorgu-btn" onclick="sorgulaBiletNo()">Bilet</button>
+      </div>
+    </div>
+
+    <!-- Sonuç -->
+    <div class="result-card" id="resultCard">
+      <div class="result-icon" id="resultIcon"></div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="result-name" id="resultName"></div>
+      <div class="result-detail" id="resultDetail"></div>
+      <div id="biletListesi"></div>
+      <button class="giris-btn" id="girisBtn" onclick="girisVer()" style="display:none">✓ Giriş Ver</button>
+    </div>
+
+    <!-- Son Girişler -->
+    <div class="card-title" style="margin-bottom:8px">Son Girişler</div>
+    <div class="log-card" id="logCard">
+      <div class="log-empty">Henüz giriş yok</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+var firebaseConfig={
+  apiKey:"AIzaSyDcmS7qpzMvc6JIsudyIAROvMy052R0bPs",
+  authDomain:"box-office-discount.firebaseapp.com",
+  databaseURL:"https://box-office-discount-default-rtdb.firebaseio.com",
+  projectId:"box-office-discount",
+  storageBucket:"box-office-discount.firebasestorage.app",
+  messagingSenderId:"835296643878",
+  appId:"1:835296643878:web:44e7a86658b37328ee0fe7"
+};
+firebase.initializeApp(firebaseConfig);
+var auth=firebase.auth(), db=firebase.database();
+var biletlerRef=db.ref('biletler'), ticketsRef=db.ref('tickets'), usersRef=db.ref('users');
+
+function pad(x){return x<10?'0'+x:String(x);}
+function todayStr(){var n=new Date();return pad(n.getDate())+'.'+pad(n.getMonth()+1)+'.'+n.getFullYear();}
+function addDays(ds,n){var p=ds.split('.');var d=new Date(p[2],p[1]-1,p[0]);d.setDate(d.getDate()+n);return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();}
+function getDayName(ds){var p=ds.split('.');return['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'][new Date(p[2],p[1]-1,p[0]).getDay()];}
+
+var OZEL_GUNLER={'19.05.2026':1,'28.05.2026':1};
+var HAFTA_SEANS={5:1,6:1,0:1};
+function isEtkinlikGunu(ds){
+  if(OZEL_GUNLER[ds]) return true;
+  var p=ds.split('.');
+  return !!HAFTA_SEANS[new Date(p[2],p[1]-1,p[0]).getDay()];
+}
+
+var currentUser=null, currentRole=null, currentName=null;
+var selectedGun=null, tickets=[], biletler={};
+var currentSorgu=null, logs=[], qrScanner=null;
+
+// AUTH
+auth.onAuthStateChanged(function(user){
+  if(user){
+    currentUser=user;
+    usersRef.child(user.uid).once('value',function(snap){
+      var ud=snap.val();
+      currentRole=ud?ud.role:'gise';
+      currentName=ud?ud.name:user.email;
+      showApp();
+    });
+  } else {showLogin();}
+});
+
+function showLogin(){
+  document.getElementById('loginWrap').style.display='block';
+  document.getElementById('appWrap').style.display='none';
+}
+function showApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  document.getElementById('userLabel').textContent=currentName||'';
+  loadData();
+  buildGunBtns();
+}
+function doLogin(){
+  var email=document.getElementById('loginEmail').value.trim();
+  var pass=document.getElementById('loginPass').value;
+  var btn=document.getElementById('loginBtn');
+  document.getElementById('loginErr').textContent='';
+  if(!email||!pass){document.getElementById('loginErr').textContent='E-posta ve şifre girin.';return;}
+  btn.textContent='Giriş yapılıyor...';btn.disabled=true;
+  auth.signInWithEmailAndPassword(email,pass).catch(function(err){
+    btn.textContent='Giriş Yap';btn.disabled=false;
+    document.getElementById('loginErr').textContent='E-posta veya şifre hatalı.';
+  });
+}
+function doLogout(){auth.signOut();}
+
+// VERİ
+function loadData(){
+  ticketsRef.on('value',function(snap){
+    var data=snap.val()||{};
+    tickets=Object.values(data).filter(Boolean);
+    updateStats();
+  });
+  biletlerRef.on('value',function(snap){
+    biletler=snap.val()||{};
+    updateStats();
+  });
+}
+
+function updateStats(){
+  if(!selectedGun) return;
+  var gunBiletler=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun;});
+  document.getElementById('statToplam').textContent=gunBiletler.length;
+  document.getElementById('statGiris').textContent=gunBiletler.filter(function(b){return b.kullanildi;}).length;
+}
+
+// GÜN SEÇİCİ
+function buildGunBtns(){
+  var today=todayStr();
+  var container=document.getElementById('gunBtns');
+  container.innerHTML='';
+  var gunler=[];
+  for(var i=-2;i<=14;i++){
+    var d=addDays(today,i);
+    if(isEtkinlikGunu(d)) gunler.push(d);
+    if(gunler.length>=10) break;
+  }
+  gunler.forEach(function(d){
+    var btn=document.createElement('button');
+    var p=d.split('.');
+    var gunAd=getDayName(d);
+    btn.className='gun-btn'+(d===selectedGun?' active':'');
+    btn.textContent=d===today?'Bugün':gunAd+' '+parseInt(p[0])+'.'+parseInt(p[1]);
+    (function(date){btn.onclick=function(){selectGun(date);};})(d);
+    container.appendChild(btn);
+  });
+  if(!selectedGun&&gunler.length>0) selectGun(gunler[0]);
+}
+
+function selectGun(d){
+  selectedGun=d;
+  buildGunBtns();
+  updateStats();
+}
+
+// KAMERA
+function toggleKamera(){
+  var btn=document.getElementById('scanBtn');
+  var reader=document.getElementById('qr-reader');
+  if(qrScanner){
+    kameraKapat();
+  } else {
+    reader.style.display='block';
+    btn.textContent='Durdur';
+    btn.classList.add('active');
+    qrScanner=new Html5Qrcode('qr-reader');
+    qrScanner.start(
+      {facingMode:'environment'},
+      {fps:10,qrbox:{width:250,height:250}},
+      function(text){
+        var val=text.trim().toUpperCase();
+        kameraKapat();
+        toast('QR okundu!','ok');
+        if(val.startsWith('SD-')){
+          document.getElementById('biletNoInput').value=val;
+          sorgulaBiletNo();
+        } else {
+          document.getElementById('pnrInput').value=val;
+          sorgulaPNR();
+        }
+      },
+      function(){}
+    ).catch(function(err){
+      toast('Kamera açılamadı','err');
+      kameraKapat();
+    });
+  }
+}
+
+function kameraKapat(){
+  var btn=document.getElementById('scanBtn');
+  var reader=document.getElementById('qr-reader');
+  btn.textContent='Başlat';
+  btn.classList.remove('active');
+  reader.style.display='none';
+  if(qrScanner){
+    qrScanner.stop().catch(function(){});
+    qrScanner=null;
+  }
+}
+
+// SORGU
+var currentSorguData=null;
+
+function resetSonuc(){
+  currentSorguData=null;
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('girisBtn').style.display='none';
+}
+
+function sorgulaPNR(){
+  var val=document.getElementById('pnrInput').value.trim().toUpperCase();
+  if(!val){toast('PNR giriniz','err');return;}
+  resetSonuc();
+  db.ref('pnrler/'+val).once('value',function(snap){
+    var p=snap.val();
+    var card=document.getElementById('resultCard');
+    card.style.display='block';
+    if(!p){
+      card.className='result-card invalid';
+      document.getElementById('resultIcon').textContent='✗';
+      document.getElementById('resultMsg').textContent='PNR Bulunamadı';
+      document.getElementById('resultName').textContent='';
+      document.getElementById('resultDetail').textContent='Bu PNR sistemde kayıtlı değil.';
+      document.getElementById('biletListesi').innerHTML='';
+      return;
+    }
+
+    card.className='result-card valid';
+    document.getElementById('resultIcon').textContent='📋';
+    document.getElementById('resultMsg').textContent='PNR Bulundu';
+    document.getElementById('resultName').textContent=p.musteriAd||'';
+    document.getElementById('resultDetail').textContent=p.tarih+' · Seans '+p.seans+'\nTam: '+(p.tam||0)+' · Çocuk: '+(p.cocuk||0)+' · Yabancı: '+(p.yabanci||0);
+
+    // Biletleri listele
+    var listEl=document.getElementById('biletListesi');
+    listEl.innerHTML='';
+    var biletNoList=p.biletler||[];
+    var bekleyenler=[];
+
+    var promises=biletNoList.map(function(bno){
+      return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});
+    });
+
+    Promise.all(promises).then(function(results){
+      results.forEach(function(b,idx){
+        var isUsed=b.data&&b.data.kullanildi;
+        var item=document.createElement('div');
+        item.className='bilet-item';
+        var left=document.createElement('div');
+        left.innerHTML='<div class="bilet-item-left">'+b.no+'</div><div class="bilet-item-tur">'+(b.data?b.data.tur:'-')+'</div>';
+        var right=document.createElement('div');
+        right.className='cb-wrap';
+        if(!isUsed){
+          var cb=document.createElement('input');
+          cb.type='checkbox';cb.className='bilet-cb';cb.checked=true;cb.dataset.no=b.no;
+          right.appendChild(cb);
+          bekleyenler.push(b.no);
+        }
+        var status=document.createElement('span');
+        status.className='bilet-item-status '+(isUsed?'used':'ok');
+        status.textContent=isUsed?'Kullanıldı':'Bekliyor';
+        right.appendChild(status);
+        item.appendChild(left);item.appendChild(right);
+        listEl.appendChild(item);
+      });
+
+      if(bekleyenler.length>0){
+        document.getElementById('girisBtn').style.display='block';
+        currentSorguData={type:'pnr',pnr:val,data:p,bekleyenler:bekleyenler};
+      } else {
+        document.getElementById('resultMsg').textContent='Tümü Kullanılmış';
+        card.className='result-card invalid';
+        document.getElementById('resultIcon').textContent='✗';
+      }
+    });
+  });
+}
+
+function sorgulaBiletNo(){
+  var val=document.getElementById('biletNoInput').value.trim().toUpperCase();
+  if(!val){toast('Bilet no giriniz','err');return;}
+  resetSonuc();
+  biletlerRef.child(val).once('value',function(snap){
+    var b=snap.val();
+    var card=document.getElementById('resultCard');
+    card.style.display='block';
+    document.getElementById('biletListesi').innerHTML='';
+    if(!b){
+      card.className='result-card invalid';
+      document.getElementById('resultIcon').textContent='✗';
+      document.getElementById('resultMsg').textContent='Geçersiz Bilet';
+      document.getElementById('resultName').textContent='';
+      document.getElementById('resultDetail').textContent='Bu bilet sistemde bulunamadı.';
+      return;
+    }
+    if(b.kullanildi){
+      card.className='result-card invalid';
+      document.getElementById('resultIcon').textContent='✗';
+      document.getElementById('resultMsg').textContent='Kullanılmış';
+      document.getElementById('resultName').textContent=b.musteriAd||'';
+      document.getElementById('resultDetail').textContent=b.kullanildiSaat+' saatinde giriş yapıldı.';
+      return;
+    }
+    card.className='result-card valid';
+    document.getElementById('resultIcon').textContent='✓';
+    document.getElementById('resultMsg').textContent='Bilet Geçerli';
+    document.getElementById('resultName').textContent=b.musteriAd||'';
+    document.getElementById('resultDetail').textContent='Seans: '+b.seans+' · '+b.tur+'\n'+b.tarih;
+    document.getElementById('girisBtn').style.display='block';
+    currentSorguData={type:'bilet',no:val,data:b};
+  });
+}
+
+function girisVer(){
+  if(!currentSorguData) return;
+  var now=new Date();
+  var saat=pad(now.getHours())+':'+pad(now.getMinutes());
+  var btn=document.getElementById('girisBtn');
+  btn.disabled=true;
+
+  if(currentSorguData.type==='pnr'){
+    var p=currentSorguData.data;
+    var secili=[];
+    document.querySelectorAll('.bilet-cb:checked').forEach(function(cb){secili.push(cb.dataset.no);});
+    if(secili.length===0){toast('En az 1 bilet seçin','err');btn.disabled=false;return;}
+    secili.forEach(function(bno){biletlerRef.child(bno).update({kullanildi:true,kullanildiSaat:saat});});
+    if(secili.length===currentSorguData.bekleyenler.length){
+      db.ref('pnrler/'+currentSorguData.pnr).update({kullanildi:true,kullanildiSaat:saat});
+    }
+    addLog(p.musteriAd||'-','Seans '+p.seans,saat,secili.length+' bilet');
+    toast(secili.length+' bilete giriş verildi!','ok');
+  } else {
+    var b=currentSorguData.data;
+    biletlerRef.child(currentSorguData.no).update({kullanildi:true,kullanildiSaat:saat});
+    addLog(b.musteriAd||'-','Seans '+b.seans,saat,b.tur);
+    toast('Giriş verildi!','ok');
+  }
+
+  updateStats();
+  resetSonuc();
+  document.getElementById('pnrInput').value='';
+  document.getElementById('biletNoInput').value='';
+}
+
+function addLog(name,seans,saat,tur){
+  logs.unshift({name:name,seans:seans,saat:saat,tur:tur});
+  if(logs.length>20) logs.pop();
+  renderLogs();
+}
+
+function renderLogs(){
+  var card=document.getElementById('logCard');
+  if(logs.length===0){card.innerHTML='<div class="log-empty">Henüz giriş yok</div>';return;}
+  card.innerHTML='';
+  logs.forEach(function(l){
+    var item=document.createElement('div');
+    item.className='log-item';
+    item.innerHTML='<div><div class="log-name">'+l.name+'</div><div class="log-detail">'+l.seans+' · '+l.tur+'</div></div><div class="log-time">'+l.saat+'</div>';
+    card.appendChild(item);
+  });
+}
+
+var tt;
+function toast(msg,type){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast '+type+' show';
+  clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},3000);
+}
+</script>
+</body>
+</html>
