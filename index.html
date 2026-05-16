@@ -1004,9 +1004,17 @@ function kameraAc(){
     function(decodedText){
       // QR okununca
       kameraKapat();
-      document.getElementById('pnrInput').value=decodedText.trim().toUpperCase();
-      sorgulaPNR();
+      var val=decodedText.trim().toUpperCase();
       toast('QR kod okundu!','ok');
+      if(val.startsWith('SD-')){
+        // Tekil bilet no
+        document.getElementById('biletNoInput').value=val;
+        sorgulaBiletNo();
+      } else {
+        // PNR kodu
+        document.getElementById('pnrInput').value=val;
+        sorgulaPNR();
+      }
     },
     function(err){}
   ).catch(function(err){
