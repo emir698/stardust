@@ -1604,3 +1604,47 @@ function sifirlaVeriler(){
 
   // Tickets, biletler, pnrler sil
   var updates={};
+  updates['tickets']=null;
+  updates['biletler']=null;
+  updates['pnrler']=null;
+  db.ref().update(updates);
+
+  // Tüm deaktif kodları aktife çek
+  codesRef.once('value',function(snap){
+    var data=snap.val();
+    if(!data) return;
+    var codeUpdates={};
+    Object.keys(data).forEach(function(key){
+      if(data[key]){
+        codeUpdates[key+'/status']='aktif';
+        codeUpdates[key+'/date']='';
+        codeUpdates[key+'/kullanan']=null;
+      }
+    });
+    if(Object.keys(codeUpdates).length>0){
+      codesRef.update(codeUpdates,function(err){
+        if(err){toast('Kodlar sıfırlanırken hata!','err');}
+      });
+    }
+    tickets=[];
+    biletler={};
+    buildSeansTickets();
+    toast('Tüm veriler ve kodlar sıfırlandı!','ok');
+    if(document.getElementById('page-dashboard').style.display!=='none') renderDashboard();
+    if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
+  });
+}
+
+function doExport(){
+  var data={tarih:todayStr(),tickets:tickets};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='stardust_yedek_'+todayStr().replace(/\./g,'-')+'.json';a.click();
+  toast('Yedek alındı!','ok');
+}
+
+var tt;
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},3500);}
+</script>
+</body>
+</html>
