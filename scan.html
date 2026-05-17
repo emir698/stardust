@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Stardust Ticket Scan</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-:root{--bg:#f5f5f7;--sf:#ffffff;--bd:#e0e0e0;--tx:#1a1a1a;--mu:#888;--ac:#e8c547;--acd:#c9a832;--gn:#34c759;--rd:#ff3b30;--bl:#007aff;--sf2:#f0f0f0}
+:root{--bg:#0a0a0a;--sf:#1a1a1a;--bd:#2a2a2a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--rd:#f87171;--bl:#60a5fa;--sf2:#242424}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;max-width:430px;margin:0 auto}
 
@@ -15,107 +16,119 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .login-logo{text-align:center;margin-bottom:2.5rem}
 .login-logo .star{font-size:13px;letter-spacing:4px;color:#e8c547;font-weight:700}
 .login-logo .name{font-size:28px;font-weight:800;color:#fff;margin-top:8px;letter-spacing:1px}
-.login-logo .sub{font-size:11px;color:#666;letter-spacing:3px;margin-top:4px}
-.login-card{background:#1a1a1a;border-radius:20px;padding:1.75rem;width:100%}
-.fl{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+.login-logo .sub{font-size:11px;color:#555;letter-spacing:3px;margin-top:4px}
+.login-card{background:#1a1a1a;border-radius:20px;padding:1.75rem;width:100%;border:1px solid #2a2a2a}
+.fl{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
 .fi{width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;outline:none;margin-bottom:1rem;-webkit-appearance:none}
 .fi:focus{border-color:#e8c547}
-.btn-login{width:100%;padding:16px;background:#e8c547;color:#000;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.3px}
-.btn-login:active{background:#c9a832}
-.login-err{font-size:13px;color:#ff3b30;text-align:center;margin-top:12px;min-height:18px}
+.btn-login{width:100%;padding:16px;background:#e8c547;color:#000;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
+.login-err{font-size:13px;color:#f87171;text-align:center;margin-top:12px;min-height:18px}
 
 /* HEADER */
-.header{background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
-.header-logo{font-size:11px;letter-spacing:3px;color:#1a1a1a;font-weight:700}
-.header-sub{font-size:9px;color:#888;letter-spacing:2px;margin-top:1px}
-.header-user{font-size:12px;color:#888;text-align:right}
-.btn-logout{background:none;border:1px solid #e0e0e0;border-radius:8px;padding:4px 10px;font-size:11px;color:#888;cursor:pointer;margin-top:4px}
+.header{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.header-logo{font-size:11px;letter-spacing:3px;color:var(--ac);font-weight:700}
+.header-sub{font-size:9px;color:var(--mu);letter-spacing:2px;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:8px}
+.header-user{font-size:12px;color:var(--mu)}
+.btn-logout{background:none;border:1px solid var(--bd);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--mu);cursor:pointer}
 
-/* SEANS SEÇİMİ EKRANI */
-.seans-screen{padding:16px}
-.screen-title{font-size:22px;font-weight:700;margin-bottom:4px}
+/* SEANS SEÇİMİ */
+.seans-screen{padding:16px;min-height:100vh}
+.screen-title{font-size:24px;font-weight:800;margin-bottom:4px;color:var(--tx)}
 .screen-date{font-size:14px;color:var(--mu);margin-bottom:20px}
-
-.seans-kart{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;align-items:stretch;cursor:pointer;border:2px solid transparent;transition:border .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
-.seans-kart:active{box-shadow:0 1px 4px rgba(0,0,0,0.1)}
-.seans-kart.selected{border-color:var(--ac)}
-
-.seans-info{padding:14px 16px;flex:1}
-.seans-mekan{font-size:11px;color:var(--mu);margin-bottom:2px}
-.seans-badge{display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:6px}
-.seans-etkinlik{font-size:15px;font-weight:700;margin-bottom:4px}
-.seans-tarih-saat{font-size:13px;color:var(--mu)}
-.seans-stat{font-size:12px;color:var(--ac);font-weight:600;margin-top:6px}
-.seans-chevron{font-size:18px;color:#ccc;padding-right:16px;display:flex;align-items:center}
+.seans-kart{background:var(--sf);border-radius:16px;margin-bottom:12px;overflow:hidden;border:1.5px solid var(--bd);display:flex;align-items:center;cursor:pointer;transition:border .15s}
+.seans-kart:active{border-color:var(--ac);background:var(--sf2)}
+.seans-info{padding:20px 16px;flex:1}
+.seans-saat{font-size:28px;font-weight:800;color:var(--tx);letter-spacing:1px}
+.seans-tarih{font-size:13px;color:var(--mu);margin-top:4px}
+.seans-stat{font-size:13px;color:var(--ac);font-weight:600;margin-top:8px}
+.seans-chevron{font-size:20px;color:var(--mu);padding-right:16px}
 
 /* TARAMA EKRANI */
-.scan-screen{display:none;padding:16px}
-.back-btn{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--bl);background:none;border:none;cursor:pointer;padding:0;margin-bottom:16px;font-weight:500}
-.scan-header{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.scan-header-title{font-size:18px;font-weight:700}
-.scan-header-sub{font-size:13px;color:var(--mu);margin-top:2px}
-.scan-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.stat-box{background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.stat-val{font-size:34px;font-weight:800}
-.stat-val.green{color:var(--gn)}
+.scan-screen{display:none;min-height:100vh}
+.scan-topbar{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);background:var(--sf)}
+.back-btn{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--bl);background:none;border:none;cursor:pointer;font-weight:500;padding:0}
+.seans-saat-label{font-size:18px;font-weight:800;color:var(--ac);letter-spacing:1px}
+.liste-btn{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--tx);cursor:pointer;display:flex;align-items:center;gap:6px}
+
+.scan-body{padding:16px}
+
+/* İSTATİSTİK */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat-box{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px;text-align:center}
+.stat-val{font-size:36px;font-weight:800}
 .stat-val.gold{color:var(--ac)}
+.stat-val.green{color:var(--gn)}
 .stat-label{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 
-/* KAMERA */
-.cam-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.cam-top{padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
-.cam-title{font-size:15px;font-weight:600}
-.cam-sub{font-size:12px;color:var(--mu);margin-top:2px}
-.cam-btn{background:#1a1a1a;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer}
-.cam-btn.stop{background:var(--rd)}
-#qr-reader{width:100%;background:#000}
+/* QR TARA - BÜYÜK */
+.qr-card{background:var(--sf);border:1px solid var(--bd);border-radius:20px;overflow:hidden;margin-bottom:16px}
+.qr-start-btn{width:100%;padding:28px 20px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px}
+.qr-icon{font-size:52px;line-height:1}
+.qr-label{font-size:20px;font-weight:700;color:var(--tx)}
+.qr-sub{font-size:13px;color:var(--mu)}
+.qr-stop-btn{width:100%;padding:16px;background:var(--rd);color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}
+#qr-reader{width:100%;background:#000;display:none}
 #qr-reader video{width:100%!important}
 
-/* SONUÇ */
-.result-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:50;align-items:flex-end;justify-content:center;padding:0}
-.result-overlay.open{display:flex}
-.result-sheet{background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px}
-.sheet-handle{width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
-.result-icon{font-size:60px;text-align:center;margin-bottom:12px;line-height:1}
-.result-title{font-size:24px;font-weight:800;text-align:center;margin-bottom:4px}
-.result-title.green{color:var(--gn)}
-.result-title.red{color:var(--rd)}
-.result-name{font-size:18px;font-weight:600;text-align:center;margin-bottom:4px}
-.result-info{font-size:14px;color:var(--mu);text-align:center;margin-bottom:20px;line-height:1.6}
-.bilet-item{background:var(--sf2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.bi-left{}
-.bi-no{font-size:12px;font-family:monospace;color:var(--bl);font-weight:600}
-.bi-tur{font-size:12px;color:var(--mu);margin-top:2px}
-.bi-right{display:flex;align-items:center;gap:8px}
-.bi-cb{width:22px;height:22px;accent-color:var(--ac);cursor:pointer}
-.bi-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
-.bi-status.ok{background:#e8f5e9;color:#2e7d32}
-.bi-status.used{background:#ffebee;color:#c62828}
-.giris-btn{width:100%;padding:18px;background:var(--gn);color:#fff;border:none;border-radius:16px;font-size:17px;font-weight:700;cursor:pointer;margin-top:8px}
-.giris-btn:disabled{opacity:.4;cursor:default}
-.kapat-btn{width:100%;padding:14px;background:var(--sf2);color:var(--tx);border:none;border-radius:16px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
-
 /* MANUEL */
-.manuel-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.manuel-title{font-size:13px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;font-weight:600}
+.manuel-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:16px}
+.manuel-title{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;font-weight:600}
 .input-row{display:flex;gap:8px;margin-bottom:8px}
-.ti{flex:1;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:14px;font-family:monospace;outline:none;-webkit-appearance:none}
+.input-row:last-child{margin-bottom:0}
+.ti{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:14px;font-family:monospace;outline:none;-webkit-appearance:none}
 .ti:focus{border-color:var(--ac)}
-.sb{background:#1a1a1a;color:#fff;border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.sb{background:var(--sf2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 
-/* LOG */
-.log-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.log-header{padding:14px 16px;font-size:13px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd)}
-.log-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f5f5f5}
+/* SON GİRİŞLER */
+.log-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.log-header-row{padding:14px 16px;font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd)}
+.log-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd)}
 .log-item:last-child{border-bottom:none}
 .log-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);margin-right:10px;flex-shrink:0}
 .log-name{font-size:14px;font-weight:500}
 .log-detail{font-size:12px;color:var(--mu);margin-top:1px}
-.log-time{font-size:13px;color:var(--mu);font-family:monospace}
+.log-time{font-size:12px;color:var(--mu);font-family:monospace}
 .log-empty{padding:24px;text-align:center;color:var(--mu);font-size:14px}
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:500;z-index:100;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+/* SONUÇ SHEET */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.sheet{background:var(--sf);border-radius:24px 24px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:20px}
+.sheet-handle{width:36px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 20px}
+.r-icon{font-size:64px;text-align:center;margin-bottom:12px;line-height:1}
+.r-title{font-size:26px;font-weight:800;text-align:center;margin-bottom:4px;color:var(--tx)}
+.r-title.green{color:var(--gn)}
+.r-title.red{color:var(--rd)}
+.r-name{font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;color:var(--tx)}
+.r-info{font-size:14px;color:var(--mu);text-align:center;margin-bottom:20px;line-height:1.7;white-space:pre-line}
+.bilet-item{background:var(--sf2);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.bi-no{font-size:12px;font-family:monospace;color:var(--bl);font-weight:600}
+.bi-tur{font-size:12px;color:var(--mu);margin-top:2px}
+.bi-cb{width:22px;height:22px;accent-color:var(--ac);cursor:pointer}
+.bi-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.bi-status.ok{background:rgba(74,222,128,.15);color:var(--gn)}
+.bi-status.used{background:rgba(248,113,113,.15);color:var(--rd)}
+.giris-btn{width:100%;padding:18px;background:var(--gn);color:#000;border:none;border-radius:16px;font-size:17px;font-weight:700;cursor:pointer;margin-top:12px}
+.giris-btn:disabled{opacity:.4;cursor:default}
+.kapat-btn{width:100%;padding:14px;background:var(--sf2);color:var(--mu);border:none;border-radius:16px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+
+/* LİSTE SHEET */
+.liste-sheet-title{font-size:18px;font-weight:700;margin-bottom:4px;color:var(--tx)}
+.liste-ozet{background:var(--ac);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.liste-ozet-label{font-size:14px;font-weight:600;color:#000}
+.liste-ozet-sayi{font-size:22px;font-weight:800;color:#000}
+.liste-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--sf2);border-radius:12px;margin-bottom:8px}
+.li-name{font-size:14px;font-weight:500;color:var(--tx)}
+.li-detail{font-size:12px;color:var(--mu);margin-top:2px}
+.li-badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
+.li-badge.ok{background:rgba(74,222,128,.15);color:var(--gn)}
+.li-badge.no{background:rgba(248,113,113,.15);color:var(--rd)}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:12px 20px;font-size:14px;font-weight:500;z-index:100;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;color:var(--tx)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok-t{border-color:rgba(74,222,128,.4);color:var(--gn)}
+.toast.err-t{border-color:rgba(248,113,113,.4);color:var(--rd)}
 </style>
 </head>
 <body>
@@ -146,75 +159,104 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
       <div class="header-logo">✦ STARDUST ✦</div>
       <div class="header-sub">TICKET SCAN</div>
     </div>
-    <div class="header-user">
-      <div id="userLabel" style="font-size:12px;color:#888"></div>
+    <div class="header-right">
+      <span class="header-user" id="userLabel"></span>
       <button class="btn-logout" onclick="doLogout()">Çıkış</button>
     </div>
   </div>
 
   <!-- SEANS SEÇİMİ -->
   <div class="seans-screen" id="seansScreen">
-    <div class="screen-title">Seans Seçimi</div>
-    <div class="screen-date" id="screenDate"></div>
-    <div id="seansListesi"></div>
+    <div style="padding:16px">
+      <div class="screen-title">Seans Seçimi</div>
+      <div class="screen-date" id="screenDate"></div>
+      <div id="seansListesi"></div>
+    </div>
   </div>
 
   <!-- TARAMA EKRANI -->
   <div class="scan-screen" id="scanScreen">
-    <button class="back-btn" onclick="goBack()">← Seans Seçimi</button>
-    <div class="scan-header">
-      <div class="scan-header-title" id="scanTitle"></div>
-      <div class="scan-header-sub" id="scanSub"></div>
+    <div class="scan-topbar">
+      <button class="back-btn" onclick="goBack()">← Seans Seçimi</button>
+      <div class="seans-saat-label" id="scanSaatLabel"></div>
+      <button class="liste-btn" onclick="acListeSheet()">☰ Liste</button>
     </div>
-    <div class="scan-stats">
-      <div class="stat-box">
-        <div class="stat-val gold" id="statToplam">0</div>
-        <div class="stat-label">Toplam Bilet</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val green" id="statGiris">0</div>
-        <div class="stat-label">Giriş Yapıldı</div>
-      </div>
-    </div>
-    <div class="cam-card">
-      <div class="cam-top">
-        <div>
-          <div class="cam-title">📷 QR Tara</div>
-          <div class="cam-sub">Kamerayı bileti tutun</div>
+    <div class="scan-body">
+      <!-- İstatistik -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val gold" id="statToplam">0</div>
+          <div class="stat-label">Toplam Bilet</div>
         </div>
-        <button class="cam-btn" id="camBtn" onclick="toggleKamera()">Başlat</button>
+        <div class="stat-box">
+          <div class="stat-val green" id="statGiris">0</div>
+          <div class="stat-label">Giriş Yapıldı</div>
+        </div>
       </div>
-      <div id="qr-reader" style="display:none"></div>
-    </div>
-    <div class="manuel-card">
-      <div class="manuel-title">Manuel Sorgula</div>
-      <div class="input-row">
-        <input class="ti" type="text" id="pnrInput" placeholder="PNR-XXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaPNR()">
-        <button class="sb" onclick="sorgulaPNR()">PNR</button>
+
+      <!-- QR Tara - Büyük -->
+      <div class="qr-card">
+        <div id="qr-reader"></div>
+        <div id="qrStartArea">
+          <button class="qr-start-btn" onclick="kameraAc()">
+            <div class="qr-icon">📷</div>
+            <div class="qr-label">QR Kod Tara</div>
+            <div class="qr-sub">Kamerayı başlatmak için dokun</div>
+          </button>
+        </div>
+        <div id="qrStopArea" style="display:none">
+          <button class="qr-stop-btn" onclick="kameraKapat()">⏹ Kamerayı Durdur</button>
+        </div>
       </div>
-      <div class="input-row">
-        <input class="ti" type="text" id="biletNoInput" placeholder="SD-X-XXXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaBiletNo()">
-        <button class="sb" onclick="sorgulaBiletNo()">Bilet</button>
+
+      <!-- Manuel -->
+      <div class="manuel-card">
+        <div class="manuel-title">Manuel Sorgula</div>
+        <div class="input-row">
+          <input class="ti" type="text" id="pnrInput" placeholder="PNR-XXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaPNR()">
+          <button class="sb" onclick="sorgulaPNR()">PNR</button>
+        </div>
+        <div class="input-row">
+          <input class="ti" type="text" id="biletNoInput" placeholder="SD-X-XXXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaBiletNo()">
+          <button class="sb" onclick="sorgulaBiletNo()">Bilet</button>
+        </div>
       </div>
-    </div>
-    <div class="log-card">
-      <div class="log-header">Son Girişler</div>
-      <div id="logList"><div class="log-empty">Henüz giriş yok</div></div>
+
+      <!-- Son Girişler -->
+      <div class="log-card">
+        <div class="log-header-row">Son Girişler</div>
+        <div id="logList"><div class="log-empty">Henüz giriş yok</div></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- SONUÇ SHEET -->
-<div class="result-overlay" id="resultOverlay" onclick="if(event.target===this)kapatSheet()">
-  <div class="result-sheet">
+<div class="overlay" id="resultOverlay" onclick="if(event.target===this)kapatSheet()">
+  <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="result-icon" id="rIcon"></div>
-    <div class="result-title" id="rTitle"></div>
-    <div class="result-name" id="rName"></div>
-    <div class="result-info" id="rInfo"></div>
+    <div class="r-icon" id="rIcon"></div>
+    <div class="r-title" id="rTitle"></div>
+    <div class="r-name" id="rName"></div>
+    <div class="r-info" id="rInfo"></div>
     <div id="rBiletler"></div>
     <button class="giris-btn" id="girisBtn" onclick="girisVer()" style="display:none">✓ Giriş Ver</button>
     <button class="kapat-btn" onclick="kapatSheet()">Kapat</button>
+  </div>
+</div>
+
+<!-- LİSTE SHEET -->
+<div class="overlay" id="listeOverlay" onclick="if(event.target===this)document.getElementById('listeOverlay').classList.remove('open')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="liste-sheet-title" id="listeTitle"></div>
+    <div style="font-size:13px;color:var(--mu);margin-bottom:16px" id="listeDate"></div>
+    <div class="liste-ozet">
+      <div class="liste-ozet-label">Giriş Yapan Kişi Sayısı</div>
+      <div class="liste-ozet-sayi" id="listeOzet">0/0</div>
+    </div>
+    <div id="listeIcerik"></div>
+    <button class="kapat-btn" onclick="document.getElementById('listeOverlay').classList.remove('open')">Kapat</button>
   </div>
 </div>
 
@@ -233,51 +275,36 @@ firebase.initializeApp({
   messagingSenderId:"835296643878",
   appId:"1:835296643878:web:44e7a86658b37328ee0fe7"
 });
-var auth=firebase.auth(), db=firebase.database();
-var biletlerRef=db.ref('biletler'), ticketsRef=db.ref('tickets'), usersRef=db.ref('users');
+var auth=firebase.auth(),db=firebase.database();
+var biletlerRef=db.ref('biletler'),ticketsRef=db.ref('tickets'),usersRef=db.ref('users');
 
 function pad(x){return x<10?'0'+x:String(x);}
 function todayStr(){var n=new Date();return pad(n.getDate())+'.'+pad(n.getMonth()+1)+'.'+n.getFullYear();}
 function addDays(ds,n){var p=ds.split('.');var d=new Date(p[2],p[1]-1,p[0]);d.setDate(d.getDate()+n);return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();}
-function getDayName(ds){var p=ds.split('.');var days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];return days[new Date(p[2],p[1]-1,p[0]).getDay()];}
-function fmtDateLong(ds){var p=ds.split('.');var months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];return parseInt(p[0])+' '+months[parseInt(p[1])-1]+' '+p[2]+', '+getDayName(ds);}
+function getDayName(ds){var p=ds.split('.');return['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][new Date(p[2],p[1]-1,p[0]).getDay()];}
+function fmtDate(ds){var p=ds.split('.');var m=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];return parseInt(p[0])+' '+m[parseInt(p[1])-1]+' '+p[2]+', '+getDayName(ds);}
 
-var OZEL_GUNLER={'19.05.2026':['20:45','21:00','21:30','22:00'],'28.05.2026':['20:45','21:00','21:30','22:00','22:30']};
-var HAFTA_SEANS={5:['20:45','21:00','21:30','22:00','22:30'],6:['20:45','21:00','21:30','22:00','22:30'],0:['20:45','21:00','21:30','22:00']};
-function getSaatler(ds){
-  if(OZEL_GUNLER[ds]) return OZEL_GUNLER[ds];
-  var p=ds.split('.');
-  return HAFTA_SEANS[new Date(p[2],p[1]-1,p[0]).getDay()]||null;
-}
-function isEtkinlikGunu(ds){return getSaatler(ds)!==null;}
+var OZEL={'19.05.2026':['20:45','21:00','21:30','22:00'],'28.05.2026':['20:45','21:00','21:30','22:00','22:30']};
+var HSEANS={5:['20:45','21:00','21:30','22:00','22:30'],6:['20:45','21:00','21:30','22:00','22:30'],0:['20:45','21:00','21:30','22:00']};
+function getSaatler(ds){if(OZEL[ds])return OZEL[ds];var p=ds.split('.');return HSEANS[new Date(p[2],p[1]-1,p[0]).getDay()]||null;}
+function isEtkinlik(ds){return getSaatler(ds)!==null;}
 
 var currentUser=null,currentName=null;
 var selectedGun=null,selectedSeans=null;
 var tickets=[],biletler={},logs=[];
 var currentSorgu=null,qrScanner=null;
 
-// AUTH
 auth.onAuthStateChanged(function(user){
-  if(user){
-    currentUser=user;
-    usersRef.child(user.uid).once('value',function(snap){
-      var ud=snap.val();
-      currentName=ud?ud.name:user.email;
-      showApp();
-    });
-  } else {showLogin();}
+  if(user){currentUser=user;usersRef.child(user.uid).once('value',function(snap){var ud=snap.val();currentName=ud?ud.name:user.email;showApp();});}
+  else{showLogin();}
 });
 
-function showLogin(){
-  document.getElementById('loginScreen').style.display='block';
-  document.getElementById('appWrap').style.display='none';
-}
+function showLogin(){document.getElementById('loginScreen').style.display='block';document.getElementById('appWrap').style.display='none';}
 function showApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appWrap').style.display='block';
   document.getElementById('userLabel').textContent=currentName||'';
-  loadData();
-  buildSeansListesi();
+  loadData();buildSeansListesi();
 }
 function doLogin(){
   var email=document.getElementById('loginEmail').value.trim();
@@ -286,94 +313,68 @@ function doLogin(){
   document.getElementById('loginErr').textContent='';
   if(!email||!pass){document.getElementById('loginErr').textContent='E-posta ve şifre girin.';return;}
   btn.textContent='Giriş yapılıyor...';btn.disabled=true;
-  auth.signInWithEmailAndPassword(email,pass).catch(function(){
-    btn.textContent='Giriş Yap';btn.disabled=false;
-    document.getElementById('loginErr').textContent='E-posta veya şifre hatalı.';
-  });
+  auth.signInWithEmailAndPassword(email,pass).catch(function(){btn.textContent='Giriş Yap';btn.disabled=false;document.getElementById('loginErr').textContent='E-posta veya şifre hatalı.';});
 }
-function doLogout(){if(qrScanner){qrScanner.stop().catch(function(){});}auth.signOut();}
+function doLogout(){if(qrScanner)qrScanner.stop().catch(function(){});auth.signOut();}
 
-// VERİ
 function loadData(){
-  ticketsRef.on('value',function(snap){
-    tickets=Object.values(snap.val()||{}).filter(Boolean);
-    updateStats();
-  });
-  biletlerRef.on('value',function(snap){
-    biletler=snap.val()||{};
-    updateStats();
-  });
+  ticketsRef.on('value',function(snap){tickets=Object.values(snap.val()||{}).filter(Boolean);updateStats();refreshSeansStats();});
+  biletlerRef.on('value',function(snap){biletler=snap.val()||{};updateStats();refreshSeansStats();});
 }
 
 function updateStats(){
-  if(!selectedGun||!selectedSeans) return;
-  var gunSeans=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===selectedSeans;});
-  document.getElementById('statToplam').textContent=gunSeans.length;
-  document.getElementById('statGiris').textContent=gunSeans.filter(function(b){return b.kullanildi;}).length;
+  if(!selectedGun||!selectedSeans)return;
+  var gb=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===selectedSeans;});
+  document.getElementById('statToplam').textContent=gb.length;
+  document.getElementById('statGiris').textContent=gb.filter(function(b){return b.kullanildi;}).length;
 }
 
-// SEANS LİSTESİ
+function refreshSeansStats(){
+  if(!selectedGun)return;
+  var saatler=getSaatler(selectedGun)||[];
+  saatler.forEach(function(saat){
+    var el=document.getElementById('stat-'+saat.replace(':','-'));
+    if(!el)return;
+    var gb=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===saat;});
+    var giris=gb.filter(function(b){return b.kullanildi;}).length;
+    el.textContent=gb.length>0?(giris+' / '+gb.length+' giriş yapıldı'):'Henüz satış yok';
+  });
+}
+
 function buildSeansListesi(){
   var today=todayStr();
   selectedGun=today;
-  document.getElementById('screenDate').textContent=fmtDateLong(today);
-
-  if(!isEtkinlikGunu(today)){
-    // Bugün etkinlik yok, en yakın etkinlik gününü bul
-    for(var i=1;i<=14;i++){
-      var d=addDays(today,i);
-      if(isEtkinlikGunu(d)){selectedGun=d;break;}
-    }
+  if(!isEtkinlik(today)){
+    for(var i=1;i<=14;i++){var d=addDays(today,i);if(isEtkinlik(d)){selectedGun=d;break;}}
   }
-
-  var saatler=getSaatler(selectedGun)||[];
-  document.getElementById('screenDate').textContent=fmtDateLong(selectedGun);
+  document.getElementById('screenDate').textContent=fmtDate(selectedGun);
   var liste=document.getElementById('seansListesi');
   liste.innerHTML='';
-
+  var saatler=getSaatler(selectedGun)||[];
   saatler.forEach(function(saat){
     var kart=document.createElement('div');
     kart.className='seans-kart';
+    var gb=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===saat;});
+    var giris=gb.filter(function(b){return b.kullanildi;}).length;
+    var statTxt=gb.length>0?(giris+' / '+gb.length+' giriş yapıldı'):'Henüz satış yok';
     kart.innerHTML=
-      '<div class="seans-info" style="padding:18px 16px">'+
-        '<div class="seans-tarih-saat" style="font-size:13px;color:#888;margin-bottom:4px">'+selectedGun+'</div>'+
-        '<div class="seans-etkinlik" style="font-size:20px;font-weight:700">'+saat+'</div>'+
-        '<div class="seans-stat" id="stat-'+saat.replace(':','-')+'" style="margin-top:6px">Yükleniyor...</div>'+
+      '<div class="seans-info">'+
+        '<div class="seans-saat">'+saat+'</div>'+
+        '<div class="seans-tarih">'+selectedGun+'</div>'+
+        '<div class="seans-stat" id="stat-'+saat.replace(':','-')+'">'+statTxt+'</div>'+
       '</div>'+
       '<div class="seans-chevron">›</div>';
-    (function(s){
-      kart.onclick=function(){selectSeans(s);};
-      // Seans istatistiği
-      var gunSeans=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===s;});
-      var statEl=kart.querySelector('.seans-stat');
-      var giris=gunSeans.filter(function(b){return b.kullanildi;}).length;
-      statEl.textContent=gunSeans.length>0?(giris+' / '+gunSeans.length+' giriş yapıldı'):'Henüz satış yok';
-    })(saat);
+    (function(s){kart.onclick=function(){selectSeans(s);};})(saat);
     liste.appendChild(kart);
   });
-
-  // İstatistikleri Firebase'den güncelle
-  setTimeout(function(){
-    saatler.forEach(function(saat){
-      var gunSeans=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===saat;});
-      var statEl=document.getElementById('stat-'+saat.replace(':','-'));
-      if(statEl){
-        var giris=gunSeans.filter(function(b){return b.kullanildi;}).length;
-        statEl.textContent=gunSeans.length>0?(giris+' / '+gunSeans.length+' giriş yapıldı'):'Henüz satış yok';
-      }
-    });
-  },1000);
 }
 
 function selectSeans(saat){
   selectedSeans=saat;
   document.getElementById('seansScreen').style.display='none';
   document.getElementById('scanScreen').style.display='block';
-  document.getElementById('scanTitle').textContent='Astra Lumina İstanbul';
-  document.getElementById('scanSub').textContent=selectedGun+' · Seans '+saat;
-  updateStats();
-  logs=[];
-  renderLogs();
+  document.getElementById('scanSaatLabel').textContent=saat;
+  updateStats();logs=[];renderLogs();
 }
 
 function goBack(){
@@ -385,57 +386,79 @@ function goBack(){
 }
 
 // KAMERA
-function toggleKamera(){
-  if(qrScanner){kameraKapat();}
-  else{kameraAc();}
-}
 function kameraAc(){
-  var reader=document.getElementById('qr-reader');
-  var btn=document.getElementById('camBtn');
-  reader.style.display='block';
-  btn.textContent='Durdur';
-  btn.classList.add('stop');
+  document.getElementById('qrStartArea').style.display='none';
+  document.getElementById('qr-reader').style.display='block';
+  document.getElementById('qrStopArea').style.display='block';
   qrScanner=new Html5Qrcode('qr-reader');
   qrScanner.start(
     {facingMode:'environment'},
-    {fps:10,qrbox:{width:250,height:250}},
+    {fps:10,qrbox:{width:260,height:260}},
     function(text){
       var val=text.trim().toUpperCase();
       kameraKapat();
-      if(val.startsWith('SD-')){
-        document.getElementById('biletNoInput').value=val;
-        sorgulaBiletNo();
-      } else {
-        document.getElementById('pnrInput').value=val;
-        sorgulaPNR();
-      }
+      if(val.startsWith('SD-')){document.getElementById('biletNoInput').value=val;sorgulaBiletNo();}
+      else{document.getElementById('pnrInput').value=val;sorgulaPNR();}
     },
     function(){}
   ).catch(function(){toast('Kamera açılamadı','err');kameraKapat();});
 }
 function kameraKapat(){
-  var reader=document.getElementById('qr-reader');
-  var btn=document.getElementById('camBtn');
-  reader.style.display='none';
-  btn.textContent='Başlat';
-  btn.classList.remove('stop');
+  document.getElementById('qr-reader').style.display='none';
+  document.getElementById('qrStartArea').style.display='block';
+  document.getElementById('qrStopArea').style.display='none';
   if(qrScanner){qrScanner.stop().catch(function(){});qrScanner=null;}
 }
 
-// SORGU
-function kapatSheet(){
-  document.getElementById('resultOverlay').classList.remove('open');
-  currentSorgu=null;
+// LİSTE
+function acListeSheet(){
+  if(!selectedGun||!selectedSeans){toast('Seans seçin','err');return;}
+  var pnrler=tickets.filter(function(t){return t&&t.tarih===selectedGun&&t.seans===selectedSeans;});
+  var gb=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===selectedSeans;});
+  var giris=gb.filter(function(b){return b.kullanildi;}).length;
+
+  document.getElementById('listeTitle').textContent='Seans '+selectedSeans;
+  document.getElementById('listeDate').textContent=selectedGun;
+  document.getElementById('listeOzet').textContent=giris+'/'+gb.length;
+
+  var icerik=document.getElementById('listeIcerik');
+  icerik.innerHTML='';
+
+  if(pnrler.length===0){
+    icerik.innerHTML='<div style="text-align:center;padding:24px;color:var(--mu);font-size:14px">Bu seans için henüz satış yok.</div>';
+  } else {
+    pnrler.forEach(function(t){
+      var pnrBiletler=gb.filter(function(b){return t.biletler&&t.biletler.indexOf(b.tarih+'_'+b.seans)>-1;});
+      // PNR'ın biletlerini kontrol et
+      var pnrGiris=t.biletler?t.biletler.filter(function(bno){return biletler[bno]&&biletler[bno].kullanildi;}).length:0;
+      var pnrToplam=t.biletler?t.biletler.length:((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0));
+      var girisYapti=pnrGiris>0;
+
+      var item=document.createElement('div');
+      item.className='liste-item';
+      item.innerHTML=
+        '<div>'+
+          '<div class="li-name">'+t.musteriAd+'</div>'+
+          '<div class="li-detail">Tam: '+(t.tam||0)+' · Çocuk: '+(t.cocuk||0)+(t.yabanci>0?' · Yabancı: '+t.yabanci:'')+'</div>'+
+        '</div>'+
+        '<span class="li-badge '+(girisYapti?'ok':'no')+'">'+(girisYapti?(pnrGiris+'/'+pnrToplam+' Girdi'):'Giriş Yapmadı')+'</span>';
+      icerik.appendChild(item);
+    });
+  }
+  document.getElementById('listeOverlay').classList.add('open');
 }
 
-function showSheet(icon,title,titleClass,name,info,biletlerHTML,showGiris){
+// SORGU
+function kapatSheet(){document.getElementById('resultOverlay').classList.remove('open');currentSorgu=null;}
+
+function showSheet(icon,title,cls,name,info,biletHTML,giris){
   document.getElementById('rIcon').textContent=icon;
   document.getElementById('rTitle').textContent=title;
-  document.getElementById('rTitle').className='result-title '+(titleClass||'');
+  document.getElementById('rTitle').className='r-title '+(cls||'');
   document.getElementById('rName').textContent=name||'';
   document.getElementById('rInfo').textContent=info||'';
-  document.getElementById('rBiletler').innerHTML=biletlerHTML||'';
-  document.getElementById('girisBtn').style.display=showGiris?'block':'none';
+  document.getElementById('rBiletler').innerHTML=biletHTML||'';
+  document.getElementById('girisBtn').style.display=giris?'block':'none';
   document.getElementById('girisBtn').disabled=false;
   document.getElementById('resultOverlay').classList.add('open');
 }
@@ -447,35 +470,20 @@ function sorgulaPNR(){
   db.ref('pnrler/'+val).once('value',function(snap){
     var p=snap.val();
     if(!p){showSheet('✗','PNR Bulunamadı','red','','Bu PNR sistemde kayıtlı değil.','',false);return;}
-
     var biletNoList=p.biletler||[];
-    var promises=biletNoList.map(function(bno){
-      return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});
-    });
+    var promises=biletNoList.map(function(bno){return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});});
     Promise.all(promises).then(function(results){
       var bekleyenler=results.filter(function(b){return b.data&&!b.data.kullanildi;});
-      var kullanilan=results.filter(function(b){return b.data&&b.data.kullanildi;});
-
-      if(bekleyenler.length===0){
-        showSheet('✗','Tümü Kullanılmış','red',p.musteriAd,p.tarih+' · Seans '+p.seans,'',false);
-        return;
-      }
-
+      if(bekleyenler.length===0){showSheet('✗','Tümü Kullanılmış','red',p.musteriAd,p.tarih+' · Seans '+p.seans,'',false);return;}
       var html='';
       results.forEach(function(b){
         var used=b.data&&b.data.kullanildi;
-        html+='<div class="bilet-item">'+
-          '<div class="bi-left"><div class="bi-no">'+b.no+'</div><div class="bi-tur">'+(b.data?b.data.tur:'-')+'</div></div>'+
-          '<div class="bi-right">'+
-          (!used?'<input type="checkbox" class="bi-cb" data-no="'+b.no+'" checked>':'')+
-          '<span class="bi-status '+(used?'used':'ok')+'">'+(used?'Kullanıldı':'Bekliyor')+'</span>'+
-          '</div></div>';
+        html+='<div class="bilet-item"><div><div class="bi-no">'+b.no+'</div><div class="bi-tur">'+(b.data?b.data.tur:'-')+'</div></div>'+
+          '<div style="display:flex;align-items:center;gap:8px">'+(!used?'<input type="checkbox" class="bi-cb" data-no="'+b.no+'" checked>':'')+
+          '<span class="bi-status '+(used?'used':'ok')+'">'+(used?'Kullanıldı':'Bekliyor')+'</span></div></div>';
       });
-
       currentSorgu={type:'pnr',pnr:val,data:p,bekleyenler:bekleyenler.map(function(b){return b.no;})};
-      showSheet('📋','PNR Bulundu','',p.musteriAd,
-        p.tarih+' · Seans '+p.seans+'\nTam: '+(p.tam||0)+' · Çocuk: '+(p.cocuk||0)+' · Yabancı: '+(p.yabanci||0),
-        html,true);
+      showSheet('📋','PNR Bulundu','',p.musteriAd,p.tarih+' · Seans '+p.seans+'\nTam: '+(p.tam||0)+' · Çocuk: '+(p.cocuk||0)+' · Yabancı: '+(p.yabanci||0),html,true);
     });
   });
 }
@@ -486,7 +494,7 @@ function sorgulaBiletNo(){
   currentSorgu=null;
   biletlerRef.child(val).once('value',function(snap){
     var b=snap.val();
-    if(!b){showSheet('✗','Geçersiz Bilet','red','','Bu bilet sistemde bulunamadı.','',false);return;}
+    if(!b){showSheet('✗','Geçersiz Bilet','red','','Bu bilet bulunamadı.','',false);return;}
     if(b.kullanildi){showSheet('✗','Kullanılmış','red',b.musteriAd||'',b.kullanildiSaat+' saatinde giriş yapıldı.','',false);return;}
     currentSorgu={type:'bilet',no:val,data:b};
     showSheet('✓','Bilet Geçerli','green',b.musteriAd||'','Seans: '+b.seans+' · '+b.tur+'\n'+b.tarih,'',true);
@@ -494,38 +502,32 @@ function sorgulaBiletNo(){
 }
 
 function girisVer(){
-  if(!currentSorgu) return;
-  var now=new Date();
-  var saat=pad(now.getHours())+':'+pad(now.getMinutes());
+  if(!currentSorgu)return;
+  var now=new Date();var saat=pad(now.getHours())+':'+pad(now.getMinutes());
   document.getElementById('girisBtn').disabled=true;
-
   if(currentSorgu.type==='pnr'){
     var p=currentSorgu.data;
     var secili=[];
     document.querySelectorAll('.bi-cb:checked').forEach(function(cb){secili.push(cb.getAttribute('data-no'));});
     if(secili.length===0){toast('En az 1 bilet seçin','err');document.getElementById('girisBtn').disabled=false;return;}
     secili.forEach(function(bno){biletlerRef.child(bno).update({kullanildi:true,kullanildiSaat:saat});});
-    if(secili.length>=currentSorgu.bekleyenler.length){
-      db.ref('pnrler/'+currentSorgu.pnr).update({kullanildi:true,kullanildiSaat:saat});
-    }
-    addLog(p.musteriAd||'-','Seans '+p.seans,saat,secili.length+' bilet');
+    if(secili.length>=currentSorgu.bekleyenler.length)db.ref('pnrler/'+currentSorgu.pnr).update({kullanildi:true,kullanildiSaat:saat});
+    addLog(p.musteriAd||'-',p.seans,saat,secili.length+' bilet');
     toast('✓ '+secili.length+' bilete giriş verildi!','ok');
   } else {
     var b=currentSorgu.data;
     biletlerRef.child(currentSorgu.no).update({kullanildi:true,kullanildiSaat:saat});
-    addLog(b.musteriAd||'-','Seans '+b.seans,saat,b.tur);
+    addLog(b.musteriAd||'-',b.seans,saat,b.tur);
     toast('✓ Giriş verildi!','ok');
   }
-
-  updateStats();
-  kapatSheet();
+  updateStats();kapatSheet();
   document.getElementById('pnrInput').value='';
   document.getElementById('biletNoInput').value='';
 }
 
 function addLog(name,seans,saat,tur){
   logs.unshift({name:name,seans:seans,saat:saat,tur:tur});
-  if(logs.length>30) logs.pop();
+  if(logs.length>30)logs.pop();
   renderLogs();
 }
 function renderLogs(){
@@ -533,9 +535,8 @@ function renderLogs(){
   if(!logs.length){el.innerHTML='<div class="log-empty">Henüz giriş yok</div>';return;}
   el.innerHTML='';
   logs.forEach(function(l){
-    var item=document.createElement('div');
-    item.className='log-item';
-    item.innerHTML='<div style="display:flex;align-items:center;flex:1"><div class="log-dot"></div><div><div class="log-name">'+l.name+'</div><div class="log-detail">'+l.seans+' · '+l.tur+'</div></div></div><div class="log-time">'+l.saat+'</div>';
+    var item=document.createElement('div');item.className='log-item';
+    item.innerHTML='<div style="display:flex;align-items:center;flex:1"><div class="log-dot"></div><div><div class="log-name">'+l.name+'</div><div class="log-detail">'+l.tur+'</div></div></div><div class="log-time">'+l.saat+'</div>';
     el.appendChild(item);
   });
 }
@@ -543,9 +544,7 @@ function renderLogs(){
 var tt;
 function toast(msg,type){
   var el=document.getElementById('toast');
-  el.textContent=msg;
-  el.style.background=type==='err'?'#ff3b30':'#1a1a1a';
-  el.className='toast show';
+  el.textContent=msg;el.className='toast show '+(type==='err'?'err-t':'ok-t');
   clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},2500);
 }
 </script>
