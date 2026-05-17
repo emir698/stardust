@@ -39,7 +39,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .seans-kart{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;align-items:stretch;cursor:pointer;border:2px solid transparent;transition:border .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
 .seans-kart:active{box-shadow:0 1px 4px rgba(0,0,0,0.1)}
 .seans-kart.selected{border-color:var(--ac)}
-.seans-img{width:90px;min-height:90px;background:linear-gradient(135deg,#1a0533,#0d1b4b,#1a0533);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px}
+
 .seans-info{padding:14px 16px;flex:1}
 .seans-mekan{font-size:11px;color:var(--mu);margin-bottom:2px}
 .seans-badge{display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:6px}
@@ -335,12 +335,10 @@ function buildSeansListesi(){
     var kart=document.createElement('div');
     kart.className='seans-kart';
     kart.innerHTML=
-      '<div class="seans-img">🌌</div>'+
-      '<div class="seans-info">'+
-        '<div><span class="seans-mekan">Turkcell Platinum Park</span><span class="seans-badge">İstanbul Avrupa</span></div>'+
-        '<div class="seans-etkinlik">Astra Lumina İstanbul</div>'+
-        '<div class="seans-tarih-saat">'+selectedGun+' - '+saat+'</div>'+
-        '<div class="seans-stat" id="stat-'+saat.replace(':','-')+'">Yükleniyor...</div>'+
+      '<div class="seans-info" style="padding:18px 16px">'+
+        '<div class="seans-tarih-saat" style="font-size:13px;color:#888;margin-bottom:4px">'+selectedGun+'</div>'+
+        '<div class="seans-etkinlik" style="font-size:20px;font-weight:700">'+saat+'</div>'+
+        '<div class="seans-stat" id="stat-'+saat.replace(':','-')+'" style="margin-top:6px">Yükleniyor...</div>'+
       '</div>'+
       '<div class="seans-chevron">›</div>';
     (function(s){
