@@ -550,3 +550,27 @@ function girisVer(){
 }
 
 function addLog(name,seans,saat,tur){
+  logs.unshift({name:name,seans:seans,saat:saat,tur:tur});
+  if(logs.length>30)logs.pop();
+  renderLogs();
+}
+function renderLogs(){
+  var el=document.getElementById('logList');
+  if(!logs.length){el.innerHTML='<div class="log-empty">Henüz giriş yok</div>';return;}
+  el.innerHTML='';
+  logs.forEach(function(l){
+    var item=document.createElement('div');item.className='log-item';
+    item.innerHTML='<div style="display:flex;align-items:center;flex:1"><div class="log-dot"></div><div><div class="log-name">'+l.name+'</div><div class="log-detail">'+l.tur+'</div></div></div><div class="log-time">'+l.saat+'</div>';
+    el.appendChild(item);
+  });
+}
+
+var tt;
+function toast(msg,type){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show '+(type==='err'?'err-t':'ok-t');
+  clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+</body>
+</html>
