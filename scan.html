@@ -304,7 +304,15 @@ function showApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appWrap').style.display='block';
   document.getElementById('userLabel').textContent=currentName||'';
-  loadData();buildSeansListesi();
+  loadData();
+  // Bugünün etkinlik günü kontrolü
+  var today=todayStr();
+  selectedGun=today;
+  if(!isEtkinlik(today)){
+    for(var i=1;i<=14;i++){var d=addDays(today,i);if(isEtkinlik(d)){selectedGun=d;break;}}
+  }
+  // Veri yüklendikten sonra otomatik seans seç
+  setTimeout(function(){autoSelectSeans();},500);
 }
 function doLogin(){
   var email=document.getElementById('loginEmail').value.trim();
@@ -375,6 +383,22 @@ function selectSeans(saat){
   document.getElementById('scanScreen').style.display='block';
   document.getElementById('scanSaatLabel').textContent=saat;
   updateStats();logs=[];renderLogs();
+}
+
+function autoSelectSeans(){
+  // Bugünün en yakın seansını otomatik seç
+  var now=new Date();
+  var saatler=getSaatler(selectedGun)||[];
+  if(saatler.length===0) return;
+  var nowMin=now.getHours()*60+now.getMinutes();
+  // En yakın gelecek seansı bul, yoksa son seansı seç
+  var secili=saatler[saatler.length-1];
+  for(var i=0;i<saatler.length;i++){
+    var p=saatler[i].split(':');
+    var sMin=parseInt(p[0])*60+parseInt(p[1]);
+    if(sMin>=nowMin-30){secili=saatler[i];break;}
+  }
+  selectSeans(secili);
 }
 
 function goBack(){
@@ -526,27 +550,3 @@ function girisVer(){
 }
 
 function addLog(name,seans,saat,tur){
-  logs.unshift({name:name,seans:seans,saat:saat,tur:tur});
-  if(logs.length>30)logs.pop();
-  renderLogs();
-}
-function renderLogs(){
-  var el=document.getElementById('logList');
-  if(!logs.length){el.innerHTML='<div class="log-empty">Henüz giriş yok</div>';return;}
-  el.innerHTML='';
-  logs.forEach(function(l){
-    var item=document.createElement('div');item.className='log-item';
-    item.innerHTML='<div style="display:flex;align-items:center;flex:1"><div class="log-dot"></div><div><div class="log-name">'+l.name+'</div><div class="log-detail">'+l.tur+'</div></div></div><div class="log-time">'+l.saat+'</div>';
-    el.appendChild(item);
-  });
-}
-
-var tt;
-function toast(msg,type){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.className='toast show '+(type==='err'?'err-t':'ok-t');
-  clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},2500);
-}
-</script>
-</body>
-</html>
