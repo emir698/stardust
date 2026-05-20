@@ -452,7 +452,7 @@ td{padding:10px 14px}
     <label>E-posta</label><input type="email" id="nu-email" placeholder="ornek@email.com">
     <label>Şifre</label><input type="password" id="nu-pass" placeholder="En az 6 karakter">
     <label>Kullanıcı Adı</label><input type="text" id="nu-name" placeholder="Ahmet">
-    <label>Rol</label><select id="nu-role"><option value="gise">Gişe Çalışanı</option><option value="admin">Admin</option></select>
+    <label>Rol</label><select id="nu-role"><option value="bilet satis">Bilet Satış</option><option value="okutma">Okutma</option><option value="management1">Management</option><option value="admin">Admin</option></select>
     <div class="mbtns"><button class="btn" onclick="document.getElementById('ov-adduser').classList.remove('open')">İptal</button><button class="btn btn-ac" onclick="addUser()">Ekle</button></div>
   </div>
 </div>
@@ -506,7 +506,7 @@ auth.onAuthStateChanged(function(user){
     currentUser=user;
     usersRef.child(user.uid).once('value',function(snap){
       var ud=snap.val();
-      currentRole=ud?ud.role:'gise';
+      currentRole=ud?ud.role:'bilet satis';
       currentName=ud?ud.name:user.email;
       showApp();
     });
@@ -517,7 +517,8 @@ function showLogin(){document.getElementById('loginWrap').style.display='flex';d
 function showApp(){
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('appWrap').style.display='block';
-  document.getElementById('userLabel').textContent=(currentName||'')+' · '+(currentRole==='admin'?'Admin':'Gişe');
+  var rolMap2={'admin':'Admin','bilet satis':'Bilet Satış','okutma':'Okutma','management1':'Management','gise':'Gişe'};
+  document.getElementById('userLabel').textContent=(currentName||'')+' · '+(rolMap2[currentRole]||currentRole);
   document.querySelectorAll('.admin-only').forEach(function(el){
     if(currentRole==='admin'){el.classList.remove('admin-only');el.classList.add('admin-visible');}
   });
@@ -1554,7 +1555,8 @@ function loadUserList(){
     var data=snap.val()||{},html='';
     Object.keys(data).forEach(function(uid){
       var u=data[uid];
-      var rb=u.role==='admin'?'<span class="role-badge role-admin">Admin</span>':'<span class="role-badge role-gise">Gişe</span>';
+      var rolMapBadge={'admin':'<span class="role-badge role-admin">Admin</span>','bilet satis':'<span class="role-badge role-gise">Bilet Satış</span>','okutma':'<span class="role-badge role-gise">Okutma</span>','management1':'<span class="role-badge role-gise">Management</span>','gise':'<span class="role-badge role-gise">Gişe</span>'};
+      var rb=rolMapBadge[u.role]||'<span class="role-badge role-gise">'+u.role+'</span>';
       html+='<div class="user-row"><div><div class="user-name">'+u.name+'</div><div class="user-role-txt">'+u.email+'</div></div>'+rb+'</div>';
     });
     var el=document.getElementById('userList');if(el)el.innerHTML=html||'<div style="color:var(--mu);font-size:13px;padding:1rem 0">Henüz kullanıcı yok</div>';
