@@ -1558,7 +1558,7 @@ function loadUserList(){
       var u=data[uid];
       var rolMapBadge={'admin':'<span class="role-badge role-admin">Admin</span>','bilet satis':'<span class="role-badge role-gise">Bilet Satış</span>','okutma':'<span class="role-badge role-gise">Okutma</span>','management1':'<span class="role-badge role-gise">Management</span>','gise':'<span class="role-badge role-gise">Gişe</span>'};
       var rb=rolMapBadge[u.role]||'<span class="role-badge role-gise">'+u.role+'</span>';
-      var silBtn=uid===currentUser.uid?'':'<button class="btn btn-sm btn-r" onclick="silUser(''+uid+'',''+u.email+'')">Sil</button>';
+      var silBtn=uid===currentUser.uid?'':'<button class="btn btn-sm btn-r" onclick="silUser(\'' + uid + '\',\'' + u.email + '\')">Sil</button>';
       html+='<div class="user-row"><div><div class="user-name">'+u.name+'</div><div class="user-role-txt">'+u.email+'</div></div>'+rb+'</div>';
     });
     var el=document.getElementById('userList');if(el)el.innerHTML=html||'<div style="color:var(--mu);font-size:13px;padding:1rem 0">Henüz kullanıcı yok</div>';
