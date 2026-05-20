@@ -373,6 +373,15 @@ td{padding:10px 14px}
           <div id="seansSatisPanel"></div>
         </div>
       </div>
+
+      <!-- İndirim Kodu Özeti -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem" id="dashKodKpiGrid"></div>
+
+      <!-- Grup Bazlı Bar Grafik -->
+      <div class="panel" id="dashKodPanel">
+        <div class="panel-title">Grup Bazlı İndirim Kodu Durumu</div>
+        <div id="dashKodGrafik" style="margin-top:.5rem"></div>
+      </div>
     </div>
 
     <!-- İNDİRİM KODLARI -->
@@ -1546,6 +1555,73 @@ function renderDashboard(){
       '<div style="font-family:var(--mo);font-size:12px;color:var(--gn)">'+fmtMoney(stG)+'</div>';
     spEl.appendChild(row);
   });
+
+  renderDashKodlar();
+}
+
+function renderDashKodlar(){
+  var toplam=codes.length;
+  var aktif=codes.filter(function(c){return c&&c.status==='aktif';}).length;
+  var kullanilan=toplam-aktif;
+  var bugun=codes.filter(function(c){return c&&c.date===todayStr();}).length;
+
+  // KPI kartları
+  var kpiEl=document.getElementById('dashKodKpiGrid');
+  if(kpiEl){
+    kpiEl.innerHTML=
+      '<div class="kpi"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+toplam.toLocaleString('tr-TR')+'</div></div>'+
+      '<div class="kpi"><div class="kpi-label">Aktif Kod</div><div class="kpi-val gn">'+aktif.toLocaleString('tr-TR')+'</div></div>'+
+      '<div class="kpi"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+kullanilan.toLocaleString('tr-TR')+'</div><div class="kpi-sub">Bugün: '+bugun+'</div></div>';
+  }
+
+  // Grup bazlı bar grafik
+  var grafEl=document.getElementById('dashKodGrafik');
+  if(!grafEl)return;
+  var bArr=Object.values(batches).filter(Boolean);
+  if(!bArr.length){
+    grafEl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:1rem 0;text-align:center">Henüz kod grubu yok</div>';
+    return;
+  }
+
+  // Her grup için verileri hesapla
+  var grupData=bArr.map(function(b){
+    var tot=(b.codes||[]).length;
+    var kul=(b.codes||[]).filter(function(c){
+      var cd=codes.find(function(x){return x&&x.code===c;});
+      return cd&&cd.status==='deaktif';
+    }).length;
+    return {name:b.name,toplam:tot,kullanilan:kul,aktif:tot-kul};
+  });
+
+  var maxToplam=Math.max.apply(null,grupData.map(function(g){return g.toplam;}));
+
+  var html='<div style="display:flex;flex-direction:column;gap:16px;padding:4px 0">';
+  grupData.forEach(function(g){
+    var pctKul=maxToplam>0?Math.round(g.kullanilan/maxToplam*100):0;
+    var pctAkt=maxToplam>0?Math.round(g.aktif/maxToplam*100):0;
+    var kulPct=g.toplam>0?Math.round(g.kullanilan/g.toplam*100):0;
+    html+=
+      '<div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+          '<span style="font-size:13px;font-weight:500">'+g.name+'</span>'+
+          '<span style="font-size:12px;font-family:var(--mo);color:var(--mu)">'+
+            '<span style="color:var(--rd)">'+g.kullanilan.toLocaleString('tr-TR')+'</span>'+
+            ' / '+g.toplam.toLocaleString('tr-TR')+
+            ' <span style="color:var(--mu)">('+kulPct+'% kullanıldı)</span>'+
+          '</span>'+
+        '</div>'+
+        '<div style="background:var(--bd);border-radius:6px;height:10px;overflow:hidden;display:flex">'+
+          '<div style="width:'+pctKul+'%;background:var(--rd);border-radius:6px 0 0 6px;transition:width .3s"></div>'+
+          '<div style="width:'+pctAkt+'%;background:var(--gn);transition:width .3s"></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:16px;margin-top:5px">'+
+          '<span style="font-size:11px;color:var(--rd)">■ Kullanılan: '+g.kullanilan.toLocaleString('tr-TR')+'</span>'+
+          '<span style="font-size:11px;color:var(--gn)">■ Aktif: '+g.aktif.toLocaleString('tr-TR')+'</span>'+
+        '</div>'+
+      '</div>';
+  });
+  html+='</div>';
+  grafEl.innerHTML=html;
 }
 
 function renderDonut(tam,cocuk,yab,dav){
