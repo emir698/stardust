@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Stardust Ticket Scan</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{--bg:#0a0a0a;--sf:#1a1a1a;--bd:#2a2a2a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--rd:#f87171;--bl:#60a5fa;--sf2:#242424}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -54,12 +53,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .scan-body{padding:16px}
 
 /* İSTATİSTİK */
-.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.stat-box{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px;text-align:center}
-.stat-val{font-size:36px;font-weight:800}
-.stat-val.gold{color:var(--ac)}
-.stat-val.green{color:var(--gn)}
-.stat-label{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
 
 /* QR TARA - BÜYÜK */
 .qr-card{background:var(--sf);border:1px solid var(--bd);border-radius:20px;overflow:hidden;margin-bottom:16px}
@@ -81,15 +75,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .sb{background:var(--sf2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 
 /* SON GİRİŞLER */
-.log-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
-.log-header-row{padding:14px 16px;font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd)}
-.log-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd)}
-.log-item:last-child{border-bottom:none}
-.log-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);margin-right:10px;flex-shrink:0}
-.log-name{font-size:14px;font-weight:500}
-.log-detail{font-size:12px;color:var(--mu);margin-top:1px}
-.log-time{font-size:12px;color:var(--mu);font-family:monospace}
-.log-empty{padding:24px;text-align:center;color:var(--mu);font-size:14px}
+
 
 /* SONUÇ SHEET */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;align-items:flex-end;justify-content:center}
@@ -182,17 +168,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
       <button class="liste-btn" onclick="acListeSheet()">☰ Liste</button>
     </div>
     <div class="scan-body">
-      <!-- İstatistik -->
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-val gold" id="statToplam">0</div>
-          <div class="stat-label">Toplam Bilet</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val green" id="statGiris">0</div>
-          <div class="stat-label">Giriş Yapıldı</div>
-        </div>
-      </div>
+
 
       <!-- QR Tara - Büyük -->
       <div class="qr-card">
@@ -222,11 +198,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
         </div>
       </div>
 
-      <!-- Son Girişler -->
-      <div class="log-card">
-        <div class="log-header-row">Son Girişler</div>
-        <div id="logList"><div class="log-empty">Henüz giriş yok</div></div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -265,6 +237,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyDcmS7qpzMvc6JIsudyIAROvMy052R0bPs",
