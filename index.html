@@ -518,12 +518,47 @@ function showApp(){
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('appWrap').style.display='block';
   var rolMap2={'admin':'Admin','bilet satis':'Bilet Satış','okutma':'Okutma','management1':'Management','gise':'Gişe'};
-  document.getElementById('userLabel').textContent=(currentName||'')+' · '+(rolMap2[currentRole]||currentRole);
-  document.querySelectorAll('.admin-only').forEach(function(el){
-    if(currentRole==='admin'){el.classList.remove('admin-only');el.classList.add('admin-visible');}
-  });
+  document.getElementById('userLabel').textContent=currentName||'';
+  // Sekmeleri role göre göster/gizle
+  var tabSat=document.getElementById('tab-sat');
+  var tabKapi=document.getElementById('tab-kapi');
+  var tabDash=document.getElementById('tab-dashboard');
+  var tabInd=document.getElementById('tab-indirim');
+  var tabAdmin=document.getElementById('tab-admin');
+  var btnYedek=document.querySelector('.btn-ac.admin-only, .admin-visible.btn-ac') || null;
+
+  // Önce hepsini gizle
+  [tabSat,tabKapi,tabDash,tabInd,tabAdmin].forEach(function(t){if(t)t.style.display='none';});
+  document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
+
+  if(currentRole==='admin'){
+    [tabSat,tabKapi,tabDash,tabInd,tabAdmin].forEach(function(t){if(t)t.style.display='';});
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';el.classList.remove('admin-only');el.classList.add('admin-visible');});
+  } else if(currentRole==='bilet satis'){
+    if(tabSat)tabSat.style.display='';
+    if(tabKapi)tabKapi.style.display='';
+  } else if(currentRole==='okutma'){
+    if(tabKapi)tabKapi.style.display='';
+  } else if(currentRole==='management1'){
+    if(tabDash)tabDash.style.display='';
+    if(tabInd)tabInd.style.display='';
+  }
+
+  // Başlangıç sekmesi
+  if(currentRole==='okutma'){
+    switchTab('kapi');
+  } else if(currentRole==='management1'){
+    switchTab('dashboard');
+    initDateFilter();
+  } else if(currentRole==='bilet satis'){
+    switchTab('sat');
+  } else if(currentRole==='admin'){
+    switchTab('sat');
+    initDateFilter();
+  }
+
   loadCodes();loadTickets();loadBiletler();buildTarihBtns();
-  if(currentRole==='admin'){loadUserList();initDateFilter();}
+  if(currentRole==='admin'){loadUserList();}
 }
 function doLogin(){
   var username=document.getElementById('loginEmail').value.trim().toLowerCase();
