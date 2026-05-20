@@ -197,18 +197,18 @@ td{padding:10px 14px}
     <span class="logo">✦ Stardust ✦</span>
     <div class="top-right">
       <span class="user-badge"><span class="sync-dot"></span><span id="userLabel">-</span></span>
-      <button class="btn btn-ac admin-only" onclick="doExport()">Yedek Al</button>
-      <button class="btn btn-r admin-only" onclick="sifirlaVeriler()">🗑️ Veriyi Sıfırla</button>
+      <button class="btn btn-ac" id="btn-yedek" onclick="doExport()" style="display:none">Yedek Al</button>
+      <button class="btn btn-r" id="btn-sifirla" onclick="sifirlaVeriler()" style="display:none">🗑️ Veriyi Sıfırla</button>
       <button class="btn" onclick="doLogout()">Çıkış</button>
     </div>
   </div>
   <div class="main">
     <div class="tabs">
-      <button class="tab active" id="tab-sat" onclick="switchTab('sat')">🎫 Bilet Sat</button>
-      <button class="tab" id="tab-kapi" onclick="switchTab('kapi')">🚪 Kapı</button>
-      <button class="tab admin-only" id="tab-dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
-      <button class="tab admin-only" id="tab-indirim" onclick="switchTab('indirim')">🏷️ İndirim Kodları</button>
-      <button class="tab admin-only" id="tab-admin" onclick="switchTab('admin')">⚙️ Admin</button>
+      <button class="tab active" id="tab-sat" onclick="switchTab('sat')" style="display:none">🎫 Bilet Sat</button>
+      <button class="tab" id="tab-kapi" onclick="switchTab('kapi')" style="display:none">🚪 Kapı</button>
+      <button class="tab" id="tab-dashboard" onclick="switchTab('dashboard')" style="display:none">📊 Dashboard</button>
+      <button class="tab" id="tab-indirim" onclick="switchTab('indirim')" style="display:none">🏷️ İndirim Kodları</button>
+      <button class="tab" id="tab-admin" onclick="switchTab('admin')" style="display:none">⚙️ Admin</button>
     </div>
 
     <!-- BİLET SAT -->
@@ -533,7 +533,8 @@ function showApp(){
 
   if(currentRole==='admin'){
     [tabSat,tabKapi,tabDash,tabInd,tabAdmin].forEach(function(t){if(t)t.style.display='';});
-    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';el.classList.remove('admin-only');el.classList.add('admin-visible');});
+    var by=document.getElementById('btn-yedek');if(by)by.style.display='';
+    var bs=document.getElementById('btn-sifirla');if(bs)bs.style.display='';
   } else if(currentRole==='bilet satis'){
     if(tabSat)tabSat.style.display='';
     if(tabKapi)tabKapi.style.display='';
@@ -549,8 +550,11 @@ function showApp(){
   if(currentRole==='okutma'){
     switchTab('kapi');
   } else if(currentRole==='management1'){
-    switchTab('dashboard');
     initDateFilter();
+    switchTab('dashboard');
+    // İndirim sekmesi için kodları önceden yükle
+    renderIndirim();
+    renderIndirimStats();
   } else if(currentRole==='bilet satis'){
     switchTab('sat');
   } else if(currentRole==='admin'){
