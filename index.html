@@ -479,8 +479,19 @@ td{padding:10px 14px}
 <div class="overlay" id="ov-batch" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="width:560px">
     <h3>Yeni Kod Grubu Ekle</h3>
-    <p>Kodları virgül veya satır ile ayırarak girin. Grup adını belirtin.</p>
+    <p>Kodları virgül veya satır ile ayırarak girin. Grup adını ve indirim oranını belirtin.</p>
     <label>Grup Adı</label><input type="text" id="batch-name" placeholder="Örn: Firma A, VIP Davetiyeler...">
+    <label>İndirim Oranı</label>
+    <select id="batch-indirim" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;margin-bottom:.75rem">
+      <option value="5">%5</option>
+      <option value="10" selected>%10</option>
+      <option value="15">%15</option>
+      <option value="20">%20</option>
+      <option value="25">%25</option>
+      <option value="30">%30</option>
+      <option value="50">%50</option>
+      <option value="100">%100 (Ücretsiz)</option>
+    </select>
     <label>Kodlar (virgül veya satır ile ayırın)</label>
     <textarea id="batch-codes" rows="6" placeholder="ALISTZ9IK6M, ALISTJXFO2O&#10;veya her satıra bir kod..."></textarea>
     <div id="batch-preview" style="font-size:12px;color:var(--mu);margin-top:-4px;margin-bottom:.5rem"></div>
@@ -838,9 +849,15 @@ function indirimUygula(){
       sonuc.style.color='var(--rd)';
       return;
     }
+    // Kodun grubunu bul ve indirim oranını al
+    var kodGrubu=null;
+    Object.values(batches).forEach(function(b){
+      if(b&&b.codes&&b.codes.indexOf(kod)>-1) kodGrubu=b;
+    });
+    var oran=kodGrubu&&kodGrubu.indirim?kodGrubu.indirim:10;
     aktifIndirimKodu={key:keys[0],code:kod};
-    indirimOrani=0.10;
-    sonuc.innerHTML='✅ %10 indirim uygulandı!';
+    indirimOrani=oran/100;
+    sonuc.innerHTML='✅ %'+oran+' indirim uygulandı!';
     sonuc.style.color='var(--gn)';
     document.getElementById('indirimBtn').style.display='none';
     document.getElementById('indirimIptalBtn').style.display='';
@@ -1771,11 +1788,14 @@ function renderBatchList(){
     // gerçek kullanım sayısı
     var realUsed=(b.codes||[]).filter(function(c){var cd=codes.find(function(x){return x&&x.code===c;});return cd&&cd.status==='deaktif';}).length;
     var aktif=total-realUsed;
+    var indStr='%'+(b.indirim||10);
     html+='<tr>'+
       '<td style="font-weight:500">'+b.name+'</td>'+
+      '<td><span style="font-size:12px;background:rgba(232,197,71,.1);color:var(--ac);border:1px solid rgba(232,197,71,.25);border-radius:20px;padding:2px 10px;font-family:var(--mo)">'+indStr+'</span></td>'+
       '<td style="font-family:var(--mo);color:var(--ac)">'+total.toLocaleString('tr-TR')+'</td>'+
       '<td style="font-family:var(--mo);color:var(--rd)">'+realUsed.toLocaleString('tr-TR')+'</td>'+
       '<td style="font-family:var(--mo);color:var(--gn)">'+aktif.toLocaleString('tr-TR')+'</td>'+
+      '<td class="dc">'+(b.date||'—')+'</td>'+
       '<td><button class="btn btn-sm btn-r" data-key="'+key+'" onclick="deleteBatch(this.dataset.key)">Sil</button></td>'+
     '</tr>';
   });
@@ -1800,15 +1820,16 @@ function parseBatchCodes(text){
 
 function saveBatch(){
   var name=document.getElementById('batch-name').value.trim();
+  var indirim=parseInt(document.getElementById('batch-indirim').value)||10;
   var codesText=document.getElementById('batch-codes').value;
   if(!name){toast('Grup adı girin','err');return;}
   var list=parseBatchCodes(codesText);
   if(!list.length){toast('En az 1 kod girin','err');return;}
   var key='batch_'+Date.now();
-  batchesRef.child(key).set({name:name,codes:list,date:todayStr()},function(err){
+  batchesRef.child(key).set({name:name,codes:list,indirim:indirim,date:todayStr()},function(err){
     if(err){toast('Hata: '+err.message,'err');return;}
     document.getElementById('ov-batch').classList.remove('open');
-    toast(name+' grubu oluşturuldu ('+list.length+' kod)','ok');
+    toast(name+' grubu oluşturuldu ('+list.length+' kod, %'+indirim+' indirim)','ok');
     renderBatchList();
   });
 }
