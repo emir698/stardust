@@ -1560,10 +1560,12 @@ function renderDashboard(){
 }
 
 function renderDashKodlar(){
+  var today=todayStr();
   var toplam=codes.length;
   var aktif=codes.filter(function(c){return c&&c.status==='aktif';}).length;
   var kullanilan=toplam-aktif;
-  var bugun=codes.filter(function(c){return c&&c.date===todayStr();}).length;
+  var bugun=codes.filter(function(c){return c&&c.date===today;}).length;
+  var genel_pct=toplam>0?Math.round(kullanilan/toplam*100):0;
 
   // KPI kartları
   var kpiEl=document.getElementById('dashKodKpiGrid');
@@ -1571,15 +1573,34 @@ function renderDashKodlar(){
     kpiEl.innerHTML=
       '<div class="kpi"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+toplam.toLocaleString('tr-TR')+'</div></div>'+
       '<div class="kpi"><div class="kpi-label">Aktif Kod</div><div class="kpi-val gn">'+aktif.toLocaleString('tr-TR')+'</div></div>'+
-      '<div class="kpi"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+kullanilan.toLocaleString('tr-TR')+'</div><div class="kpi-sub">Bugün: '+bugun+'</div></div>';
+      '<div class="kpi"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+kullanilan.toLocaleString('tr-TR')+'</div><div class="kpi-sub">Bugün: +'+bugun+'</div></div>';
   }
 
-  // Grup bazlı bar grafik
+  // Genel progress bar
   var grafEl=document.getElementById('dashKodGrafik');
   if(!grafEl)return;
+
+  var barColor=genel_pct>=80?'var(--rd)':genel_pct>=50?'var(--ac)':'var(--gn)';
+  var html=
+    '<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<span style="font-size:13px;font-weight:600;color:var(--tx)">Genel Stok Durumu</span>'+
+        '<span style="font-size:13px;font-family:var(--mo);color:'+barColor+'">%'+genel_pct+' kullanıldı</span>'+
+      '</div>'+
+      '<div style="background:var(--bd);border-radius:8px;height:14px;overflow:hidden">'+
+        '<div style="width:'+genel_pct+'%;height:100%;background:'+barColor+';border-radius:8px;transition:width .4s"></div>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--mu);font-family:var(--mo)">'+
+        '<span>'+kullanilan.toLocaleString('tr-TR')+' kullanıldı</span>'+
+        '<span>'+aktif.toLocaleString('tr-TR')+' kaldı</span>'+
+      '</div>'+
+    '</div>';
+
+  // Grup bazlı
   var bArr=Object.values(batches).filter(Boolean);
   if(!bArr.length){
-    grafEl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:1rem 0;text-align:center">Henüz kod grubu yok</div>';
+    html+='<div style="color:var(--mu);font-size:13px;padding:1rem 0;text-align:center">Henüz kod grubu yok</div>';
+    grafEl.innerHTML=html;
     return;
   }
 
@@ -1590,33 +1611,44 @@ function renderDashKodlar(){
       var cd=codes.find(function(x){return x&&x.code===c;});
       return cd&&cd.status==='deaktif';
     }).length;
-    return {name:b.name,toplam:tot,kullanilan:kul,aktif:tot-kul};
+    var bugunKul=(b.codes||[]).filter(function(c){
+      var cd=codes.find(function(x){return x&&x.code===c;});
+      return cd&&cd.status==='deaktif'&&cd.date===today;
+    }).length;
+    return {name:b.name,toplam:tot,kullanilan:kul,aktif:tot-kul,bugun:bugunKul};
   });
 
-  var maxToplam=Math.max.apply(null,grupData.map(function(g){return g.toplam;}));
+  // Doluluk oranına göre sırala (en çok tükenen üstte)
+  grupData.sort(function(a,b){
+    var pA=a.toplam>0?a.kullanilan/a.toplam:0;
+    var pB=b.toplam>0?b.kullanilan/b.toplam:0;
+    return pB-pA;
+  });
 
-  var html='<div style="display:flex;flex-direction:column;gap:16px;padding:4px 0">';
+  html+='<div style="display:flex;flex-direction:column;gap:16px">';
   grupData.forEach(function(g){
-    var pctKul=maxToplam>0?Math.round(g.kullanilan/maxToplam*100):0;
-    var pctAkt=maxToplam>0?Math.round(g.aktif/maxToplam*100):0;
     var kulPct=g.toplam>0?Math.round(g.kullanilan/g.toplam*100):0;
+    var uyari=kulPct>=80;
+    var bColor=kulPct>=80?'var(--rd)':kulPct>=50?'var(--ac)':'var(--gn)';
+
     html+=
-      '<div>'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
-          '<span style="font-size:13px;font-weight:500">'+g.name+'</span>'+
+      '<div style="background:var(--sf2);border:1px solid '+(uyari?'rgba(248,113,113,.35)':'var(--bd)')+';border-radius:12px;padding:1rem">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            '<span style="font-size:13px;font-weight:600">'+g.name+'</span>'+
+            (uyari?'<span style="font-size:10px;background:rgba(248,113,113,.15);color:var(--rd);border:1px solid rgba(248,113,113,.3);border-radius:20px;padding:2px 8px;font-weight:600">⚠ Stok Azalıyor</span>':'')+
+            (g.bugun>0?'<span style="font-size:10px;background:rgba(96,165,250,.1);color:var(--bl);border:1px solid rgba(96,165,250,.25);border-radius:20px;padding:2px 8px;font-family:var(--mo)">Bugün +'+g.bugun+'</span>':'')+
+          '</div>'+
           '<span style="font-size:12px;font-family:var(--mo);color:var(--mu)">'+
-            '<span style="color:var(--rd)">'+g.kullanilan.toLocaleString('tr-TR')+'</span>'+
-            ' / '+g.toplam.toLocaleString('tr-TR')+
-            ' <span style="color:var(--mu)">('+kulPct+'% kullanıldı)</span>'+
+            g.kullanilan.toLocaleString('tr-TR')+' / '+g.toplam.toLocaleString('tr-TR')+
           '</span>'+
         '</div>'+
-        '<div style="background:var(--bd);border-radius:6px;height:10px;overflow:hidden;display:flex">'+
-          '<div style="width:'+pctKul+'%;background:var(--rd);border-radius:6px 0 0 6px;transition:width .3s"></div>'+
-          '<div style="width:'+pctAkt+'%;background:var(--gn);transition:width .3s"></div>'+
+        '<div style="background:var(--bd);border-radius:6px;height:10px;overflow:hidden">'+
+          '<div style="width:'+kulPct+'%;height:100%;background:'+bColor+';border-radius:6px;transition:width .4s"></div>'+
         '</div>'+
-        '<div style="display:flex;gap:16px;margin-top:5px">'+
-          '<span style="font-size:11px;color:var(--rd)">■ Kullanılan: '+g.kullanilan.toLocaleString('tr-TR')+'</span>'+
-          '<span style="font-size:11px;color:var(--gn)">■ Aktif: '+g.aktif.toLocaleString('tr-TR')+'</span>'+
+        '<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;font-family:var(--mo)">'+
+          '<span style="color:'+bColor+'">%'+kulPct+' kullanıldı</span>'+
+          '<span style="color:var(--gn)">'+g.aktif.toLocaleString('tr-TR')+' aktif kaldı</span>'+
         '</div>'+
       '</div>';
   });
