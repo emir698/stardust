@@ -381,9 +381,10 @@ td{padding:10px 14px}
       <div class="toolbar">
         <div class="sw"><span class="si">🔍</span><input type="text" id="si1" placeholder="Kod ara..." oninput="applyFilter()"></div>
         <select id="sf1" onchange="applyFilter()"><option value="hepsi">Tüm Kodlar</option><option value="aktif">Sadece Aktif</option><option value="deaktif">Sadece Deaktif</option></select>
+        <select id="sf2" onchange="applyFilter()"><option value="hepsi">Tüm Gruplar</option></select>
         <button class="btn btn-r" onclick="openBulk()">Toplu Deaktif</button>
       </div>
-      <div class="tw"><table><thead><tr><th>#</th><th>Kod</th><th>İndirim</th><th>Durum</th><th>Kullanan</th><th>Kullanım Tarihi</th><th>İşlem</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Kod</th><th>Grup</th><th>İndirim</th><th>Durum</th><th>Kullanan</th><th>Kullanım Tarihi</th><th>İşlem</th></tr></thead><tbody id="tbody"></tbody></table></div>
       <div class="pag"><span class="pi" id="pi1"></span><div style="display:flex;gap:8px"><button class="btn" id="pb1" onclick="changePg(-1)">← Önceki</button><button class="btn" id="nb1" onclick="changePg(1)">Sonraki →</button></div></div>
     </div>
 
@@ -405,6 +406,14 @@ td{padding:10px 14px}
             <div style="font-size:12px;color:var(--mu);margin-bottom:4px;margin-top:.75rem">Aktif İndirim Kodu</div><div class="card-stat" id="adminAktifKod">-</div>
           </div>
         </div>
+      </div>
+      <!-- KOD GRUPLARI -->
+      <div class="page-section" style="margin-top:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <div class="section-title" style="margin-bottom:0">Kod Grupları</div>
+          <button class="btn btn-ac" onclick="openYeniBatch()">+ Yeni Grup Ekle</button>
+        </div>
+        <div id="batchList"><div style="color:var(--mu);font-size:13px;padding:1rem 0">Yükleniyor...</div></div>
       </div>
     </div>
   </div>
@@ -457,6 +466,22 @@ td{padding:10px 14px}
   </div>
 </div>
 
+<!-- YENİ GRUP EKLE -->
+<div class="overlay" id="ov-batch" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:560px">
+    <h3>Yeni Kod Grubu Ekle</h3>
+    <p>Kodları virgül veya satır ile ayırarak girin. Grup adını belirtin.</p>
+    <label>Grup Adı</label><input type="text" id="batch-name" placeholder="Örn: Firma A, VIP Davetiyeler...">
+    <label>Kodlar (virgül veya satır ile ayırın)</label>
+    <textarea id="batch-codes" rows="6" placeholder="ALISTZ9IK6M, ALISTJXFO2O&#10;veya her satıra bir kod..."></textarea>
+    <div id="batch-preview" style="font-size:12px;color:var(--mu);margin-top:-4px;margin-bottom:.5rem"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="document.getElementById('ov-batch').classList.remove('open')">İptal</button>
+      <button class="btn btn-ac" onclick="saveBatch()">Grubu Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <div class="print-area" id="printArea" style="display:none"></div>
 <div class="toast" id="toast"></div>
 
@@ -476,7 +501,7 @@ var firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 emailjs.init('bxTBrj4JyPTee19s_');
 var auth=firebase.auth(),db=firebase.database();
-var codesRef=db.ref('codes'),usersRef=db.ref('users'),ticketsRef=db.ref('tickets'),biletlerRef=db.ref('biletler');
+var codesRef=db.ref('codes'),usersRef=db.ref('users'),ticketsRef=db.ref('tickets'),biletlerRef=db.ref('biletler'),batchesRef=db.ref('codeBatches');
 var PRICES={tam:1500,cocuk:1200,yabanci:2250,davetli:0},CAPACITY=0;
 
 function pad(x){return x<10?'0'+x:String(x);}
@@ -496,6 +521,7 @@ function dateInRange(ds,start,end){
 }
 
 var codes=[],tickets=[],biletler={},fil=[],pg=1,PG=30;
+var batches={},batchMap={}; // kod -> grup adı
 var currentUser=null,currentRole=null,currentName=null;
 var selectedTarih=null,selectedSeans=null,qty={tam:0,cocuk:0,yabanci:0,davetli:0};
 var seansTickets={},kapiLogs=[];
@@ -562,7 +588,7 @@ function showApp(){
     initDateFilter();
   }
 
-  loadCodes();loadTickets();loadBiletler();buildTarihBtns();
+  loadCodes();loadTickets();loadBiletler();loadBatches();buildTarihBtns();
   if(currentRole==='admin'){loadUserList();}
 }
 function doLogin(){
@@ -1553,7 +1579,15 @@ function renderIndirimStats(){
 function applyFilter(){
   var q=document.getElementById('si1').value.trim().toUpperCase();
   var s=document.getElementById('sf1').value;
-  fil=codes.filter(function(c){return c&&(!q||c.code.indexOf(q)>=0)&&(s==='hepsi'||(s==='aktif'&&c.status==='aktif')||(s==='deaktif'&&c.status==='deaktif'));});
+  var g=document.getElementById('sf2')?document.getElementById('sf2').value:'hepsi';
+  fil=codes.filter(function(c){
+    if(!c)return false;
+    if(q&&c.code.indexOf(q)<0)return false;
+    if(s==='aktif'&&c.status!=='aktif')return false;
+    if(s==='deaktif'&&c.status!=='deaktif')return false;
+    if(g!=='hepsi'&&(batchMap[c.code]||'Grupsuz')!==g)return false;
+    return true;
+  });
   pg=1;renderIndirim();
 }
 function renderIndirim(){
@@ -1565,7 +1599,9 @@ function renderIndirim(){
     for(var j=0;j<codes.length;j++){if(codes[j]&&codes[j].code===c.code){gi=j;break;}}
     var badge=c.status==='aktif'?'<span class="badge ba">AKTİF</span>':'<span class="badge bdd">DEAKTİF</span>';
     var btn=c.status==='aktif'?'<button class="btn btn-sm btn-r" onclick="confDe('+gi+')">Deaktif</button>':'<button class="btn btn-sm btn-g" onclick="reAk('+gi+')">Aktif Et</button>';
-    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td style="color:var(--mu)">%10</td><td>'+badge+'</td><td style="font-size:12px">'+(c.kullanan||'—')+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
+    var grupAdi=batchMap[c.code]||'—';
+    var grupBadge=grupAdi!=='—'?'<span style="font-size:11px;background:rgba(232,197,71,.1);color:var(--ac);border:1px solid rgba(232,197,71,.25);border-radius:20px;padding:2px 8px;font-family:var(--mo)">'+grupAdi+'</span>':'<span style="color:var(--mu);font-size:12px">—</span>';
+    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td>'+grupBadge+'</td><td style="color:var(--mu)">%10</td><td>'+badge+'</td><td style="font-size:12px">'+(c.kullanan||'—')+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
   }
   tb.innerHTML=rows;updatePag();
 }
@@ -1585,12 +1621,106 @@ function bulkDo(){
   document.getElementById('ov3').classList.remove('open');toast(count+' kod deaktif edildi','ok');
 }
 
+// BATCH / KOD GRUPLARI
+function loadBatches(){
+  batchesRef.on('value',function(snap){
+    batches=snap.val()||{};
+    // batchMap oluştur: kod -> grup adı
+    batchMap={};
+    Object.values(batches).forEach(function(b){
+      if(!b||!b.codes)return;
+      b.codes.forEach(function(code){batchMap[code]=b.name;});
+    });
+    // Grup filtresini güncelle
+    var sf2=document.getElementById('sf2');
+    if(sf2){
+      var prev=sf2.value;
+      sf2.innerHTML='<option value="hepsi">Tüm Gruplar</option>';
+      Object.values(batches).forEach(function(b){
+        if(!b)return;
+        var opt=document.createElement('option');
+        opt.value=b.name;opt.textContent=b.name;
+        sf2.appendChild(opt);
+      });
+      sf2.value=prev;
+    }
+    if(document.getElementById('page-admin').style.display!=='none') renderBatchList();
+    if(document.getElementById('page-indirim').style.display!=='none'){renderIndirim();}
+  });
+}
+
+function renderBatchList(){
+  var el=document.getElementById('batchList');
+  if(!el)return;
+  var bArr=Object.entries(batches);
+  if(!bArr.length){el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:1rem 0">Henüz grup yok. Yukarıdan ekleyin.</div>';return;}
+  var html='<div class="tw"><table><thead><tr><th>Grup Adı</th><th>Toplam Kod</th><th>Kullanılan</th><th>Aktif</th><th>Oluşturulma</th><th>İşlem</th></tr></thead><tbody>';
+  bArr.forEach(function(entry){
+    var key=entry[0],b=entry[1];
+    if(!b)return;
+    var total=(b.codes||[]).length;
+    var used=(b.codes||[]).filter(function(c){return batchMap[c]&&codes.find(function(cd){return cd&&cd.code===c&&cd.status==='deaktif';});}).length;
+    // gerçek kullanım sayısı
+    var realUsed=(b.codes||[]).filter(function(c){var cd=codes.find(function(x){return x&&x.code===c;});return cd&&cd.status==='deaktif';}).length;
+    var aktif=total-realUsed;
+    html+='<tr>'+
+      '<td style="font-weight:500">'+b.name+'</td>'+
+      '<td style="font-family:var(--mo);color:var(--ac)">'+total.toLocaleString('tr-TR')+'</td>'+
+      '<td style="font-family:var(--mo);color:var(--rd)">'+realUsed.toLocaleString('tr-TR')+'</td>'+
+      '<td style="font-family:var(--mo);color:var(--gn)">'+aktif.toLocaleString('tr-TR')+'</td>'+
+      '<td class="dc">'+(b.date||'—')+'</td>'+
+      '<td><button class="btn btn-sm btn-r" onclick="deleteBatch(''+key+'')">Sil</button></td>'+
+    '</tr>';
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+function openYeniBatch(){
+  document.getElementById('batch-name').value='';
+  document.getElementById('batch-codes').value='';
+  document.getElementById('batch-preview').textContent='';
+  document.getElementById('ov-batch').classList.add('open');
+  document.getElementById('batch-codes').oninput=function(){
+    var list=parseBatchCodes(this.value);
+    document.getElementById('batch-preview').textContent=list.length>0?list.length+' kod algılandı':'';
+  };
+}
+
+function parseBatchCodes(text){
+  return text.split(/[
+,]+/).map(function(s){return s.trim().toUpperCase();}).filter(function(s){return s.length>0;});
+}
+
+function saveBatch(){
+  var name=document.getElementById('batch-name').value.trim();
+  var codesText=document.getElementById('batch-codes').value;
+  if(!name){toast('Grup adı girin','err');return;}
+  var list=parseBatchCodes(codesText);
+  if(!list.length){toast('En az 1 kod girin','err');return;}
+  var key='batch_'+Date.now();
+  batchesRef.child(key).set({name:name,codes:list,date:todayStr()},function(err){
+    if(err){toast('Hata: '+err.message,'err');return;}
+    document.getElementById('ov-batch').classList.remove('open');
+    toast(name+' grubu oluşturuldu ('+list.length+' kod)','ok');
+    renderBatchList();
+  });
+}
+
+function deleteBatch(key){
+  if(!confirm('Bu grup silinsin mi? Kodlar silinmez, sadece grup ataması kalkar.'))return;
+  batchesRef.child(key).remove(function(err){
+    if(!err)toast('Grup silindi','ok');
+  });
+}
+
 // ADMİN
 function renderAdminPage(){
   document.getElementById('adminTotalTickets').textContent=tickets.reduce(function(a,t){return a+(t?((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)):0);},0).toLocaleString('tr-TR');
   document.getElementById('adminTotalGelir').textContent=fmtMoney(tickets.reduce(function(a,t){return a+(t?(t.toplam||0):0);},0));
   document.getElementById('adminAktifKod').textContent=codes.filter(function(c){return c&&c.status==='aktif';}).length.toLocaleString('tr-TR');
   loadUserList();
+  renderBatchList();
 }
 function loadUserList(){
   usersRef.once('value',function(snap){
