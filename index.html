@@ -15,21 +15,20 @@
 :root{--bg:#0f0f0f;--sf:#1a1a1a;--sf2:#242424;--bd:#2a2a2a;--bd2:#3a3a3a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--gd:rgba(74,222,128,0.08);--rd:#f87171;--rdd:rgba(248,113,113,0.08);--bl:#60a5fa;--mo:'IBM Plex Mono',monospace;--sa:'DM Sans',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--tx);font-family:var(--sa);min-height:100vh}
-.login-wrap{min-height:100vh;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
-.login-logo-wrap{text-align:center;margin-bottom:2.5rem}
-.login-logo-wrap .ll-star{font-size:13px;letter-spacing:4px;color:#e8c547;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-.login-logo-wrap .ll-name{font-size:28px;font-weight:800;color:#fff;margin-top:8px;letter-spacing:1px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-.login-box{background:var(--sf);border:1px solid var(--bd2);border-radius:16px;padding:2.5rem;width:360px;max-width:100%}
-.login-logo{font-family:var(--mo);font-size:11px;color:var(--ac);letter-spacing:3px;margin-bottom:2rem;text-align:center}
-.login-title{font-size:20px;font-weight:600;margin-bottom:2rem;text-align:center}
-.form-group{margin-bottom:1rem}
-.form-label{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
-.form-input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;color:var(--tx);font-family:var(--sa);font-size:14px;outline:none;transition:border .15s}
-.form-input:focus{border-color:var(--ac)}
-.btn-login{width:100%;padding:12px;background:var(--ac);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sa);transition:background .15s;margin-top:.5rem}
-.btn-login:hover{background:#f0cf5a}
-.btn-login:disabled{opacity:.6;cursor:default}
-.login-err{font-size:13px;color:var(--rd);text-align:center;margin-top:1rem;min-height:20px}
+/* LOGIN */
+.login-screen{min-height:100vh;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+.login-logo{text-align:center;margin-bottom:2.5rem}
+.login-logo .star{font-size:13px;letter-spacing:4px;color:#e8c547;font-weight:700}
+.login-logo .name{font-size:28px;font-weight:800;color:#fff;margin-top:8px;letter-spacing:1px}
+.login-logo .sub{font-size:11px;color:#555;letter-spacing:3px;margin-top:4px}
+.login-card{background:#1a1a1a;border-radius:20px;padding:1.75rem;width:100%;border:1px solid #2a2a2a}
+.fl{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+.fi{width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;outline:none;margin-bottom:1rem;-webkit-appearance:none}
+.fi:focus{border-color:#e8c547}
+.btn-login{width:100%;padding:16px;background:#e8c547;color:#000;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
+.login-err{font-size:13px;color:#f87171;text-align:center;margin-top:12px;min-height:18px}
+
+
 .app{display:none}
 .topbar{border-bottom:1px solid var(--bd);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10}
 .logo{font-family:var(--mo);font-size:12px;color:var(--ac);letter-spacing:2px}
@@ -180,19 +179,23 @@ td{padding:10px 14px}
 </head>
 <body>
 
-<div class="login-wrap" id="loginWrap">
-  <div class="login-logo-wrap">
-    <div class="ll-star">✦ STARDUST ✦</div>
-    <div class="ll-name">Box Office</div>
-  </div>
-  <div class="login-box">
-    <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" type="email" id="loginEmail" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="form-group"><label class="form-label">Şifre</label><input class="form-input" type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
-    <div class="login-err" id="loginErr"></div>
+<div id="loginWrap">
+  <div class="login-screen">
+    <div class="login-logo">
+      <div class="star">✦ STARDUST ✦</div>
+      <div class="name">Box Office</div>
+      
+    </div>
+    <div class="login-card">
+      <label class="fl">E-posta</label>
+      <input class="fi" type="email" id="loginEmail" onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="fl">Şifre</label>
+      <input class="fi" type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>
   </div>
 </div>
-
 <div class="app" id="appWrap">
   <div class="topbar">
     <span class="logo">✦ Stardust ✦</span>
@@ -294,15 +297,8 @@ td{padding:10px 14px}
         <div class="page-section" style="margin-bottom:0">
           <div class="section-title">PNR ile Sorgula</div>
           <div style="display:flex;gap:8px;flex-direction:column">
-            <div style="display:flex;gap:8px">
-              <input type="text" id="pnrInput" class="form-input" placeholder="PNR-XXXXXXXX veya SD-X-XXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px;flex:1" onkeydown="if(event.key==='Enter')sorgulaPNR()">
-              <button class="btn btn-ac" onclick="sorgulaPNR()">Sorgula</button>
-              <button class="btn" id="kameraBtn" onclick="toggleKamera()">📷</button>
-            </div>
-            <div id="kameraAlani" style="display:none;margin-top:10px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;overflow:hidden">
-              <div id="qr-reader" style="width:100%"></div>
-              <div style="padding:8px;text-align:center"><button class="btn btn-r btn-sm" onclick="kameraKapat()">Kamerayı Kapat</button></div>
-            </div>
+            <input type="text" id="pnrInput" class="form-input" placeholder="PNR-XXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaPNR()">
+            <button class="btn btn-ac" onclick="sorgulaPNR()">Sorgula</button>
           </div>
         </div>
 
@@ -461,22 +457,11 @@ td{padding:10px 14px}
 <!-- KULLANICI EKLE -->
 <div class="overlay" id="ov-adduser" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal"><h3>Yeni Kullanıcı Ekle</h3>
-    <label>E-posta</label><input type="email" id="nu-email">
+    <label>E-posta</label><input type="email" id="nu-email" placeholder="ornek@email.com">
     <label>Şifre</label><input type="password" id="nu-pass" placeholder="En az 6 karakter">
     <label>Kullanıcı Adı</label><input type="text" id="nu-name" placeholder="Ahmet">
     <label>Rol</label><select id="nu-role"><option value="gise">Gişe Çalışanı</option><option value="admin">Admin</option></select>
     <div class="mbtns"><button class="btn" onclick="document.getElementById('ov-adduser').classList.remove('open')">İptal</button><button class="btn btn-ac" onclick="addUser()">Ekle</button></div>
-  </div>
-</div>
-
-<!-- BİLET GÖRÜNTÜLE MODAL -->
-<div class="overlay" id="ov-bilet-goruntule" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="width:480px">
-    <h3>🎟️ Bilet Detayı</h3>
-    <div id="biletGoruntuleIcerik"></div>
-    <div class="mbtns">
-      <button class="btn" onclick="document.getElementById('ov-bilet-goruntule').classList.remove('open')">Kapat</button>
-    </div>
   </div>
 </div>
 
@@ -1009,17 +994,9 @@ function kameraAc(){
     function(decodedText){
       // QR okununca
       kameraKapat();
-      var val=decodedText.trim().toUpperCase();
+      document.getElementById('pnrInput').value=decodedText.trim().toUpperCase();
+      sorgulaPNR();
       toast('QR kod okundu!','ok');
-      if(val.startsWith('SD-')){
-        // Tekil bilet no
-        document.getElementById('biletNoInput').value=val;
-        sorgulaBiletNo();
-      } else {
-        // PNR kodu
-        document.getElementById('pnrInput').value=val;
-        sorgulaPNR();
-      }
     },
     function(err){}
   ).catch(function(err){
@@ -1062,13 +1039,7 @@ function buildKapiTarihBtns(){
     (function(date){btn.onclick=function(){selectKapiTarih(date);};})(d);
     container.appendChild(btn);
   });
-  // Bugünü otomatik seç, bugün etkinlik günü değilse en yakın günü seç
-  if(!kapiSelectedTarih&&gunler.length>0){
-    var today=todayStr();
-    var bugun=gunler.indexOf(today);
-    if(bugun>-1) selectKapiTarih(today);
-    else selectKapiTarih(gunler[0]);
-  }
+  if(!kapiSelectedTarih&&gunler.length>0) selectKapiTarih(gunler[0]);
 }
 
 function selectKapiTarih(d){
@@ -1109,7 +1080,6 @@ function renderKapiGunBiletler(){
       '<td>'+(t.yabanci||0)+'</td>'+
       '<td>'+durum+'</td>'+
       '<td></td>';
-    // Giriş Ver butonu
     if(!kullanildi&&t.pnr){
       var gb=document.createElement('button');
       gb.className='btn btn-sm btn-ac';
@@ -1118,74 +1088,9 @@ function renderKapiGunBiletler(){
       gb.addEventListener('click',function(){hizliGiris(this.dataset.pnr);});
       tr.querySelector('td:last-child').appendChild(gb);
     }
-    // Bileti Görüntüle butonu
-    if(t.pnr){
-      var vb=document.createElement('button');
-      vb.className='btn btn-sm';
-      vb.style.marginLeft='4px';
-      vb.textContent='🎟️ Görüntüle';
-      vb.dataset.pnr=t.pnr;
-      vb.addEventListener('click',function(){biletGoruntule(this.dataset.pnr);});
-      tr.querySelector('td:last-child').appendChild(vb);
-    }
     tbEl.appendChild(tr);
   });
   // rows rendered via DOM above
-}
-
-function biletGoruntule(pnr){
-  db.ref('pnrler/'+pnr).once('value',function(snap){
-    var p=snap.val();
-    if(!p){toast('PNR bulunamadı','err');return;}
-    var icerik=document.getElementById('biletGoruntuleIcerik');
-    icerik.innerHTML='';
-
-    // Müşteri bilgileri
-    var info=document.createElement('div');
-    info.style.cssText='background:var(--bg);border-radius:8px;padding:1rem;margin-bottom:1rem';
-    info.innerHTML=
-      '<div style="font-size:16px;font-weight:600;margin-bottom:8px">'+p.musteriAd+'</div>'+
-      (p.musteriTel?'<div style="font-size:13px;color:var(--mu)">📞 '+p.musteriTel+'</div>':'')+
-      (p.musteriMail?'<div style="font-size:13px;color:var(--mu)">✉️ '+p.musteriMail+'</div>':'')+
-      '<div style="font-size:13px;color:var(--mu);margin-top:6px">📅 '+p.tarih+' · Seans '+p.seans+'</div>'+
-      '<div style="font-size:13px;color:var(--mu)">Tam: '+(p.tam||0)+' · Çocuk: '+(p.cocuk||0)+' · Yabancı: '+(p.yabanci||0)+'</div>'+
-      '<div style="font-size:13px;color:var(--ac);font-family:var(--mo);margin-top:6px">PNR: '+pnr+'</div>';
-    icerik.appendChild(info);
-
-    // Biletler ve QR kodlar
-    var biletNoList=p.biletler||[];
-    if(biletNoList.length===0){
-      var noData=document.createElement('div');
-      noData.style.cssText='color:var(--mu);font-size:13px;text-align:center;padding:1rem';
-      noData.textContent='Bilet detayı bulunamadı.';
-      icerik.appendChild(noData);
-    } else {
-      biletNoList.forEach(function(bno,idx){
-        biletlerRef.child(bno).once('value',function(bs){
-          var b=bs.val();
-          var biletDiv=document.createElement('div');
-          biletDiv.style.cssText='background:#fff;color:#000;border-radius:8px;padding:1rem;margin-bottom:8px;text-align:center';
-          biletDiv.innerHTML=
-            '<div style="font-size:10px;letter-spacing:2px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
-            '<div style="font-size:14px;font-weight:700;margin-bottom:2px">'+p.musteriAd+'</div>'+
-            '<div style="font-size:12px;color:#555;margin-bottom:8px">'+p.tarih+' · Seans '+p.seans+'</div>'+
-            '<div id="qr-goruntule-'+idx+'" style="display:flex;justify-content:center;margin:8px 0"></div>'+
-            '<div style="font-size:11px;font-weight:600;margin:6px 0;padding:4px;background:'+(b&&b.tur==='Tam'?'#e8f5e9':b&&b.tur==='Çocuk'?'#e3f2fd':b&&b.tur==='Yabancı'?'#fff3e0':'#f5f5f5')+';border-radius:4px">'+(b?b.tur:'Bilet')+'</div>'+
-            '<div style="font-size:10px;color:#aaa;font-family:monospace">'+bno+'</div>'+
-            (b&&b.kullanildi?'<div style="color:#f44336;font-size:11px;margin-top:4px">✗ Kullanıldı</div>':'<div style="color:#4caf50;font-size:11px;margin-top:4px">✓ Geçerli</div>');
-          icerik.appendChild(biletDiv);
-          // QR kod oluştur
-          setTimeout(function(){
-            var qrEl=document.getElementById('qr-goruntule-'+idx);
-            if(qrEl&&qrEl.innerHTML===''){
-              try{new QRCode(qrEl,{text:bno,width:100,height:100,colorDark:'#000',colorLight:'#fff'});}catch(e){}
-            }
-          },100);
-        });
-      });
-    }
-    document.getElementById('ov-bilet-goruntule').classList.add('open');
-  });
 }
 
 function hizliGiris(pnr){
@@ -1750,33 +1655,5 @@ var tt;
 function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},3500);}
 </script>
 </body>
-</html>/* LOGIN */
-.login-screen{min-height:100vh;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
-.login-logo{text-align:center;margin-bottom:2.5rem}
-.login-logo .star{font-size:13px;letter-spacing:4px;color:#e8c547;font-weight:700}
-.login-logo .name{font-size:28px;font-weight:800;color:#fff;margin-top:8px;letter-spacing:1px}
-.login-logo .sub{font-size:11px;color:#555;letter-spacing:3px;margin-top:4px}
-.login-card{background:#1a1a1a;border-radius:20px;padding:1.75rem;width:100%;border:1px solid #2a2a2a}
-.fl{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
-.fi{width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;outline:none;margin-bottom:1rem;-webkit-appearance:none}
-.fi:focus{border-color:#e8c547}
-.btn-login{width:100%;padding:16px;background:#e8c547;color:#000;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
-.login-err{font-size:13px;color:#f87171;text-align:center;margin-top:12px;min-height:18px}
-<!-- LOGIN -->
-<div id="loginWrap">
-  <div class="login-screen">
-    <div class="login-logo">
-      <div class="star">✦ STARDUST ✦</div>
-      <div class="name">Box Office</div>
-      
-    </div>
-    <div class="login-card">
-      <label class="fl">E-posta</label>
-      <input class="fi" type="email" id="loginEmail" onkeydown="if(event.key==='Enter')doLogin()">
-      <label class="fl">Şifre</label>
-      <input class="fi" type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
-      <div class="login-err" id="loginErr"></div>
-    </div>
-  </div>
-</div>
+</html>
+
