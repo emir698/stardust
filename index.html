@@ -1525,17 +1525,18 @@ function renderDashboard(){
 function renderDonut(tam,cocuk,yab,dav){
   dav=dav||0;
   var total=tam+cocuk+yab+dav||1;
-  var r=50,cx=60,cy=60,circ=2*Math.PI*r;
-  function arc(pct,offset,color){var dash=pct*circ;return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="18" stroke-dasharray="'+dash+' '+circ+'" stroke-dashoffset="'+(-offset*circ)+'" transform="rotate(-90 '+cx+' '+cy+')" />';}
+  var r=70,cx=85,cy=85,circ=2*Math.PI*r;
+  function arc(pct,offset,color){var dash=pct*circ;return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="20" stroke-dasharray="'+dash+' '+circ+'" stroke-dashoffset="'+(-offset*circ)+'" transform="rotate(-90 '+cx+' '+cy+')" />';}
   var pT=tam/total,pC=cocuk/total,pY=yab/total,pD=dav/total;
-  var svg='<svg width="120" height="120"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--bd)" stroke-width="18"/>'+
-    (total>0?arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80')+arc(pD,pT+pC+pY,'#a3a3a3'):'')+
-    '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" fill="var(--tx)" font-size="14" font-weight="600" font-family="var(--mo)">'+total+'</text></svg>';
+  var svg='<svg width="170" height="170" style="flex-shrink:0"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--bd)" stroke-width="20"/>'+
+    arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80')+arc(pD,pT+pC+pY,'#f97316')+
+    '<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" fill="var(--tx)" font-size="22" font-weight="700" font-family="var(--mo)">'+total+'</text>'+
+    '<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" fill="var(--mu)" font-size="11" font-family="var(--sa)">kişi</text></svg>';
   var legend='<div class="donut-legend">'+
     '<div class="donut-item"><div class="donut-dot" style="background:#e8c547"></div><span>Tam</span><span class="donut-pct">'+tam+' (%'+Math.round(pT*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#60a5fa"></div><span>Çocuk</span><span class="donut-pct">'+cocuk+' (%'+Math.round(pC*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#4ade80"></div><span>Yabancı</span><span class="donut-pct">'+yab+' (%'+Math.round(pY*100)+')</span></div>'+
-    (dav>0?'<div class="donut-item"><div class="donut-dot" style="background:#a3a3a3"></div><span>Davetli</span><span class="donut-pct">'+dav+' (%'+Math.round(pD*100)+')</span></div>':'')+
+    '<div class="donut-item"><div class="donut-dot" style="background:#f97316"></div><span>Davetli</span><span class="donut-pct">'+dav+' (%'+Math.round(pD*100)+')</span></div>'+
     '</div>';
   document.getElementById('donutWrap').innerHTML=svg+legend;
 }
