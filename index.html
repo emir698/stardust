@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Stardust Box Office</title>
+<title>Stardust — Box Office</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -360,11 +360,7 @@ td{padding:10px 14px}
       <!-- KPI Kartları -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem" id="kpiGrid"></div>
 
-      <!-- Ay Seçici -->
-      <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap" id="aySecici"></div>
 
-      <!-- Ay KPI -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem" id="ayKpiGrid"></div>
 
       <!-- Bilet Türü + Seans Bazlı -->
       <div class="dash-grid">
@@ -1458,31 +1454,7 @@ function renderDashboard(){
     '<div class="kpi"><div class="kpi-label">Seçili Dönem Bilet</div><div class="kpi-val ac">'+bugunBilet+'</div><div class="kpi-sub">kişi</div></div>'+
     '<div class="kpi"><div class="kpi-label">Seçili Dönem Gelir</div><div class="kpi-val gn">'+fmtMoney(bugunGelir)+'</div></div>';
 
-  // Ay seçici - hangi ayların verisi var?
-  var yil=new Date().getFullYear();
-  var aySecEl=document.getElementById('aySecici');
-  aySecEl.innerHTML='';
-  for(var m=1;m<=12;m++){
-    (function(month){
-      var btn=document.createElement('button');
-      var isSelected=selectedAy===month;
-      btn.className='tarih-btn'+(isSelected?' active':'');
-      btn.textContent=AYLAR[month-1];
-      btn.onclick=function(){selectedAy=month;renderDashboard();};
-      aySecEl.appendChild(btn);
-    })(m);
-  }
-  if(!selectedAy) selectedAy=new Date().getMonth()+1;
 
-  // Seçili ay verisi
-  var ayMm=pad(selectedAy);
-  var ayFiltered=tickets.filter(function(t){return t&&t.tarih&&t.tarih.slice(3,5)===ayMm&&t.tarih.slice(6)===String(yil);});
-  var ayBilet=ayFiltered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0);},0);
-  var ayGelir=ayFiltered.reduce(function(a,t){return a+(t.toplam||0);},0);
-
-  document.getElementById('ayKpiGrid').innerHTML=
-    '<div class="kpi"><div class="kpi-label">'+AYLAR[selectedAy-1]+' Toplam Bilet</div><div class="kpi-val bl">'+ayBilet+'</div><div class="kpi-sub">kişi</div></div>'+
-    '<div class="kpi"><div class="kpi-label">'+AYLAR[selectedAy-1]+' Toplam Gelir</div><div class="kpi-val" style="color:var(--ac)">'+fmtMoney(ayGelir)+'</div></div>';
 
   // Bilet türü donut - seçili dönem
   var totTam=filtered.reduce(function(a,t){return a+(t.tam||0);},0);
