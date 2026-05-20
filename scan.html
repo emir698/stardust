@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .seans-info{padding:20px 16px;flex:1}
 .seans-saat{font-size:28px;font-weight:800;color:var(--tx);letter-spacing:1px}
 .seans-tarih{font-size:13px;color:var(--mu);margin-top:4px}
-.seans-stat{font-size:13px;color:var(--ac);font-weight:600;margin-top:8px}
+
 .seans-chevron{font-size:20px;color:var(--mu);padding-right:16px}
 
 /* TARAMA EKRANI */
@@ -299,8 +299,8 @@ function doLogin(){
 function doLogout(){if(qrScanner)qrScanner.stop().catch(function(){});auth.signOut();}
 
 function loadData(){
-  ticketsRef.on('value',function(snap){tickets=Object.values(snap.val()||{}).filter(Boolean);updateStats();refreshSeansStats();});
-  biletlerRef.on('value',function(snap){biletler=snap.val()||{};updateStats();refreshSeansStats();});
+  ticketsRef.on('value',function(snap){tickets=Object.values(snap.val()||{}).filter(Boolean);updateStats();});
+  biletlerRef.on('value',function(snap){biletler=snap.val()||{};updateStats();});
 }
 
 function updateStats(){
@@ -310,17 +310,7 @@ function updateStats(){
   document.getElementById('statGiris').textContent=gb.filter(function(b){return b.kullanildi;}).length;
 }
 
-function refreshSeansStats(){
-  if(!selectedGun)return;
-  var saatler=getSaatler(selectedGun)||[];
-  saatler.forEach(function(saat){
-    var el=document.getElementById('stat-'+saat.replace(':','-'));
-    if(!el)return;
-    var gb=Object.values(biletler).filter(function(b){return b&&b.tarih===selectedGun&&b.seans===saat;});
-    var giris=gb.filter(function(b){return b.kullanildi;}).length;
-    el.textContent=gb.length>0?(giris+' / '+gb.length+' giriş yapıldı'):'Henüz satış yok';
-  });
-}
+
 
 function buildSeansListesi(){
   var today=todayStr();
@@ -342,7 +332,6 @@ function buildSeansListesi(){
       '<div class="seans-info">'+
         '<div class="seans-saat">'+saat+'</div>'+
         '<div class="seans-tarih">'+selectedGun+'</div>'+
-        '<div class="seans-stat" id="stat-'+saat.replace(':','-')+'">'+statTxt+'</div>'+
       '</div>'+
       '<div class="seans-chevron">›</div>';
     (function(s){kart.onclick=function(){selectSeans(s);};})(saat);
@@ -431,6 +420,16 @@ function acListeSheet(){
       var pnrToplam=t.biletler?t.biletler.length:((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0));
       var girisYapti=pnrGiris>0;
 
+      // Giriş saatini bul
+      var girisZamani='';
+      if(girisYapti&&t.biletler){
+        t.biletler.forEach(function(bno){
+          if(biletler[bno]&&biletler[bno].kullanildi&&biletler[bno].kullanildiSaat){
+            girisZamani=biletler[bno].kullanildiSaat;
+          }
+        });
+      }
+
       var item=document.createElement('div');
       item.className='liste-item';
       item.innerHTML=
@@ -438,7 +437,10 @@ function acListeSheet(){
           '<div class="li-name">'+t.musteriAd+'</div>'+
           '<div class="li-detail">Tam: '+(t.tam||0)+' · Çocuk: '+(t.cocuk||0)+(t.yabanci>0?' · Yabancı: '+t.yabanci:'')+'</div>'+
         '</div>'+
-        '<span class="li-badge '+(girisYapti?'ok':'no')+'">'+(girisYapti?(pnrGiris+'/'+pnrToplam+' Girdi'):'Giriş Yapmadı')+'</span>';
+        '<div style="text-align:right">'+
+          '<span class="li-badge '+(girisYapti?'ok':'no')+'">'+(girisYapti?(pnrGiris+'/'+pnrToplam+' Girdi'):'Giriş Yapmadı')+'</span>'+
+          (girisYapti&&girisZamani?'<div style="font-size:11px;color:var(--mu);margin-top:4px;font-family:monospace">'+girisZamani+'</div>':'')+
+        '</div>';
       icerik.appendChild(item);
     });
   }
@@ -500,7 +502,7 @@ function sorgulaBiletNo(){
 
 function girisVer(){
   if(!currentSorgu)return;
-  var now=new Date();var saat=pad(now.getHours())+':'+pad(now.getMinutes());
+  var now=new Date();var saat=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
   document.getElementById('girisBtn').disabled=true;
   if(currentSorgu.type==='pnr'){
     var p=currentSorgu.data;
