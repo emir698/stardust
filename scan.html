@@ -239,7 +239,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-firebase.initializeApp({
+var scanApp=firebase.initializeApp({
   apiKey:"AIzaSyDcmS7qpzMvc6JIsudyIAROvMy052R0bPs",
   authDomain:"box-office-discount.firebaseapp.com",
   databaseURL:"https://box-office-discount-default-rtdb.firebaseio.com",
@@ -247,8 +247,8 @@ firebase.initializeApp({
   storageBucket:"box-office-discount.firebasestorage.app",
   messagingSenderId:"835296643878",
   appId:"1:835296643878:web:44e7a86658b37328ee0fe7"
-});
-var auth=firebase.auth(),db=firebase.database();
+},'scan-app');
+var auth=scanApp.auth(),db=scanApp.database();
 var biletlerRef=db.ref('biletler'),ticketsRef=db.ref('tickets'),usersRef=db.ref('users');
 
 function pad(x){return x<10?'0'+x:String(x);}
