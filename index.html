@@ -186,8 +186,8 @@ td{padding:10px 14px}
     <div class="ll-name">Box Office</div>
   </div>
   <div class="login-box">
-    <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" type="email" id="loginEmail" placeholder="ornek@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="form-group"><label class="form-label">Şifre</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" type="email" id="loginEmail" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label class="form-label">Şifre</label><input class="form-input" type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
     <div class="login-err" id="loginErr"></div>
   </div>
@@ -461,7 +461,7 @@ td{padding:10px 14px}
 <!-- KULLANICI EKLE -->
 <div class="overlay" id="ov-adduser" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal"><h3>Yeni Kullanıcı Ekle</h3>
-    <label>E-posta</label><input type="email" id="nu-email" placeholder="ornek@email.com">
+    <label>E-posta</label><input type="email" id="nu-email">
     <label>Şifre</label><input type="password" id="nu-pass" placeholder="En az 6 karakter">
     <label>Kullanıcı Adı</label><input type="text" id="nu-name" placeholder="Ahmet">
     <label>Rol</label><select id="nu-role"><option value="gise">Gişe Çalışanı</option><option value="admin">Admin</option></select>
@@ -1750,4 +1750,33 @@ var tt;
 function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';clearTimeout(tt);tt=setTimeout(function(){el.classList.remove('show');},3500);}
 </script>
 </body>
-</html>
+</html>/* LOGIN */
+.login-screen{min-height:100vh;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+.login-logo{text-align:center;margin-bottom:2.5rem}
+.login-logo .star{font-size:13px;letter-spacing:4px;color:#e8c547;font-weight:700}
+.login-logo .name{font-size:28px;font-weight:800;color:#fff;margin-top:8px;letter-spacing:1px}
+.login-logo .sub{font-size:11px;color:#555;letter-spacing:3px;margin-top:4px}
+.login-card{background:#1a1a1a;border-radius:20px;padding:1.75rem;width:100%;border:1px solid #2a2a2a}
+.fl{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+.fi{width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;outline:none;margin-bottom:1rem;-webkit-appearance:none}
+.fi:focus{border-color:#e8c547}
+.btn-login{width:100%;padding:16px;background:#e8c547;color:#000;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer}
+.login-err{font-size:13px;color:#f87171;text-align:center;margin-top:12px;min-height:18px}
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="login-screen">
+    <div class="login-logo">
+      <div class="star">✦ STARDUST ✦</div>
+      <div class="name">Box Office</div>
+      
+    </div>
+    <div class="login-card">
+      <label class="fl">E-posta</label>
+      <input class="fi" type="email" id="loginEmail" onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="fl">Şifre</label>
+      <input class="fi" type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+  </div>
+</div>
