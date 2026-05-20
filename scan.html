@@ -128,8 +128,8 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
       
     </div>
     <div class="login-card">
-      <label class="fl">E-posta</label>
-      <input class="fi" type="email" id="loginEmail" onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="fl">Kullanıcı Adı</label>
+      <input class="fi" type="text" id="loginEmail" autocapitalize="none" onkeydown="if(event.key==='Enter')doLogin()">
       <label class="fl">Şifre</label>
       <input class="fi" type="password" id="loginPass" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
@@ -274,27 +274,41 @@ auth.onAuthStateChanged(function(user){
 
 function showLogin(){document.getElementById('loginScreen').style.display='block';document.getElementById('appWrap').style.display='none';}
 function showApp(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('appWrap').style.display='block';
-  document.getElementById('userLabel').textContent=currentName||'';
-  loadData();
-  // Bugünün etkinlik günü kontrolü
-  var today=todayStr();
-  selectedGun=today;
-  if(!isEtkinlik(today)){
-    for(var i=1;i<=14;i++){var d=addDays(today,i);if(isEtkinlik(d)){selectedGun=d;break;}}
-  }
-  // Veri yüklendikten sonra otomatik seans seç
-  setTimeout(function(){autoSelectSeans();},500);
+  usersRef.child(currentUser.uid).once('value',function(snap){
+    var ud=snap.val();
+    var role=ud?ud.role:'';
+    if(role!=='admin'&&role!=='okutma'){
+      auth.signOut();
+      document.getElementById('loginErr').textContent='Bu uygulama için yetkiniz yok.';
+      return;
+    }
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    document.getElementById('userLabel').textContent=currentName||'';
+    loadData();
+    var today=todayStr();
+    selectedGun=today;
+    if(!isEtkinlik(today)){
+      for(var i=1;i<=14;i++){var d=addDays(today,i);if(isEtkinlik(d)){selectedGun=d;break;}}
+    }
+    setTimeout(function(){autoSelectSeans();},500);
+  });
 }
 function doLogin(){
-  var email=document.getElementById('loginEmail').value.trim();
+  var username=document.getElementById('loginEmail').value.trim().toLowerCase();
   var pass=document.getElementById('loginPass').value;
   var btn=document.getElementById('loginBtn');
   document.getElementById('loginErr').textContent='';
-  if(!email||!pass){document.getElementById('loginErr').textContent='E-posta ve şifre girin.';return;}
+  if(!username||!pass){document.getElementById('loginErr').textContent='Kullanıcı adı ve şifre girin.';return;}
+  var email=username.indexOf('@')>-1?username:username+'@stardust.app';
   btn.textContent='Giriş yapılıyor...';btn.disabled=true;
-  auth.signInWithEmailAndPassword(email,pass).catch(function(){btn.textContent='Giriş Yap';btn.disabled=false;document.getElementById('loginErr').textContent='E-posta veya şifre hatalı.';});
+  auth.signInWithEmailAndPassword(email,pass).catch(function(err){
+    btn.textContent='Giriş Yap';btn.disabled=false;
+    var msg='Giriş başarısız.';
+    if(err.code==='auth/wrong-password'||err.code==='auth/user-not-found'||err.code==='auth/invalid-credential')msg='Kullanıcı adı veya şifre hatalı.';
+    else if(err.code==='auth/too-many-requests')msg='Çok fazla deneme. Bekleyin.';
+    document.getElementById('loginErr').textContent=msg;
+  });
 }
 function doLogout(){if(qrScanner)qrScanner.stop().catch(function(){});auth.signOut();}
 
