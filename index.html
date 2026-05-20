@@ -185,7 +185,7 @@ td{padding:10px 14px}
     <div class="name">Box Office</div>
   </div>
   <div class="login-box">
-    <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" type="email" id="loginEmail" placeholder="ornek@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label class="form-label">Kullanıcı Adı</label><input class="form-input" type="text" id="loginEmail" autocapitalize="none" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="form-group"><label class="form-label">Şifre</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn-login" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
     <div class="login-err" id="loginErr"></div>
@@ -449,7 +449,7 @@ td{padding:10px 14px}
 <!-- KULLANICI EKLE -->
 <div class="overlay" id="ov-adduser" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal"><h3>Yeni Kullanıcı Ekle</h3>
-    <label>E-posta</label><input type="email" id="nu-email" placeholder="ornek@email.com">
+    <label>Kullanıcı Adı</label><input type="text" id="nu-email" placeholder="ornek: kapi1" autocapitalize="none">
     <label>Şifre</label><input type="password" id="nu-pass" placeholder="En az 6 karakter">
     <label>Kullanıcı Adı</label><input type="text" id="nu-name" placeholder="Ahmet">
     <label>Rol</label><select id="nu-role"><option value="bilet satis">Bilet Satış</option><option value="okutma">Okutma</option><option value="management1">Management</option><option value="admin">Admin</option></select>
@@ -526,11 +526,12 @@ function showApp(){
   if(currentRole==='admin'){loadUserList();initDateFilter();}
 }
 function doLogin(){
-  var email=document.getElementById('loginEmail').value.trim();
+  var username=document.getElementById('loginEmail').value.trim().toLowerCase();
   var pass=document.getElementById('loginPass').value;
   var btn=document.getElementById('loginBtn');
   document.getElementById('loginErr').textContent='';
-  if(!email||!pass){document.getElementById('loginErr').textContent='E-posta ve şifre girin.';return;}
+  if(!username||!pass){document.getElementById('loginErr').textContent='Kullanıcı adı ve şifre girin.';return;}
+  var email=username.indexOf('@')>-1?username:username+'@stardust.app';
   btn.textContent='Giriş yapılıyor...';btn.disabled=true;
   auth.signInWithEmailAndPassword(email,pass).catch(function(err){
     btn.textContent='Giriş Yap';btn.disabled=false;
@@ -1564,7 +1565,8 @@ function loadUserList(){
 }
 function openAddUser(){document.getElementById('ov-adduser').classList.add('open');}
 function addUser(){
-  var email=document.getElementById('nu-email').value.trim();
+  var uname=document.getElementById('nu-email').value.trim().toLowerCase();
+  var email=uname+'@stardust.app';
   var pass=document.getElementById('nu-pass').value;
   var name=document.getElementById('nu-name').value.trim();
   var role=document.getElementById('nu-role').value;
