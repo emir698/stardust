@@ -1668,8 +1668,7 @@ function renderBatchList(){
       '<td style="font-family:var(--mo);color:var(--ac)">'+total.toLocaleString('tr-TR')+'</td>'+
       '<td style="font-family:var(--mo);color:var(--rd)">'+realUsed.toLocaleString('tr-TR')+'</td>'+
       '<td style="font-family:var(--mo);color:var(--gn)">'+aktif.toLocaleString('tr-TR')+'</td>'+
-      '<td class="dc">'+(b.date||'—')+'</td>'+
-      '<td><button class="btn btn-sm btn-r" onclick="deleteBatch(''+key+'')">Sil</button></td>'+
+      '<td><button class="btn btn-sm btn-r" data-key="'+key+'" onclick="deleteBatch(this.dataset.key)">Sil</button></td>'+
     '</tr>';
   });
   html+='</tbody></table></div>';
@@ -1688,8 +1687,7 @@ function openYeniBatch(){
 }
 
 function parseBatchCodes(text){
-  return text.split(/[
-,]+/).map(function(s){return s.trim().toUpperCase();}).filter(function(s){return s.length>0;});
+  return text.split(/[\n,]+/).map(function(s){return s.trim().toUpperCase();}).filter(function(s){return s.length>0;});
 }
 
 function saveBatch(){
