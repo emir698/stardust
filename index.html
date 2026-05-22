@@ -146,7 +146,7 @@ td{padding:10px 14px}
 .bilet-tam{background:#e8f5e9;color:#2e7d32}
 .bilet-cocuk{background:#e3f2fd;color:#1565c0}
 .bilet-yabanci{background:#fff3e0;color:#e65100}
-.bilet-davetli{background:#e8f5e9;color:#2e7d32}.bilet-kurumsal{background:#e3f2fd;color:#1565c0}
+.bilet-davetli{background:#e8f5e9;color:#2e7d32}.bilet-kurumsal{background:rgba(168,85,247,.1);color:#a855f7}
 .bilet-no{font-size:9px;color:#aaa;text-align:center;margin-top:6px;font-family:monospace}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:2rem}
 .card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
@@ -254,7 +254,7 @@ td{padding:10px 14px}
         </div>
         <div class="bilet-row">
           <div><div class="bilet-type-name">Kurumsal</div><div class="bilet-type-sub">Ücretsiz · Toplu satış</div></div>
-          <div class="bilet-price" style="color:var(--bl)">0 ₺</div>
+          <div class="bilet-price" style="color:#a855f7">0 ₺</div>
           <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('kurumsal',-1)">−</button><span class="qty-num" id="qty-kurumsal">0</span><button class="qty-btn" onclick="changeQty('kurumsal',1)">+</button></div>
         </div>
 
@@ -1037,9 +1037,9 @@ function closeBiletModal(){document.getElementById('ov-bilet').classList.remove(
 function buildBiletPrintHTML(biletlerArr){
   var html='<div id="pdf-biletler" style="background:#f5f5f5;padding:20px;font-family:Arial,sans-serif">';
   biletlerArr.forEach(function(b,idx){
-    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal':'#60a5fa'};
+    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal':'#a855f7'};
     var renk=turRenk[b.tur]||'#e8c547';
-    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal':'rgba(96,165,250,.12)'};
+    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal':'rgba(168,85,247,.12)'};
     var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
     // QR kodunu al
     var qrEl=document.getElementById('qr-'+idx);
@@ -1643,7 +1643,8 @@ function renderDashboard(){
   var totTam=filtered.reduce(function(a,t){return a+(t.tam||0);},0);
   var totCocuk=filtered.reduce(function(a,t){return a+(t.cocuk||0);},0);
   var totYab=filtered.reduce(function(a,t){return a+(t.yabanci||0);},0);
-  var totDav=filtered.reduce(function(a,t){return a+(t.davetli||0)+(t.kurumsal||0);},0);
+  var totDav=filtered.reduce(function(a,t){return a+(t.davetli||0);},0);
+  var totKur=filtered.reduce(function(a,t){return a+(t.kurumsal||0);},0);
   renderDonut(totTam,totCocuk,totYab,totDav);
 
   // Seans bazlı satış - gerçek saatler
@@ -1762,14 +1763,14 @@ function renderDashKodlar(){
   grafEl.innerHTML=html;
 }
 
-function renderDonut(tam,cocuk,yab,dav){
-  dav=dav||0;
-  var total=tam+cocuk+yab+dav||1;
+function renderDonut(tam,cocuk,yab,dav,kur){
+  dav=dav||0;kur=kur||0;
+  var total=tam+cocuk+yab+dav+kur||1;
   var r=70,cx=85,cy=85,circ=2*Math.PI*r;
   function arc(pct,offset,color){var dash=pct*circ;return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="20" stroke-dasharray="'+dash+' '+circ+'" stroke-dashoffset="'+(-offset*circ)+'" transform="rotate(-90 '+cx+' '+cy+')" />';}
-  var pT=tam/total,pC=cocuk/total,pY=yab/total,pD=dav/total;
+  var pT=tam/total,pC=cocuk/total,pY=yab/total,pD=dav/total,pK=kur/total;
   var svg='<svg width="170" height="170" style="flex-shrink:0"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--bd)" stroke-width="20"/>'+
-    arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80')+arc(pD,pT+pC+pY,'#f97316')+
+    arc(pT,0,'#e8c547')+arc(pC,pT,'#60a5fa')+arc(pY,pT+pC,'#4ade80')+arc(pD,pT+pC+pY,'#f97316')+arc(pK,pT+pC+pY+pD,'#a855f7')+
     '<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" fill="var(--tx)" font-size="22" font-weight="700" font-family="var(--mo)">'+total+'</text>'+
     '<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" fill="var(--mu)" font-size="11" font-family="var(--sa)">kişi</text></svg>';
   var legend='<div class="donut-legend">'+
@@ -1777,6 +1778,7 @@ function renderDonut(tam,cocuk,yab,dav){
     '<div class="donut-item"><div class="donut-dot" style="background:#60a5fa"></div><span>Çocuk</span><span class="donut-pct">'+cocuk+' (%'+Math.round(pC*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#4ade80"></div><span>Yabancı</span><span class="donut-pct">'+yab+' (%'+Math.round(pY*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#f97316"></div><span>Davetli</span><span class="donut-pct">'+dav+' (%'+Math.round(pD*100)+')</span></div>'+
+    '<div class="donut-item"><div class="donut-dot" style="background:#a855f7"></div><span>Kurumsal</span><span class="donut-pct">'+kur+' (%'+Math.round(pK*100)+')</span></div>'+
     '</div>';
   document.getElementById('donutWrap').innerHTML=svg+legend;
 }
