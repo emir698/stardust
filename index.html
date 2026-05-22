@@ -1046,15 +1046,28 @@ function buildBiletPrintHTML(biletlerArr){
     var qrImg='';
     if(qrEl){var canvas=qrEl.querySelector('canvas');if(canvas)qrImg=canvas.toDataURL('image/png');}
     html+=
-      '<div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;margin:0 auto 24px;box-shadow:0 2px 16px rgba(0,0,0,.08);text-align:center;page-break-inside:avoid">'+
-        '<div style="font-size:11px;letter-spacing:3px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
-        '<div style="font-size:26px;font-weight:700;color:#111;margin-bottom:4px">Astra Lumina İstanbul</div>'+
-        '<div style="font-size:13px;color:#555;margin-bottom:14px">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
-        '<div style="font-size:16px;font-weight:600;color:#111;margin-bottom:10px">'+b.musteriAd+'</div>'+
-        '<div style="font-size:11px;color:#aaa;letter-spacing:1px;margin-bottom:10px;font-family:monospace">PNR: '+b.pnr+'</div>'+
-        (qrImg?'<img src="'+qrImg+'" style="width:150px;height:150px;margin:0 auto 14px;display:block" />':'<div style="width:150px;height:150px;background:#f0f0f0;margin:0 auto 14px;border-radius:8px"></div>')+
-        '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:6px 24px;font-size:14px;font-weight:600;margin-bottom:12px">'+b.tur+'</div>'+
-        '<div style="font-size:11px;color:#bbb;letter-spacing:1px;font-family:monospace">'+b.no+'</div>'+
+      '<div style="background:#fff;border-radius:16px;width:420px;margin:0 auto 32px;box-shadow:0 2px 16px rgba(0,0,0,.08);overflow:hidden;page-break-inside:avoid;font-family:Arial,sans-serif">'+
+        '<div style="background:#0f0f0f;padding:16px;text-align:center">'+
+          '<div style="color:#e8c547;font-size:10px;letter-spacing:4px;margin-bottom:4px">✦ STARDUST ✦</div>'+
+          '<div style="color:#fff;font-size:18px;font-weight:600;letter-spacing:0.5px">Astra Lumina İstanbul</div>'+
+        '</div>'+
+        '<div style="padding:24px 28px;text-align:center">'+
+          '<div style="font-size:13px;color:#777;margin-bottom:18px">'+getDayName(b.tarih)+', '+b.tarih+' &nbsp;·&nbsp; Seans '+b.seans+'</div>'+
+          (qrImg?'<img src="'+qrImg+'" style="width:160px;height:160px;margin:0 auto 16px;display:block;border-radius:8px" />':'<div style="width:160px;height:160px;background:#f0f0f0;margin:0 auto 16px;border-radius:8px"></div>')+
+          '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:6px 24px;font-size:14px;font-weight:600;margin-bottom:14px">'+b.tur+'</div>'+
+          '<div style="border-top:1px dashed #eee;margin:14px 0"></div>'+
+          '<div style="font-size:10px;color:#bbb;letter-spacing:1.5px;font-family:monospace">'+b.no+'</div>'+
+        '</div>'+
+        '<div style="background:#fafafa;border-top:1px solid #eee;padding:14px 20px">'+
+          '<div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:10px">'+
+            '<strong>Kurallar:</strong> Karekodun taranmasıyla etkinliğe sadece 1 (bir) kişi girebilir. Bu biletin kopyalanması ya da satılması etkinliğe giriş hakkınızı engeller.<br>'+
+            '<span style="color:#888"><em>Rules:</em> The QR code only allows one entry per scan. Unauthorised duplication or sale of this ticket may prevent your admittance to the event.</span>'+
+          '</div>'+
+          '<div style="border:1.5px solid #222;border-radius:10px;padding:10px 14px;text-align:center">'+
+            '<div style="font-size:12px;font-weight:700;color:#111;margin-bottom:3px">PDF biletinizi yanınızda veya mobil cihazınızda bulundurmayı unutmayın!</div>'+
+            '<div style="font-size:11px;color:#555">PDF biletinizdeki karekod kapıda okutulacaktır.</div>'+
+          '</div>'+
+        '</div>'+
       '</div>';
   });
   html+='</div>';
