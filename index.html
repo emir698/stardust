@@ -250,12 +250,20 @@ td{padding:10px 14px}
         <div class="bilet-row">
           <div><div class="bilet-type-name">Davetli</div><div class="bilet-type-sub">Ücretsiz giriş</div></div>
           <div class="bilet-price" style="color:var(--gn)">0 ₺</div>
-          <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('davetli',-1)">−</button><span class="qty-num" id="qty-davetli">0</span><button class="qty-btn" onclick="changeQty('davetli',1)">+</button></div>
+          <div class="bilet-qty" id="qty-davetli-wrap">
+            <button class="qty-btn" onclick="changeQty('davetli',-1)">−</button>
+            <span class="qty-num" id="qty-davetli">0</span>
+            <button class="qty-btn" onclick="changeQty('davetli',1)">+</button>
+          </div>
         </div>
         <div class="bilet-row">
           <div><div class="bilet-type-name">Kurumsal Satış</div><div class="bilet-type-sub">Ücretsiz · Toplu satış</div></div>
           <div class="bilet-price" style="color:#a855f7">0 ₺</div>
-          <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('kurumsal',-1)">−</button><span class="qty-num" id="qty-kurumsal">0</span><button class="qty-btn" onclick="changeQty('kurumsal',1)">+</button></div>
+          <div class="bilet-qty" id="qty-kurumsal-wrap">
+            <button class="qty-btn" onclick="changeQty('kurumsal',-1)">−</button>
+            <span class="qty-num" id="qty-kurumsal">0</span>
+            <button class="qty-btn" onclick="changeQty('kurumsal',1)">+</button>
+          </div>
         </div>
 
         <div class="ozet-box" id="ozetBox" style="display:none"></div>
@@ -610,6 +618,15 @@ function showApp(){
     renderIndirimStats();
   } else if(currentRole==='bilet satis'){
     switchTab('sat');
+  }
+
+  // Davetli ve Kurumsal Satış kilidi
+  if(currentRole!=='admin'){
+    var lockHTML='<button class="qty-btn" onclick="yetkiYok()" style="opacity:.4;cursor:not-allowed">🔒</button><span class="qty-num" style="color:var(--mu)">—</span><button class="qty-btn" onclick="yetkiYok()" style="opacity:.4;cursor:not-allowed">🔒</button>';
+    var davWrap=document.getElementById('qty-davetli-wrap');
+    var kurWrap=document.getElementById('qty-kurumsal-wrap');
+    if(davWrap)davWrap.innerHTML=lockHTML;
+    if(kurWrap)kurWrap.innerHTML=lockHTML;
   } else if(currentRole==='admin'){
     switchTab('sat');
     initDateFilter();
