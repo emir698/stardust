@@ -887,7 +887,7 @@ function indirimIptal(){
 
 function updateOzet(){
   var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0, dav=qty.davetli||0, kur=qty.kurumsal||0;
-  var total=tam+cocuk+yab+dav;
+  var total=tam+cocuk+yab+dav+kur;
   document.getElementById('satBtn').disabled=total===0;
   var box=document.getElementById('ozetBox');
   if(total===0){box.style.display='none';return;}
