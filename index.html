@@ -1024,6 +1024,33 @@ function gosterBiletler(biletlerArr,adSoyad,pnr){
 }
 function closeBiletModal(){document.getElementById('ov-bilet').classList.remove('open');}
 
+function buildBiletHTML(b,idx){
+  // QR kodunu canvas'tan base64'e çevir
+  var qrEl=document.getElementById('qr-'+idx);
+  var qrImg='';
+  if(qrEl){
+    var canvas=qrEl.querySelector('canvas');
+    var img=qrEl.querySelector('img');
+    if(canvas) qrImg=canvas.toDataURL('image/png');
+    else if(img) qrImg=img.src;
+  }
+  var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80'};
+  var renk=turRenk[b.tur]||'#e8c547';
+  var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)'};
+  var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
+  return '<div style="font-family:Georgia,serif;background:#fff;border-radius:16px;padding:32px 28px;max-width:420px;margin:0 auto 24px;box-shadow:0 2px 24px rgba(0,0,0,.10);text-align:center;">'+
+    '<div style="font-size:11px;letter-spacing:3px;color:#888;margin-bottom:6px">✦ STARDUST ✦</div>'+
+    '<div style="font-size:28px;font-weight:700;color:#111;margin-bottom:6px">Box Office</div>'+
+    '<div style="font-size:14px;color:#555;margin-bottom:16px">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
+    '<div style="font-size:17px;font-weight:600;color:#111;margin-bottom:12px">'+b.musteriAd+'</div>'+
+    '<div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:8px">PNR: '+b.pnr+'</div>'+
+    (qrImg?'<img src="'+qrImg+'" style="width:140px;height:140px;margin:8px auto 16px;display:block;border-radius:8px" />'
+           :'<div style="width:140px;height:140px;background:#f0f0f0;margin:8px auto 16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#999">QR</div>')+
+    '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:7px 28px;font-size:15px;font-weight:600;margin-bottom:14px">'+b.tur+'</div>'+
+    '<div style="font-size:11px;color:#aaa;letter-spacing:1px;font-family:monospace">'+b.no+'</div>'+
+  '</div>';
+}
+
 function biletMailGonder(){
   var mail=document.getElementById('mailGonderInput').value.trim();
   if(!mail){toast('E-posta adresi girin','err');return;}
@@ -1033,17 +1060,30 @@ function biletMailGonder(){
   sonuc.style.color='var(--mu)';
   btn.disabled=true;
 
-  var biletMetin='';
+  var musteriAd=currentBiletlerData.length>0?(currentBiletlerData[0].musteriAd||'Misafir'):'Misafir';
+
+  // Tüm biletlerin HTML'ini birleştir
+  var biletHTML='';
   currentBiletlerData.forEach(function(b,i){
-    biletMetin+=(i+1)+'. '+b.tur+' Bileti\nSeans: '+b.seans+' | Tarih: '+b.tarih+'\nBilet No: '+b.no+'\n\n';
+    biletHTML+=buildBiletHTML(b,i);
   });
 
-  var musteriAd=currentBiletlerData.length>0?(currentBiletlerData[0].musteriAd||'Misafir'):'Misafir';
+  var fullHTML=
+    '<div style="background:#f5f5f5;padding:32px 16px;min-height:100vh">'+
+    '<div style="max-width:480px;margin:0 auto">'+
+    '<p style="font-family:Georgia,serif;font-size:15px;color:#444;margin-bottom:24px;text-align:center">'+
+      'Merhaba <strong>'+musteriAd+'</strong>,<br>etkinlik biletiniz aşağıda yer almaktadır.'+
+    '</p>'+
+    biletHTML+
+    '<p style="font-family:Georgia,serif;font-size:12px;color:#999;text-align:center;margin-top:16px">'+
+      'Bu bilet Stardust Box Office tarafından düzenlenmiştir.<br>Kapıda QR kodunu okutmanız yeterlidir.'+
+    '</p>'+
+    '</div></div>';
 
   emailjs.send('service_ps2poro','template_4erqyaa',{
     to_email: mail,
     to_name: musteriAd,
-    biletler: biletMetin
+    bilet_html: fullHTML
   }).then(function(){
     sonuc.textContent='✅ Biletler '+mail+' adresine gönderildi!';
     sonuc.style.color='var(--gn)';
@@ -1052,7 +1092,7 @@ function biletMailGonder(){
     sonuc.textContent='❌ Hata: '+(err.text||JSON.stringify(err));
     sonuc.style.color='var(--rd)';
     btn.disabled=false;
-    console.log('EmailJS error:',err);
+    console.log('Mail error:',err);
   });
 }
 
