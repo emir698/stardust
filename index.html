@@ -33,7 +33,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sa);min-height:100vh
 .login-err{font-size:13px;color:var(--rd);text-align:center;margin-top:1rem;min-height:20px}
 .app{display:none}
 .topbar{border-bottom:1px solid var(--bd);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:10}
-.logo{font-family:var(--mo);font-size:12px;color:var(--ac);letter-spacing:2px}
+.logo{font-family:var(--mo);font-size:17px;color:var(--ac);letter-spacing:3px;font-weight:600}
 .top-right{display:flex;gap:8px;align-items:center}
 .user-badge{font-size:12px;color:var(--mu);font-family:var(--mo);padding:4px 10px;border:1px solid var(--bd);border-radius:20px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block;margin-right:6px}
@@ -196,7 +196,7 @@ td{padding:10px 14px}
 
 <div class="app" id="appWrap">
   <div class="topbar">
-    <span class="logo">✦ Stardust ✦</span>
+    <span class="logo">✦ STARDUST ✦</span>
     <div class="top-right">
       <span class="user-badge"><span class="sync-dot"></span><span id="userLabel">-</span></span>
       <button class="btn btn-ac" id="btn-yedek" onclick="doExport()" style="display:none">Yedek Al</button>
@@ -253,7 +253,7 @@ td{padding:10px 14px}
           <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('davetli',-1)">−</button><span class="qty-num" id="qty-davetli">0</span><button class="qty-btn" onclick="changeQty('davetli',1)">+</button></div>
         </div>
         <div class="bilet-row">
-          <div><div class="bilet-type-name">Kurumsal</div><div class="bilet-type-sub">Ücretsiz · Toplu satış</div></div>
+          <div><div class="bilet-type-name">Kurumsal Satış</div><div class="bilet-type-sub">Ücretsiz · Toplu satış</div></div>
           <div class="bilet-price" style="color:#a855f7">0 ₺</div>
           <div class="bilet-qty"><button class="qty-btn" onclick="changeQty('kurumsal',-1)">−</button><span class="qty-num" id="qty-kurumsal">0</span><button class="qty-btn" onclick="changeQty('kurumsal',1)">+</button></div>
         </div>
@@ -944,7 +944,7 @@ function openSatisModal(){
   if(cocuk>0)html+='<div style="padding:4px 0">Çocuk: '+cocuk+' × 1.200₺ = '+fmtMoney(cocuk*PRICES.cocuk)+'</div>';
   if(yab>0)html+='<div style="padding:4px 0">Yabancı: '+yab+' × 2.250₺ = '+fmtMoney(yab*PRICES.yabanci)+'</div>';
   if(dav>0)html+='<div style="padding:4px 0;color:var(--gn)">Davetli: '+dav+' × 0₺</div>';
-  if(kur>0)html+='<div style="padding:4px 0;color:var(--bl)">Kurumsal: '+kur+' × 0₺</div>';
+  if(kur>0)html+='<div style="padding:4px 0;color:#a855f7">Kurumsal Satış: '+kur+' × 0₺</div>';
   var sonGelirModal=gelir;
   if(indirimOrani>0){
     var ind=Math.round(gelir*indirimOrani);
@@ -981,7 +981,7 @@ function tamamlaSatis(){
     biletler:[]
   };
   var biletlerArr=[];
-  var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'},{k:'davetli',l:'Davetli',cls:'bilet-davetli'},{k:'kurumsal',l:'Kurumsal',cls:'bilet-kurumsal'}];
+  var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'},{k:'davetli',l:'Davetli',cls:'bilet-davetli'},{k:'kurumsal',l:'Kurumsal Satış',cls:'bilet-kurumsal'}];
   types.forEach(function(tp){
     for(var i=0;i<qty[tp.k];i++){
       var bNo='SD-'+selectedSeans+'-'+genID();
@@ -1037,9 +1037,9 @@ function closeBiletModal(){document.getElementById('ov-bilet').classList.remove(
 function buildBiletPrintHTML(biletlerArr){
   var html='<div id="pdf-biletler" style="background:#f5f5f5;padding:20px;font-family:Arial,sans-serif">';
   biletlerArr.forEach(function(b,idx){
-    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal':'#a855f7'};
+    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal Satış':'#a855f7'};
     var renk=turRenk[b.tur]||'#e8c547';
-    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal':'rgba(168,85,247,.12)'};
+    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal Satış':'rgba(168,85,247,.12)'};
     var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
     // QR kodunu al
     var qrEl=document.getElementById('qr-'+idx);
@@ -1790,7 +1790,7 @@ function renderDonut(tam,cocuk,yab,dav,kur){
     '<div class="donut-item"><div class="donut-dot" style="background:#60a5fa"></div><span>Çocuk</span><span class="donut-pct">'+cocuk+' (%'+Math.round(pC*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#4ade80"></div><span>Yabancı</span><span class="donut-pct">'+yab+' (%'+Math.round(pY*100)+')</span></div>'+
     '<div class="donut-item"><div class="donut-dot" style="background:#f97316"></div><span>Davetli</span><span class="donut-pct">'+dav+' (%'+Math.round(pD*100)+')</span></div>'+
-    '<div class="donut-item"><div class="donut-dot" style="background:#a855f7"></div><span>Kurumsal</span><span class="donut-pct">'+kur+' (%'+Math.round(pK*100)+')</span></div>'+
+    '<div class="donut-item"><div class="donut-dot" style="background:#a855f7"></div><span>Kurumsal Satış</span><span class="donut-pct">'+kur+' (%'+Math.round(pK*100)+')</span></div>'+
     '</div>';
   document.getElementById('donutWrap').innerHTML=svg+legend;
 }
