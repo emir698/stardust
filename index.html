@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{--bg:#0f0f0f;--sf:#1a1a1a;--sf2:#242424;--bd:#2a2a2a;--bd2:#3a3a3a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--gd:rgba(74,222,128,0.08);--rd:#f87171;--rdd:rgba(248,113,113,0.08);--bl:#60a5fa;--mo:'IBM Plex Mono',monospace;--sa:'DM Sans',sans-serif}
@@ -1024,77 +1026,111 @@ function gosterBiletler(biletlerArr,adSoyad,pnr){
 }
 function closeBiletModal(){document.getElementById('ov-bilet').classList.remove('open');}
 
-function buildBiletHTML(b,idx){
-  // QR kodunu canvas'tan base64'e çevir
-  var qrEl=document.getElementById('qr-'+idx);
-  var qrImg='';
-  if(qrEl){
-    var canvas=qrEl.querySelector('canvas');
-    var img=qrEl.querySelector('img');
-    if(canvas) qrImg=canvas.toDataURL('image/png');
-    else if(img) qrImg=img.src;
-  }
-  var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80'};
-  var renk=turRenk[b.tur]||'#e8c547';
-  var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)'};
-  var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
-  return '<div style="font-family:Georgia,serif;background:#fff;border-radius:16px;padding:32px 28px;max-width:420px;margin:0 auto 24px;box-shadow:0 2px 24px rgba(0,0,0,.10);text-align:center;">'+
-    '<div style="font-size:11px;letter-spacing:3px;color:#888;margin-bottom:6px">✦ STARDUST ✦</div>'+
-    '<div style="font-size:28px;font-weight:700;color:#111;margin-bottom:6px">Box Office</div>'+
-    '<div style="font-size:14px;color:#555;margin-bottom:16px">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
-    '<div style="font-size:17px;font-weight:600;color:#111;margin-bottom:12px">'+b.musteriAd+'</div>'+
-    '<div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:8px">PNR: '+b.pnr+'</div>'+
-    (qrImg?'<img src="'+qrImg+'" style="width:140px;height:140px;margin:8px auto 16px;display:block;border-radius:8px" />'
-           :'<div style="width:140px;height:140px;background:#f0f0f0;margin:8px auto 16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#999">QR</div>')+
-    '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:7px 28px;font-size:15px;font-weight:600;margin-bottom:14px">'+b.tur+'</div>'+
-    '<div style="font-size:11px;color:#aaa;letter-spacing:1px;font-family:monospace">'+b.no+'</div>'+
-  '</div>';
+function buildBiletPrintHTML(biletlerArr){
+  var html='<div id="pdf-biletler" style="background:#f5f5f5;padding:20px;font-family:Arial,sans-serif">';
+  biletlerArr.forEach(function(b,idx){
+    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80'};
+    var renk=turRenk[b.tur]||'#e8c547';
+    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)'};
+    var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
+    // QR kodunu al
+    var qrEl=document.getElementById('qr-'+idx);
+    var qrImg='';
+    if(qrEl){var canvas=qrEl.querySelector('canvas');if(canvas)qrImg=canvas.toDataURL('image/png');}
+    html+=
+      '<div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;margin:0 auto 24px;box-shadow:0 2px 16px rgba(0,0,0,.08);text-align:center;page-break-inside:avoid">'+
+        '<div style="font-size:11px;letter-spacing:3px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
+        '<div style="font-size:26px;font-weight:700;color:#111;margin-bottom:4px">Box Office</div>'+
+        '<div style="font-size:13px;color:#555;margin-bottom:14px">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
+        '<div style="font-size:16px;font-weight:600;color:#111;margin-bottom:10px">'+b.musteriAd+'</div>'+
+        '<div style="font-size:11px;color:#aaa;letter-spacing:1px;margin-bottom:10px;font-family:monospace">PNR: '+b.pnr+'</div>'+
+        (qrImg?'<img src="'+qrImg+'" style="width:150px;height:150px;margin:0 auto 14px;display:block" />':'<div style="width:150px;height:150px;background:#f0f0f0;margin:0 auto 14px;border-radius:8px"></div>')+
+        '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:6px 24px;font-size:14px;font-weight:600;margin-bottom:12px">'+b.tur+'</div>'+
+        '<div style="font-size:11px;color:#bbb;letter-spacing:1px;font-family:monospace">'+b.no+'</div>'+
+      '</div>';
+  });
+  html+='</div>';
+  return html;
 }
 
-function biletMailGonder(){
+async function biletPDFGonder(){
   var mail=document.getElementById('mailGonderInput').value.trim();
   if(!mail){toast('E-posta adresi girin','err');return;}
   var sonuc=document.getElementById('mailGonderSonuc');
   var btn=document.getElementById('mailGonderBtn');
-  sonuc.textContent='Gönderiliyor...';
+  sonuc.textContent='PDF oluşturuluyor...';
   sonuc.style.color='var(--mu)';
   btn.disabled=true;
 
-  var musteriAd=currentBiletlerData.length>0?(currentBiletlerData[0].musteriAd||'Misafir'):'Misafir';
+  try {
+    // Biletleri geçici div'e render et
+    var tmpDiv=document.createElement('div');
+    tmpDiv.style.cssText='position:fixed;left:-9999px;top:0;width:500px;background:#f5f5f5';
+    tmpDiv.innerHTML=buildBiletPrintHTML(currentBiletlerData);
+    document.body.appendChild(tmpDiv);
 
-  // Tüm biletlerin HTML'ini birleştir
-  var biletHTML='';
-  currentBiletlerData.forEach(function(b,i){
-    biletHTML+=buildBiletHTML(b,i);
-  });
+    // Her bilet kartını ayrı canvas'a çevir
+    var { jsPDF } = window.jspdf;
+    var pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var cards=tmpDiv.querySelectorAll('div[style*="page-break-inside"]');
+    var first=true;
 
-  var fullHTML=
-    '<div style="background:#f5f5f5;padding:32px 16px;min-height:100vh">'+
-    '<div style="max-width:480px;margin:0 auto">'+
-    '<p style="font-family:Georgia,serif;font-size:15px;color:#444;margin-bottom:24px;text-align:center">'+
-      'Merhaba <strong>'+musteriAd+'</strong>,<br>etkinlik biletiniz aşağıda yer almaktadır.'+
-    '</p>'+
-    biletHTML+
-    '<p style="font-family:Georgia,serif;font-size:12px;color:#999;text-align:center;margin-top:16px">'+
-      'Bu bilet Stardust Box Office tarafından düzenlenmiştir.<br>Kapıda QR kodunu okutmanız yeterlidir.'+
-    '</p>'+
-    '</div></div>';
+    for(var i=0;i<cards.length;i++){
+      var canvas=await html2canvas(cards[i],{scale:2,backgroundColor:'#ffffff',useCORS:true});
+      var imgData=canvas.toDataURL('image/jpeg',0.92);
+      var pageW=pdf.internal.pageSize.getWidth();
+      var pageH=pdf.internal.pageSize.getHeight();
+      var imgW=pageW-20;
+      var imgH=(canvas.height*imgW)/canvas.width;
+      var yPos=(pageH-imgH)/2;
+      if(!first)pdf.addPage();
+      pdf.addImage(imgData,'JPEG',10,yPos,imgW,imgH);
+      first=false;
+    }
 
-  emailjs.send('service_ps2poro','template_4erqyaa',{
-    to_email: mail,
-    to_name: musteriAd,
-    bilet_html: fullHTML
-  }).then(function(){
-    sonuc.textContent='✅ Biletler '+mail+' adresine gönderildi!';
-    sonuc.style.color='var(--gn)';
-    btn.disabled=false;
-  }).catch(function(err){
-    sonuc.textContent='❌ Hata: '+(err.text||JSON.stringify(err));
+    document.body.removeChild(tmpDiv);
+
+    // PDF'i base64'e çevir
+    var pdfBase64=pdf.output('datauristring').split(',')[1];
+    var musteriAd=currentBiletlerData.length>0?(currentBiletlerData[0].musteriAd||'Misafir'):'Misafir';
+
+    sonuc.textContent='PDF gönderiliyor...';
+
+    // Brevo API ile gönder
+    var res=await fetch('https://api.brevo.com/v3/smtp/email',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'api-key':'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'
+      },
+      body:JSON.stringify({
+        sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
+        to:[{email:mail,name:musteriAd}],
+        subject:'Stardust Etkinlik Biletiniz — '+musteriAd,
+        htmlContent:'<div style="font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:0 auto"><div style="background:#0f0f0f;color:#e8c547;text-align:center;padding:20px;border-radius:8px;font-size:18px;letter-spacing:3px;margin-bottom:16px">✦ STARDUST ✦</div><p style="color:#333">Merhaba <strong>'+musteriAd+'</strong>,</p><p style="color:#555">Etkinlik biletiniz ekte PDF olarak yer almaktadır. Kapıda QR kodu göstermeniz yeterlidir.</p><p style="color:#999;font-size:12px;margin-top:24px">Astra Lumina İstanbul · Stardust Box Office</p></div>',
+        attachment:[{content:pdfBase64,name:'Stardust-Bilet.pdf'}]
+      })
+    });
+
+    if(res.ok||res.status===201){
+      sonuc.textContent='✅ PDF bilet '+mail+' adresine gönderildi!';
+      sonuc.style.color='var(--gn)';
+    } else {
+      var d=await res.json();
+      throw new Error(JSON.stringify(d));
+    }
+  } catch(err){
+    sonuc.textContent='❌ Hata: '+err.message;
     sonuc.style.color='var(--rd)';
-    btn.disabled=false;
-    console.log('Mail error:',err);
-  });
+    console.log('PDF mail error:',err);
+  }
+  btn.disabled=false;
 }
+
+function biletMailGonder(){
+  biletPDFGonder();
+}
+
 
 // KAPI
 var currentSorgu=null;
