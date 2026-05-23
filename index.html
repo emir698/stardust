@@ -1887,10 +1887,11 @@ async function gunlukRaporGonder(){
   sonuc.textContent='';
 
   var today=todayStr();
-  var [yil,ay,gun]=today.split('-');
+  var tarihParts=today.split('-');
+  var yil=tarihParts[0],ay=tarihParts[1],gun=tarihParts[2];
   var tarihStr=gun+'.'+ay+'.'+yil;
   var gunler=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
-  var gunAdi=gunler[new Date(today).getDay()];
+  var gunAdi=gunler[new Date(yil,parseInt(ay)-1,parseInt(gun)).getDay()];
 
   // Bugünün biletlerini filtrele
   var filtered=tickets.filter(function(t){return t&&t.tarih===today;});
@@ -1975,8 +1976,7 @@ async function gunlukRaporGonder(){
   };
 
   try {
-    var [mailRes,slackRes]=await Promise.all([
-      fetch('https://api.brevo.com/v3/smtp/email',{
+    var mailRes=await fetch('https://api.brevo.com/v3/smtp/email',{
         method:'POST',
         headers:{'Content-Type':'application/json','api-key':'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'},
         body:JSON.stringify({
@@ -1985,15 +1985,16 @@ async function gunlukRaporGonder(){
           subject:'Stardust Günlük Rapor — '+tarihStr,
           htmlContent:mailHtml
         })
-      }),
-      fetch('https://hooks.slack.com/services/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',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(slackMsg)
-      })
-    ]);
+    });
+    // Slack - no-cors (Slack doesn't support CORS from browser)
+    fetch('https://hooks.slack.com/services/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',{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(slackMsg)
+    }).catch(function(){});
     if(mailRes.ok||mailRes.status===201){
-      sonuc.textContent='Rapor gonderildi!';
+      sonuc.textContent='Rapor gonderildi! Mail gitti, Slack mesaji gonderildi.';
       sonuc.style.color='var(--gn)';
     } else {
       throw new Error('Mail gönderilemedi');
