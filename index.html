@@ -1986,13 +1986,7 @@ async function gunlukRaporGonder(){
           htmlContent:mailHtml
         })
     });
-    // Slack - no-cors (Slack doesn't support CORS from browser)
-    fetch('https://hooks.slack.com/services/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',{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(slackMsg)
-    }).catch(function(){});
+    // Slack CORS tarayıcıdan bloklanıyor - Firebase Functions kurulunca aktif olacak
     if(mailRes.ok||mailRes.status===201){
       sonuc.textContent='Rapor gonderildi! Mail gitti, Slack mesaji gonderildi.';
       sonuc.style.color='var(--gn)';
