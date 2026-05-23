@@ -355,7 +355,7 @@ td{padding:10px 14px}
       <!-- Son Girişler -->
       <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Son Girişler</div>
       <div class="tw">
-        <table><thead><tr><th>PNR / Bilet No</th><th>Ad Soyad</th><th>Seans</th><th>Tür</th><th>Saat</th></tr></thead>
+        <table><thead><tr><th>PNR / Bilet No</th><th>Ad Soyad</th><th>Seans</th><th>Tür</th><th>Tarih</th><th>Saat</th></tr></thead>
         <tbody id="kapiLog"></tbody>
       </table></div>
 
@@ -672,7 +672,7 @@ function loadCodes(){
   codesRef.on('value',function(snap){
     var data=snap.val();
     if(data){
-      codes=Object.values(data);
+      codes=Object.keys(data).map(function(k){var c=data[k];c._key=k;return c;});
     } else if(currentRole==='admin'){
       toast('Kodlar yükleniyor...','warn');
       var b={};
@@ -932,7 +932,8 @@ function updateOzet(){
   if(indirimOrani>0){
     var indirimTutar=Math.round(gelir*indirimOrani);
     sonGelir=gelir-indirimTutar;
-    html+='<div class="ozet-row"><span style="color:var(--gn)">%10 İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
+    var indirimPct=Math.round(indirimOrani*100);
+    html+='<div class="ozet-row"><span style="color:var(--gn)">%'+indirimPct+' İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
   }
   html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(sonGelir)+'</span></div>';
   box.innerHTML=html;
@@ -978,7 +979,8 @@ function openSatisModal(){
   if(indirimOrani>0){
     var ind=Math.round(gelir*indirimOrani);
     sonGelirModal=gelir-ind;
-    html+='<div style="padding:4px 0;color:var(--gn)">%10 İndirim: -'+fmtMoney(ind)+'</div>';
+    var pct=Math.round(indirimOrani*100);
+    html+='<div style="padding:4px 0;color:var(--gn)">%'+pct+' İndirim: -'+fmtMoney(ind)+'</div>';
   }
   html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--ac)">Toplam: '+fmtMoney(sonGelirModal)+'</div></div>';
   document.getElementById('satisOzetModal').innerHTML=html;
@@ -1858,7 +1860,8 @@ function renderIndirim(){
     var btn=c.status==='aktif'?'<button class="btn btn-sm btn-r" onclick="confDe('+gi+')">Deaktif</button>':'<button class="btn btn-sm btn-g" onclick="reAk('+gi+')">Aktif Et</button>';
     var grupAdi=batchMap[c.code]||'—';
     var grupBadge=grupAdi!=='—'?'<span style="font-size:11px;background:rgba(232,197,71,.1);color:var(--ac);border:1px solid rgba(232,197,71,.25);border-radius:20px;padding:2px 8px;font-family:var(--mo)">'+grupAdi+'</span>':'<span style="color:var(--mu);font-size:12px">—</span>';
-    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td>'+grupBadge+'</td><td style="color:var(--mu)">%10</td><td>'+badge+'</td><td style="font-size:12px">'+(c.kullanan||'—')+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
+    var kodIndirim='—';Object.values(batches).forEach(function(b){if(b&&b.codes&&b.codes.indexOf(c.code)>-1&&b.indirim)kodIndirim='%'+b.indirim;});
+    rows+='<tr><td style="color:var(--mu);font-size:12px">'+(start+i+1)+'</td><td><span class="cc">'+c.code+'</span></td><td>'+grupBadge+'</td><td style="color:var(--mu)">'+kodIndirim+'</td><td>'+badge+'</td><td style="font-size:12px">'+(c.kullanan||'—')+'</td><td><span class="dc">'+(c.date||'—')+'</span></td><td>'+btn+'</td></tr>';
   }
   tb.innerHTML=rows;updatePag();
 }
@@ -1868,13 +1871,13 @@ function updatePag(){
   document.getElementById('pb1').disabled=pg<=1;document.getElementById('nb1').disabled=pg>=pages;
 }
 function changePg(d){pg+=d;renderIndirim();}
-function confDe(idx){if(!confirm('"'+codes[idx].code+'" deaktif edilsin mi?'))return;db.ref('codes/'+idx).update({status:'deaktif',date:todayStr()},function(err){if(!err)toast('Deaktif edildi','ok');});}
-function reAk(idx){db.ref('codes/'+idx).update({status:'aktif',date:''},function(err){if(!err)toast('Aktif edildi','ok');});}
+function confDe(idx){if(!confirm('"'+codes[idx].code+'" deaktif edilsin mi?'))return;var k=codes[idx]._key;db.ref('codes/'+k).update({status:'deaktif',date:todayStr()},function(err){if(!err)toast('Deaktif edildi','ok');});}
+function reAk(idx){var k=codes[idx]._key;db.ref('codes/'+k).update({status:'aktif',date:''},function(err){if(!err)toast('Aktif edildi','ok');}); }
 function openBulk(){document.getElementById('bki').value='';document.getElementById('ov3').classList.add('open');}
 function bulkDo(){
   var list=document.getElementById('bki').value.split(',').map(function(s){return s.trim().toUpperCase();}).filter(Boolean);
   var count=0,now=todayStr();
-  for(var i=0;i<list.length;i++)for(var j=0;j<codes.length;j++)if(codes[j]&&codes[j].code===list[i]&&codes[j].status==='aktif'){db.ref('codes/'+j).update({status:'deaktif',date:now});count++;break;}
+  for(var i=0;i<list.length;i++)for(var j=0;j<codes.length;j++)if(codes[j]&&codes[j].code===list[i]&&codes[j].status==='aktif'){db.ref('codes/'+codes[j]._key).update({status:'deaktif',date:now});count++;break;}
   document.getElementById('ov3').classList.remove('open');toast(count+' kod deaktif edildi','ok');
 }
 
@@ -1887,9 +1890,9 @@ async function gunlukRaporGonder(){
   sonuc.textContent='';
 
   var today=todayStr();
-  var tarihParts=today.split('-');
-  var yil=tarihParts[0],ay=tarihParts[1],gun=tarihParts[2];
-  var tarihStr=gun+'.'+ay+'.'+yil;
+  var tarihParts=today.split('.');
+  var gun=tarihParts[0],ay=tarihParts[1],yil=tarihParts[2];
+  var tarihStr=today;
   var gunler=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
   var gunAdi=gunler[new Date(yil,parseInt(ay)-1,parseInt(gun)).getDay()];
 
