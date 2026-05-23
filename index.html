@@ -431,6 +431,18 @@ td{padding:10px 14px}
           </div>
         </div>
       </div>
+      <!-- GÜNLÜK RAPOR -->
+      <div class="page-section" style="margin-top:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <div class="section-title" style="margin-bottom:0">Günlük Rapor</div>
+          <button class="btn btn-ac" onclick="gunlukRaporGonder()" id="raporBtn">📊 Rapor Gönder</button>
+        </div>
+        <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:1.25rem">
+          <div style="font-size:13px;color:var(--mu);margin-bottom:8px">Bugünün bilet satışları, ciro, seans dağılımı ve indirim kodu kullanımını mail ve Slack'e gönderir.</div>
+          <div id="raporSonuc" style="font-size:13px;margin-top:8px"></div>
+        </div>
+      </div>
+
       <!-- KOD GRUPLARI -->
       <div class="page-section" style="margin-top:1.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
@@ -1864,6 +1876,134 @@ function bulkDo(){
   var count=0,now=todayStr();
   for(var i=0;i<list.length;i++)for(var j=0;j<codes.length;j++)if(codes[j]&&codes[j].code===list[i]&&codes[j].status==='aktif'){db.ref('codes/'+j).update({status:'deaktif',date:now});count++;break;}
   document.getElementById('ov3').classList.remove('open');toast(count+' kod deaktif edildi','ok');
+}
+
+// GÜNLÜK RAPOR
+async function gunlukRaporGonder(){
+  var btn=document.getElementById('raporBtn');
+  var sonuc=document.getElementById('raporSonuc');
+  btn.disabled=true;
+  btn.textContent='Gönderiliyor...';
+  sonuc.textContent='';
+
+  var today=todayStr();
+  var [yil,ay,gun]=today.split('-');
+  var tarihStr=gun+'.'+ay+'.'+yil;
+  var gunler=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  var gunAdi=gunler[new Date(today).getDay()];
+
+  // Bugünün biletlerini filtrele
+  var filtered=tickets.filter(function(t){return t&&t.tarih===today;});
+  var tamT=0,cocukT=0,yabanciT=0,davetliT=0,kurumsalT=0,toplamCiro=0;
+  var seansMap={};
+  filtered.forEach(function(t){
+    tamT+=(t.tam||0);cocukT+=(t.cocuk||0);yabanciT+=(t.yabanci||0);
+    davetliT+=(t.davetli||0);kurumsalT+=(t.kurumsal||0);toplamCiro+=(t.toplam||0);
+    var s=t.seans||'?';
+    if(!seansMap[s])seansMap[s]={bilet:0,ciro:0};
+    seansMap[s].bilet+=(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);
+    seansMap[s].ciro+=(t.toplam||0);
+  });
+  var toplamBilet=tamT+cocukT+yabanciT+davetliT+kurumsalT;
+
+  // İndirim kodu kullanımı
+  var bugunKodlar=codes.filter(function(c){return c&&c.date===today&&c.status==='deaktif';});
+  var batchKullanim={};
+  Object.values(batches).forEach(function(b){
+    if(!b||!b.codes)return;
+    var kul=b.codes.filter(function(code){return bugunKodlar.some(function(c){return c.code===code;});});
+    if(kul.length>0)batchKullanim[b.name]={count:kul.length,indirim:b.indirim||10};
+  });
+
+  function bar(label,count,total,color){
+    if(count===0)return '';
+    var pct=total>0?Math.round(count/total*100):0;
+    return '<tr><td style="padding:6px 10px;color:#555;font-size:13px;width:100px">'+label+'</td><td style="padding:6px 10px"><div style="background:#f0f0f0;border-radius:4px;height:18px;overflow:hidden;width:200px"><div style="width:'+pct+'%;background:'+color+';height:100%;border-radius:4px"></div></div></td><td style="padding:6px 10px;font-size:13px;font-weight:600;color:#111">'+count+'</td><td style="padding:6px 10px;font-size:12px;color:#888">%'+pct+'</td></tr>';
+  }
+
+  var seansHtml='';
+  Object.entries(seansMap).sort().forEach(function(e){
+    seansHtml+='<tr style="border-bottom:0.5px solid #eee"><td style="padding:8px 10px;color:#333;font-size:13px">'+e[0]+'</td><td style="padding:8px 10px;text-align:right;font-weight:600;font-size:13px">'+e[1].bilet+'</td><td style="padding:8px 10px;text-align:right;color:#1a7a4a;font-size:13px">'+e[1].ciro.toLocaleString('tr-TR')+'₺</td></tr>';
+  });
+
+  var kodHtml='';
+  if(Object.keys(batchKullanim).length===0){
+    kodHtml='<tr><td colspan="3" style="padding:10px;color:#999;font-size:13px;text-align:center">Bugün kod kullanımı yok</td></tr>';
+  } else {
+    Object.entries(batchKullanim).forEach(function(e){
+      kodHtml+='<tr style="border-bottom:0.5px solid #eee"><td style="padding:8px 10px;color:#333;font-size:13px">'+e[0]+'</td><td style="padding:8px 10px;text-align:right;font-weight:600;color:#e24b4a;font-size:13px">'+e[1].count+'</td><td style="padding:8px 10px;text-align:right;color:#888;font-size:13px">%'+e[1].indirim+'</td></tr>';
+    });
+  }
+
+  var mailHtml='<div style="font-family:Arial,sans-serif;background:#f5f5f5;padding:0;margin:0">'+
+    '<div style="background:#0f0f0f;padding:20px;text-align:center"><div style="color:#e8c547;font-size:10px;letter-spacing:4px;margin-bottom:4px">✦ STARDUST ✦</div><div style="color:#fff;font-size:18px;font-weight:600">Astra Lumina İstanbul</div><div style="color:#888;font-size:12px;margin-top:4px">Günlük Rapor — '+gunAdi+', '+tarihStr+'</div></div>'+
+    '<div style="background:#fff;padding:28px 32px">'+
+    '<table style="width:100%;margin-bottom:24px"><tr>'+
+    '<td style="background:#f9f9f9;border-radius:8px;padding:14px;text-align:center;width:33%"><div style="font-size:11px;color:#888;margin-bottom:6px">Toplam Bilet</div><div style="font-size:26px;font-weight:700;color:#111">'+toplamBilet+'</div></td>'+
+    '<td style="width:8px"></td>'+
+    '<td style="background:#f9f9f9;border-radius:8px;padding:14px;text-align:center;width:33%"><div style="font-size:11px;color:#888;margin-bottom:6px">Toplam Ciro</div><div style="font-size:22px;font-weight:700;color:#1a7a4a">'+toplamCiro.toLocaleString('tr-TR')+'₺</div></td>'+
+    '<td style="width:8px"></td>'+
+    '<td style="background:#f9f9f9;border-radius:8px;padding:14px;text-align:center;width:33%"><div style="font-size:11px;color:#888;margin-bottom:6px">Kod Kullanımı</div><div style="font-size:26px;font-weight:700;color:#e8c547">'+bugunKodlar.length+'</div></td>'+
+    '</tr></table>'+
+    '<div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">BİLET TÜRÜ DAĞILIMI</div>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:24px">'+bar('Tam',tamT,toplamBilet,'#e8c547')+bar('Çocuk',cocukT,toplamBilet,'#60a5fa')+bar('Yabancı',yabanciT,toplamBilet,'#4ade80')+bar('Davetli',davetliT,toplamBilet,'#f97316')+bar('Kurumsal',kurumsalT,toplamBilet,'#a855f7')+'</table>'+
+    '<div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">SEANS BAZLI DAĞILIM</div>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:24px"><tr style="background:#f5f5f5"><th style="padding:8px 10px;text-align:left;color:#555;font-weight:500;font-size:12px">Seans</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">Bilet</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">Ciro</th></tr>'+
+    (seansHtml||'<tr><td colspan="3" style="padding:10px;color:#999;font-size:13px;text-align:center">Bugün satış yok</td></tr>')+'</table>'+
+    '<div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">İNDİRİM KODU KULLANIMI</div>'+
+    '<table style="width:100%;border-collapse:collapse"><tr style="background:#f5f5f5"><th style="padding:8px 10px;text-align:left;color:#555;font-weight:500;font-size:12px">Grup</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">Kullanılan</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">İndirim</th></tr>'+
+    kodHtml+'</table></div>'+
+    '<div style="background:#f5f5f5;padding:14px;text-align:center;border-top:1px solid #eee"><p style="color:#aaa;font-size:11px;margin:0">Astra Lumina İstanbul · Stardust · Günlük Rapor</p></div></div>';
+
+  var slackSeansText=Object.entries(seansMap).sort().map(function(e){return '• '+e[0]+' — '+e[1].bilet+' kişi, '+e[1].ciro.toLocaleString('tr-TR')+'₺';}).join('\n')||'Satış yok';
+  var slackKodText=Object.keys(batchKullanim).length>0?Object.entries(batchKullanim).map(function(e){return '• '+e[0]+': '+e[1].count+' kullanım (%'+e[1].indirim+')';}).join('\n'):'Bugün kullanım yok';
+
+  var slackMsg={
+    text:'✦ STARDUST — Günlük Rapor — '+gunAdi+' '+tarihStr,
+    blocks:[
+      {type:'header',text:{type:'plain_text',text:'✦ Stardust Günlük Rapor — '+tarihStr}},
+      {type:'section',fields:[
+        {type:'mrkdwn',text:'*Toplam Bilet*\n'+toplamBilet+' kişi'},
+        {type:'mrkdwn',text:'*Toplam Ciro*\n'+toplamCiro.toLocaleString('tr-TR')+'₺'},
+        {type:'mrkdwn',text:'*Kod Kullanımı*\n'+bugunKodlar.length+' adet'}
+      ]},
+      {type:'divider'},
+      {type:'section',text:{type:'mrkdwn',text:'*Bilet Türleri:*\n🟡 Tam: '+tamT+'  🔵 Çocuk: '+cocukT+'  🟢 Yabancı: '+yabanciT+'  🟠 Davetli: '+davetliT+'  🟣 Kurumsal: '+kurumsalT}},
+      {type:'section',text:{type:'mrkdwn',text:'*Seans Bazlı:*\n'+slackSeansText}},
+      {type:'section',text:{type:'mrkdwn',text:'*İndirim Kodları:*\n'+slackKodText}}
+    ]
+  };
+
+  try {
+    var [mailRes,slackRes]=await Promise.all([
+      fetch('https://api.brevo.com/v3/smtp/email',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','api-key':'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'},
+        body:JSON.stringify({
+          sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
+          to:[{email:'emir@devin.com.tr',name:'Ömer Baş'}],
+          subject:'Stardust Günlük Rapor — '+tarihStr,
+          htmlContent:mailHtml
+        })
+      }),
+      fetch('https://hooks.slack.com/services/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',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(slackMsg)
+      })
+    ]);
+    if(mailRes.ok||mailRes.status===201){
+      sonuc.textContent='Rapor gonderildi!';
+      sonuc.style.color='var(--gn)';
+    } else {
+      throw new Error('Mail gönderilemedi');
+    }
+  } catch(err){
+    sonuc.textContent='❌ Hata: '+err.message;
+    sonuc.style.color='var(--rd)';
+  }
+  btn.disabled=false;
+  btn.textContent='📊 Rapor Gönder';
 }
 
 // BATCH / KOD GRUPLARI
