@@ -948,7 +948,8 @@ function updateOzet(){
   if(indirimOrani>0){
     var indirimTutar=Math.round(gelir*indirimOrani);
     gelir=gelir-indirimTutar;
-    html+='<div class="ozet-row"><span style="color:var(--gn)">%10 İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
+    var pctGoster=Math.round(indirimOrani*100);
+    html+='<div class="ozet-row"><span style="color:var(--gn)">%'+pctGoster+' İndirim <span style="font-size:11px;opacity:.7">('+aktifIndirimKodu.code+')</span></span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
   }
   html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(gelir)+'</span></div>';
   box.innerHTML=html;
