@@ -980,7 +980,8 @@ function openSatisModal(){
   var soyad=document.getElementById('musteriSoyad').value.trim();
   if(!ad||!soyad){toast('Ad ve soyad giriniz!','err');return;}
   var tam=qty.tam||0,cocuk=qty.cocuk||0,yab=qty.yabanci||0,dav=qty.davetli||0,kur=qty.kurumsal||0;
-  var gelir=tam*PRICES.tam+cocuk*PRICES.cocuk+yab*PRICES.yabanci;
+  var h2=hesaplaFiyat();
+  var gelir=h2.gelir;
   var html='<div style="background:var(--bg);border-radius:8px;padding:1rem;font-size:13px">';
   html+='<div style="margin-bottom:10px"><strong>'+ad+' '+soyad+'</strong></div>';
   html+='<div style="margin-bottom:10px;font-size:14px">'+selectedTarih+' — Seans '+selectedSeans+'</div>';
