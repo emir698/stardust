@@ -914,32 +914,46 @@ function indirimIptal(){
   updateOzet();
 }
 
+function hesaplaFiyat(){
+  var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0;
+  var bestGelir=Infinity, bestA2=0, bestA1=0, bestKT=0, bestKC=0;
+  for(var a2=0;a2<=Math.floor(tam/2)&&a2<=cocuk;a2++){
+    var kT2=tam-a2*2,kC2=cocuk-a2;
+    for(var a1=0;a1<=kT2&&a1<=Math.floor(kC2/2);a1++){
+      var kt=kT2-a1,kc=kC2-a1*2;
+      var g=(a2+a1)*3900+kt*PRICES.tam+kc*PRICES.cocuk+yab*PRICES.yabanci;
+      if(g<bestGelir){bestGelir=g;bestA2=a2;bestA1=a1;bestKT=kt;bestKC=kc;}
+    }
+  }
+  return {gelir:bestGelir,aile2t1c:bestA2,aile1t2c:bestA1,kalanTam:bestKT,kalanCocuk:bestKC};
+}
+
 function updateOzet(){
-  var tam=qty.tam||0, cocuk=qty.cocuk||0, yab=qty.yabanci||0, dav=qty.davetli||0, kur=qty.kurumsal||0;
+  var tam=qty.tam||0,cocuk=qty.cocuk||0,yab=qty.yabanci||0,dav=qty.davetli||0,kur=qty.kurumsal||0;
   var total=tam+cocuk+yab+dav+kur;
   document.getElementById('satBtn').disabled=total===0;
   var box=document.getElementById('ozetBox');
   if(total===0){box.style.display='none';return;}
   box.style.display='block';
-  var gelir=tam*PRICES.tam+cocuk*PRICES.cocuk+yab*PRICES.yabanci;
+  var h=hesaplaFiyat();
+  var gelir=h.gelir+(kur*PRICES.kurumsal);
   var html='';
-  if(tam>0) html+='<div class="ozet-row"><span>Tam × '+tam+'</span><span>'+fmtMoney(tam*PRICES.tam)+'</span></div>';
-  if(cocuk>0) html+='<div class="ozet-row"><span>Çocuk × '+cocuk+'</span><span>'+fmtMoney(cocuk*PRICES.cocuk)+'</span></div>';
+  if(h.aile2t1c>0) html+='<div class="ozet-row"><span style="color:var(--ac)">🎁 Aile (2T+1Ç) × '+h.aile2t1c+'</span><span>'+fmtMoney(h.aile2t1c*3900)+'</span></div>';
+  if(h.aile1t2c>0) html+='<div class="ozet-row"><span style="color:var(--ac)">🎁 Aile (1T+2Ç) × '+h.aile1t2c+'</span><span>'+fmtMoney(h.aile1t2c*3900)+'</span></div>';
+  if(h.kalanTam>0) html+='<div class="ozet-row"><span>Tam × '+h.kalanTam+'</span><span>'+fmtMoney(h.kalanTam*PRICES.tam)+'</span></div>';
+  if(h.kalanCocuk>0) html+='<div class="ozet-row"><span>Çocuk × '+h.kalanCocuk+'</span><span>'+fmtMoney(h.kalanCocuk*PRICES.cocuk)+'</span></div>';
   if(yab>0) html+='<div class="ozet-row"><span>Yabancı × '+yab+'</span><span>'+fmtMoney(yab*PRICES.yabanci)+'</span></div>';
   if(dav>0) html+='<div class="ozet-row"><span style="color:var(--gn)">Davetli × '+dav+'</span><span style="color:var(--gn)">0₺</span></div>';
-  if(kur>0) html+='<div class="ozet-row"><span style="color:var(--bl)">Kurumsal × '+kur+'</span><span style="color:var(--bl)">0₺</span></div>';
-  var sonGelir=gelir;
+  if(kur>0) html+='<div class="ozet-row"><span>Kurumsal × '+kur+'</span><span>'+fmtMoney(kur*PRICES.kurumsal)+'</span></div>';
   if(indirimOrani>0){
     var indirimTutar=Math.round(gelir*indirimOrani);
-    sonGelir=gelir-indirimTutar;
-    var indirimPct=Math.round(indirimOrani*100);
-    html+='<div class="ozet-row"><span style="color:var(--gn)">%'+indirimPct+' İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
+    gelir=gelir-indirimTutar;
+    html+='<div class="ozet-row"><span style="color:var(--gn)">%10 İndirim</span><span style="color:var(--gn)">-'+fmtMoney(indirimTutar)+'</span></div>';
   }
-  html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(sonGelir)+'</span></div>';
+  html+='<div class="ozet-row"><span>TOPLAM ('+total+' kişi)</span><span>'+fmtMoney(gelir)+'</span></div>';
   box.innerHTML=html;
   if(total>0) document.getElementById('indirimAlani').style.display='block';
 }
-
 function resetForm(){
   selectedSeans=null;qty={tam:0,cocuk:0,yabanci:0,davetli:0,kurumsal:0};
   aktifIndirimKodu=null;indirimOrani=0;
@@ -970,8 +984,10 @@ function openSatisModal(){
   var html='<div style="background:var(--bg);border-radius:8px;padding:1rem;font-size:13px">';
   html+='<div style="margin-bottom:10px"><strong>'+ad+' '+soyad+'</strong></div>';
   html+='<div style="margin-bottom:10px;font-size:14px">'+selectedTarih+' — Seans '+selectedSeans+'</div>';
-  if(tam>0)html+='<div style="padding:4px 0">Tam: '+tam+' × 1.500₺ = '+fmtMoney(tam*PRICES.tam)+'</div>';
-  if(cocuk>0)html+='<div style="padding:4px 0">Çocuk: '+cocuk+' × 1.200₺ = '+fmtMoney(cocuk*PRICES.cocuk)+'</div>';
+  if(h2.aile2t1c>0)html+='<div style="padding:4px 0;color:var(--ac)">🎁 Aile (2T+1Ç) × '+h2.aile2t1c+' = '+fmtMoney(h2.aile2t1c*3900)+'</div>';
+  if(h2.aile1t2c>0)html+='<div style="padding:4px 0;color:var(--ac)">🎁 Aile (1T+2Ç) × '+h2.aile1t2c+' = '+fmtMoney(h2.aile1t2c*3900)+'</div>';
+  if(h2.kalanTam>0)html+='<div style="padding:4px 0">Tam: '+h2.kalanTam+' × 1.500₺ = '+fmtMoney(h2.kalanTam*PRICES.tam)+'</div>';
+  if(h2.kalanCocuk>0)html+='<div style="padding:4px 0">Çocuk: '+h2.kalanCocuk+' × 1.200₺ = '+fmtMoney(h2.kalanCocuk*PRICES.cocuk)+'</div>';
   if(yab>0)html+='<div style="padding:4px 0">Yabancı: '+yab+' × 2.250₺ = '+fmtMoney(yab*PRICES.yabanci)+'</div>';
   if(dav>0)html+='<div style="padding:4px 0;color:var(--gn)">Davetli: '+dav+' × 0₺</div>';
   if(kur>0)html+='<div style="padding:4px 0;color:#a855f7">Kurumsal Satış: '+kur+' × 0₺</div>';
@@ -996,7 +1012,8 @@ function tamamlaSatis(){
   var adSoyad=ad+' '+soyad;
   var now=new Date();
   var pnr='PNR-'+genID().substr(0,8);
-  var gelir2=(qty.tam||0)*PRICES.tam+(qty.cocuk||0)*PRICES.cocuk+(qty.yabanci||0)*PRICES.yabanci;
+  var h2=hesaplaFiyat();
+  var gelir2=h2.gelir+(qty.kurumsal||0)*PRICES.kurumsal;
   var davetliSayisi=(qty.davetli||0)+(qty.kurumsal||0);
   var indTutar=indirimOrani>0?Math.round(gelir2*indirimOrani):0;
   var sonToplam=gelir2-indTutar;
