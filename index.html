@@ -507,6 +507,21 @@ td{padding:10px 14px}
   </div>
 </div>
 
+<!-- PDF GÖNDER OVERLAY -->
+<div class="overlay" id="ov-pdfgonder" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:420px">
+    <h3>📧 PDF Biletleri Gönder</h3>
+    <p id="pg-pnr-info" style="font-family:var(--mo);color:var(--ac);font-size:13px;margin-bottom:1rem"></p>
+    <label>Mail Adresi</label>
+    <input type="email" id="pg-mail" class="form-input" placeholder="musteri@mail.com" style="margin-bottom:.75rem">
+    <div id="pg-sonuc" style="font-size:13px;min-height:18px;margin-bottom:.75rem"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="document.getElementById('ov-pdfgonder').classList.remove('open')">İptal</button>
+      <button class="btn btn-ac" id="pg-gonder-btn" onclick="pdfGonderGonder()">📧 Gönder</button>
+    </div>
+  </div>
+</div>
+
 <!-- GİRİŞ VER OVERLAY -->
 <div class="overlay" id="ov-giris" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="max-width:480px">
@@ -1357,6 +1372,15 @@ function renderKapiGunBiletler(){
       pb.dataset.ad=t.musteriAd||'';
       pb.addEventListener('click',function(){tekPDFIndir(this.dataset.pnr,this.dataset.ad,this);});
       islemTd.appendChild(pb);
+
+      var sgb=document.createElement('button');
+      sgb.className='btn btn-sm';
+      sgb.style.cssText='background:#1a0a2a;color:#c084fc;border:1px solid #c084fc33';
+      sgb.innerHTML='📧 PDF Gönder';
+      sgb.dataset.pnr=t.pnr;
+      sgb.dataset.ad=t.musteriAd||'';
+      sgb.addEventListener('click',function(){openPDFGonderModal(this.dataset.pnr,this.dataset.ad);});
+      islemTd.appendChild(sgb);
     }
     if(t.pnr&&currentRole==='admin'){
       var db2=document.createElement('button');
@@ -1490,6 +1514,125 @@ async function tekPDFIndir(pnr, ad, btn){
   }
   btn.disabled=false;
   btn.innerHTML='📄 Tek PDF';
+}
+
+var pdfGonderPNR = null;
+var pdfGonderAd = null;
+
+function openPDFGonderModal(pnr, ad){
+  pdfGonderPNR = pnr;
+  pdfGonderAd = ad;
+  document.getElementById('pg-pnr-info').textContent = 'PNR: ' + pnr + (ad ? '  ·  ' + ad : '');
+  document.getElementById('pg-mail').value = '';
+  document.getElementById('pg-sonuc').textContent = '';
+  document.getElementById('pg-gonder-btn').disabled = false;
+  document.getElementById('pg-gonder-btn').innerHTML = '📧 Gönder';
+  document.getElementById('ov-pdfgonder').classList.add('open');
+}
+
+async function pdfGonderGonder(){
+  var mail = document.getElementById('pg-mail').value.trim();
+  var sonuc = document.getElementById('pg-sonuc');
+  var btn = document.getElementById('pg-gonder-btn');
+  if(!mail){sonuc.textContent='Mail adresi girin';sonuc.style.color='var(--rd)';return;}
+  if(!pdfGonderPNR) return;
+  btn.disabled=true; btn.innerHTML='⏳ PDF hazırlanıyor...'; sonuc.textContent='';
+
+  try {
+    var psnap = await db.ref('pnrler/'+pdfGonderPNR).once('value');
+    var p = psnap.val();
+    if(!p){sonuc.textContent='PNR bulunamadı';sonuc.style.color='var(--rd)';btn.disabled=false;btn.innerHTML='📧 Gönder';return;}
+
+    var biletNoList = p.biletler||[];
+    var biletDataList = await Promise.all(biletNoList.map(function(bno){
+      return biletlerRef.child(bno).once('value').then(function(bs){
+        var bd=bs.val()||{};
+        var turCls={'Tam':'bilet-tam','Çocuk':'bilet-cocuk','Yabancı':'bilet-yabanci','Davetli':'bilet-davetli','Kurumsal Satış':'bilet-kurumsal'};
+        return {no:bno,tur:bd.tur||'Bilet',tarih:bd.tarih||p.tarih,seans:bd.seans||p.seans,cls:turCls[bd.tur]||'bilet-tam'};
+      });
+    }));
+
+    sonuc.textContent='QR kodlar hazırlanıyor...'; sonuc.style.color='var(--mu)';
+
+    var tmpWrap=document.createElement('div');
+    tmpWrap.style.cssText='position:fixed;left:-9999px;top:0;width:500px;background:#f5f5f5';
+    biletDataList.forEach(function(b,idx){
+      var d=document.createElement('div');
+      d.innerHTML='<div id="pdfg-qr-'+idx+'"></div>';
+      tmpWrap.appendChild(d);
+    });
+    document.body.appendChild(tmpWrap);
+    biletDataList.forEach(function(b,idx){
+      try{new QRCode(document.getElementById('pdfg-qr-'+idx),{text:b.no,width:110,height:110,colorDark:'#000',colorLight:'#fff'});}catch(e){}
+    });
+    await new Promise(function(r){setTimeout(r,600);});
+
+    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal Satış':'#a855f7'};
+    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal Satış':'rgba(168,85,247,.12)'};
+    var {jsPDF}=window.jspdf;
+    var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pageW=doc.internal.pageSize.getWidth(); var pageH=doc.internal.pageSize.getHeight();
+
+    for(var i=0;i<biletDataList.length;i++){
+      var b=biletDataList[i];
+      var renk=turRenk[b.tur]||'#e8c547'; var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
+      var qrEl=document.getElementById('pdfg-qr-'+i);
+      var qrImg=''; if(qrEl){var cvs=qrEl.querySelector('canvas');if(cvs)qrImg=cvs.toDataURL('image/png');}
+      var card=document.createElement('div');
+      card.style.cssText='position:fixed;left:-9999px;top:0;background:#fff;width:460px;font-family:Arial,sans-serif;border-radius:16px;overflow:hidden';
+      card.innerHTML=
+        '<div style="background:#0f0f0f;padding:16px;text-align:center">'+
+          '<div style="color:#e8c547;font-size:10px;letter-spacing:4px;margin-bottom:4px">✦ STARDUST ✦</div>'+
+          '<div style="color:#fff;font-size:18px;font-weight:600">Astra Lumina İstanbul</div>'+
+        '</div>'+
+        '<div style="padding:24px 28px;text-align:center;background:#fff">'+
+          '<div style="font-size:13px;color:#777;margin-bottom:18px">'+getDayName(b.tarih)+', '+b.tarih+' &nbsp;·&nbsp; Seans '+b.seans+'</div>'+
+          (qrImg?'<img src="'+qrImg+'" style="width:160px;height:160px;margin:0 auto 16px;display:block" />':'')+
+          '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:6px 24px;font-size:14px;font-weight:600;margin-bottom:14px">'+b.tur+'</div>'+
+          '<div style="border-top:1px dashed #eee;margin:14px 0"></div>'+
+          '<div style="font-size:10px;color:#bbb;letter-spacing:1.5px;font-family:monospace">'+b.no+'</div>'+
+        '</div>'+
+        '<div style="background:#fafafa;border-top:1px solid #eee;padding:14px 20px;text-align:center">'+
+          '<div style="font-size:11px;font-weight:700;color:#111">PDF biletinizdeki karekod kapıda okutulacaktır.</div>'+
+        '</div>';
+      document.body.appendChild(card);
+      var canvas=await html2canvas(card,{scale:1.5,backgroundColor:'#ffffff',useCORS:true});
+      document.body.removeChild(card);
+      var imgData=canvas.toDataURL('image/jpeg',0.75);
+      var imgW=pageW-20; var imgH=(canvas.height*imgW)/canvas.width; var yPos=(pageH-imgH)/2;
+      if(i>0) doc.addPage();
+      doc.addImage(imgData,'JPEG',10,yPos,imgW,imgH);
+      sonuc.textContent='PDF oluşturuluyor ('+(i+1)+'/'+biletDataList.length+')...';
+    }
+    document.body.removeChild(tmpWrap);
+
+    var pdfB64=doc.output('datauristring').split(',')[1];
+    sonuc.textContent='Mail gönderiliyor...';
+
+    var res=await fetch('https://api.brevo.com/v3/smtp/email',{
+      method:'POST',
+      headers:{'api-key':'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','Content-Type':'application/json'},
+      body:JSON.stringify({
+        sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
+        to:[{email:mail}],
+        subject:'Stardust — Biletleriniz ('+pdfGonderPNR+')',
+        htmlContent:'<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto"><div style="background:#0f0f0f;padding:20px;text-align:center"><div style="color:#e8c547;font-size:11px;letter-spacing:3px">✦ STARDUST ✦</div><div style="color:#fff;font-size:18px;font-weight:600;margin-top:6px">Astra Lumina İstanbul</div></div><div style="padding:24px;background:#fff"><p>Merhaba <strong>'+(p.musteriAd||pdfGonderAd||'')+'</strong>,</p><p>Etkinlik biletiniz ekte PDF olarak yer almaktadır.</p><p>Seans saatinizden <strong>30 dakika önce</strong> alanda bulunmanız gerekmektedir.</p><p>Seans saatinin kaçırılması durumunda <strong>ücret iadesi yapılmaz.</strong></p><p>Girişlerde biletinizin QR kodunu okutmanız yeterli olacaktır.</p></div><div style="background:#f5f5f5;padding:14px;text-align:center;font-size:11px;color:#aaa">Astra Lumina İstanbul · Stardust</div></div>',
+        attachment:[{content:pdfB64,name:'Stardust-Biletler-'+pdfGonderPNR+'.pdf',type:'application/pdf',disposition:'attachment'}]
+      })
+    });
+
+    if(res.ok||res.status===201){
+      sonuc.textContent='✅ '+biletDataList.length+' bilet '+mail+' adresine gönderildi!';
+      sonuc.style.color='var(--gn)';
+    } else {
+      var d=await res.json();
+      throw new Error(d.message||JSON.stringify(d));
+    }
+  } catch(err){
+    sonuc.textContent='❌ Hata: '+err.message;
+    sonuc.style.color='var(--rd)';
+  }
+  btn.disabled=false; btn.innerHTML='📧 Gönder';
 }
 
 async function zipBiletIndir(pnr, ad, btn){
@@ -2488,3 +2631,4 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 </script>
 </body>
 </html>
+
