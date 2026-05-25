@@ -530,21 +530,6 @@ td{padding:10px 14px}
 </div>
 
 <div class="print-area" id="printArea" style="display:none"></div>
-<!-- BİLETİ GETİR OVERLAY -->
-<div class="overlay" id="ov-biletigetir">
-  <div class="modal" style="max-width:420px">
-    <h3>✉️ Bileti Tekrar Gönder</h3>
-    <p id="bg-pnr-info" style="font-family:var(--mo);color:var(--ac);font-size:13px;margin-bottom:1rem"></p>
-    <label>Mail Adresi</label>
-    <input type="email" id="bg-mail" class="form-input" placeholder="musteri@mail.com" style="margin-bottom:.75rem">
-    <div id="bg-sonuc" style="font-size:13px;min-height:18px;margin-bottom:.75rem"></div>
-    <div class="mbtns">
-      <button class="btn" onclick="document.getElementById('ov-biletigetir').classList.remove('open')">İptal</button>
-      <button class="btn btn-ac" id="bg-gonder-btn" onclick="biletiGetirGonder()">✉️ Gönder</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -2237,90 +2222,43 @@ function doExport(){
 }
 
 
-var biletiGetirPNR = null;
-
 function openBiletiGetir(pnr, ad){
-  biletiGetirPNR = pnr;
-  document.getElementById('bg-pnr-info').textContent = 'PNR: ' + pnr + (ad ? '  ·  ' + ad : '');
-  document.getElementById('bg-mail').value = '';
-  document.getElementById('bg-sonuc').textContent = '';
-  document.getElementById('ov-biletigetir').classList.add('open');
-}
-
-async function biletiGetirGonder(){
-  var mail = document.getElementById('bg-mail').value.trim();
-  var sonuc = document.getElementById('bg-sonuc');
-  var btn = document.getElementById('bg-gonder-btn');
-  if(!mail){sonuc.textContent='Mail adresi girin';sonuc.style.color='var(--rd)';return;}
-  if(!biletiGetirPNR){return;}
-  btn.disabled=true;
-  sonuc.textContent='Hazırlanıyor...';
-  sonuc.style.color='var(--mu)';
-
-  try {
-    // PNR verisini çek
-    var psnap = await db.ref('pnrler/'+biletiGetirPNR).once('value');
-    var p = psnap.val();
-    if(!p){sonuc.textContent='PNR bulunamadı';sonuc.style.color='var(--rd)';btn.disabled=false;return;}
-
-    // Biletleri çek ve PDF oluştur
+  // PNR'ı Firebase'den çek ve mevcut bilet modalını aç
+  db.ref('pnrler/'+pnr).once('value', function(snap){
+    var p = snap.val();
+    if(!p){toast('PNR bulunamadı','err');return;}
     var biletNoList = p.biletler||[];
-    var biletDataList = await Promise.all(biletNoList.map(function(bno){
-      return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});
-    }));
-
-    var {jsPDF} = window.jspdf;
-    var attachments = [];
-
-    for(var i=0;i<biletDataList.length;i++){
-      var b = biletDataList[i];
-      var doc = new jsPDF({unit:'mm',format:[80,120]});
-      var el = document.createElement('div');
-      el.style.cssText='position:fixed;left:-9999px;top:0;width:300px';
-      var bd = b.data||{tur:'Bilet',tarih:p.tarih,seans:p.seans,musteriAd:p.musteriAd||''};
-      var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal Satış':'#a855f7'};
-      el.innerHTML = '<div style="background:#fff;padding:20px;width:280px;font-family:Arial,sans-serif;border-radius:10px">'+
-        '<div style="text-align:center;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
-        '<div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:2px">Astra Lumina İstanbul</div>'+
-        '<div style="text-align:center;font-size:12px;color:#555;margin-bottom:8px">'+bd.tarih+' — Seans '+bd.seans+'</div>'+
-        '<div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:8px">'+p.musteriAd+'</div>'+
-        '<div style="text-align:center;font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">PNR: '+biletiGetirPNR+'</div>'+
-        '<div style="text-align:center;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;background:'+(turRenk[bd.tur]||'#e8c547')+'22;color:'+(turRenk[bd.tur]||'#e8c547')+';margin-bottom:8px">'+bd.tur+'</div>'+
-        '<div style="text-align:center;font-size:10px;color:#aaa;font-family:monospace">'+b.no+'</div>'+
-        '</div>';
-      document.body.appendChild(el);
-      var canvas = await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true});
-      document.body.removeChild(el);
-      var imgData = canvas.toDataURL('image/jpeg',0.92);
-      doc.addImage(imgData,'JPEG',0,0,80,120);
-      var pdfB64 = doc.output('datauristring').split(',')[1];
-      attachments.push({content:pdfB64,name:'bilet-'+(i+1)+'.pdf',type:'application/pdf',disposition:'attachment'});
-    }
-
-    var res = await fetch('https://api.brevo.com/v3/smtp/email',{
-      method:'POST',
-      headers:{'api-key':'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','Content-Type':'application/json'},
-      body:JSON.stringify({
-        sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
-        to:[{email:mail}],
-        subject:'Stardust — Biletleriniz ('+biletiGetirPNR+')',
-        htmlContent:'<p>Merhaba '+(p.musteriAd||'')+'</p><p>Biletleriniz ekte yer almaktadır.</p><p>PNR: <strong>'+biletiGetirPNR+'</strong></p>',
-        attachment:attachments
-      })
+    var adSoyad = p.musteriAd||ad||'';
+    // Bilet verilerini çek
+    var promises = biletNoList.map(function(bno){
+      return biletlerRef.child(bno).once('value').then(function(bs){
+        var bd = bs.val()||{};
+        var turCls = {
+          'Tam':'bilet-tam','Çocuk':'bilet-cocuk','Yabancı':'bilet-yabanci',
+          'Davetli':'bilet-davetli','Kurumsal Satış':'bilet-kurumsal'
+        };
+        return {
+          no: bno,
+          tur: bd.tur||'Bilet',
+          tarih: bd.tarih||p.tarih,
+          seans: bd.seans||p.seans,
+          cls: turCls[bd.tur]||'bilet-tam'
+        };
+      });
     });
-
-    if(res.ok||res.status===201){
-      sonuc.textContent='✅ Bilet '+mail+' adresine gönderildi!';
-      sonuc.style.color='var(--gn)';
-    } else {
-      var d=await res.json();
-      throw new Error(JSON.stringify(d));
-    }
-  } catch(err){
-    sonuc.textContent='❌ Hata: '+err.message;
-    sonuc.style.color='var(--rd)';
-  }
-  btn.disabled=false;
+    Promise.all(promises).then(function(biletlerArr){
+      // mail input'u temizle
+      var mailInput = document.getElementById('mailGonderInput');
+      var mailSonuc = document.getElementById('mailGonderSonuc');
+      if(mailInput) mailInput.value = '';
+      if(mailSonuc) mailSonuc.textContent = '';
+      // currentBiletlerMail sıfırla
+      currentBiletlerMail = '';
+      currentBiletlerData = biletlerArr;
+      // Mevcut gosterBiletler fonksiyonunu çağır
+      gosterBiletler(biletlerArr, adSoyad, pnr);
+    });
+  });
 }
 
 var tt;
@@ -2328,4 +2266,3 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 </script>
 </body>
 </html>
-
