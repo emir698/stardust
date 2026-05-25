@@ -12,6 +12,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{--bg:#0f0f0f;--sf:#1a1a1a;--sf2:#242424;--bd:#2a2a2a;--bd2:#3a3a3a;--tx:#f0f0f0;--mu:#666;--ac:#e8c547;--gn:#4ade80;--gd:rgba(74,222,128,0.08);--rd:#f87171;--rdd:rgba(248,113,113,0.08);--bl:#60a5fa;--mo:'IBM Plex Mono',monospace;--sa:'DM Sans',sans-serif}
@@ -1337,6 +1339,15 @@ function renderKapiGunBiletler(){
       mb.dataset.ad=t.musteriAd||'';
       mb.addEventListener('click',function(){openBiletiGetir(this.dataset.pnr,this.dataset.ad);});
       islemTd.appendChild(mb);
+
+      var zb=document.createElement('button');
+      zb.className='btn btn-sm';
+      zb.style.cssText='background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa33';
+      zb.innerHTML='📦 ZIP';
+      zb.dataset.pnr=t.pnr;
+      zb.dataset.ad=t.musteriAd||'';
+      zb.addEventListener('click',function(){zipBiletIndir(this.dataset.pnr,this.dataset.ad,this);});
+      islemTd.appendChild(zb);
     }
     if(t.pnr&&currentRole==='admin'){
       var db2=document.createElement('button');
@@ -1354,6 +1365,63 @@ function renderKapiGunBiletler(){
     tbEl.appendChild(tr);
   });
   // rows rendered via DOM above
+}
+
+async function zipBiletIndir(pnr, ad, btn){
+  btn.disabled=true;
+  btn.innerHTML='⏳ Hazırlanıyor...';
+
+  try {
+    var psnap = await db.ref('pnrler/'+pnr).once('value');
+    var p = psnap.val();
+    if(!p){toast('PNR bulunamadı','err');btn.disabled=false;btn.innerHTML='📦 ZIP';return;}
+
+    var biletNoList = p.biletler||[];
+    var biletDataList = await Promise.all(biletNoList.map(function(bno){
+      return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()||{}};});
+    }));
+
+    var zip = new JSZip();
+    var {jsPDF} = window.jspdf;
+    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal Satış':'#a855f7'};
+
+    btn.innerHTML='⏳ 0/'+biletDataList.length;
+
+    for(var i=0;i<biletDataList.length;i++){
+      var b = biletDataList[i];
+      var bd = b.data;
+      var doc = new jsPDF({unit:'mm',format:[80,120]});
+      var el = document.createElement('div');
+      el.style.cssText='position:fixed;left:-9999px;top:0;width:300px;background:#fff';
+      el.innerHTML =
+        '<div style="background:#fff;padding:20px;width:280px;font-family:Arial,sans-serif;border-radius:10px">'+
+        '<div style="text-align:center;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
+        '<div style="text-align:center;font-size:16px;font-weight:700;margin-bottom:2px">Astra Lumina İstanbul</div>'+
+        '<div style="text-align:center;font-size:11px;color:#555;margin-bottom:6px">'+(bd.tarih||p.tarih)+' — Seans '+(bd.seans||p.seans)+'</div>'+
+        '<div style="text-align:center;font-size:13px;font-weight:600;margin-bottom:6px">'+(p.musteriAd||ad||'')+'</div>'+
+        '<div style="text-align:center;font-size:9px;color:#888;margin-bottom:6px;font-family:monospace">PNR: '+pnr+'</div>'+
+        '<div style="text-align:center;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:'+(turRenk[bd.tur]||'#e8c547')+'22;color:'+(turRenk[bd.tur]||'#e8c547')+';margin-bottom:6px">'+(bd.tur||'Bilet')+'</div>'+
+        '<div style="text-align:center;font-size:9px;color:#aaa;font-family:monospace">'+b.no+'</div>'+
+        '</div>';
+      document.body.appendChild(el);
+      var canvas = await html2canvas(el,{scale:1.5,backgroundColor:'#ffffff',useCORS:true});
+      document.body.removeChild(el);
+      var imgData = canvas.toDataURL('image/jpeg',0.75);
+      doc.addImage(imgData,'JPEG',0,0,80,120);
+      var pdfBytes = doc.output('arraybuffer');
+      zip.file('bilet-'+(i+1)+'-'+b.no+'.pdf', pdfBytes);
+      btn.innerHTML='⏳ '+(i+1)+'/'+biletDataList.length;
+    }
+
+    var zipBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    saveAs(zipBlob, 'stardust-biletler-'+pnr+'.zip');
+    toast('ZIP indirildi! ('+biletDataList.length+' bilet)','ok');
+  } catch(err){
+    toast('Hata: '+err.message,'err');
+    console.error(err);
+  }
+  btn.disabled=false;
+  btn.innerHTML='📦 ZIP';
 }
 
 function biletSil(pnr){
