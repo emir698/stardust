@@ -1338,9 +1338,43 @@ function renderKapiGunBiletler(){
       mb.addEventListener('click',function(){openBiletiGetir(this.dataset.pnr,this.dataset.ad);});
       islemTd.appendChild(mb);
     }
+    if(t.pnr&&currentUser&&currentUser.role==='admin'){
+      var db2=document.createElement('button');
+      db2.className='btn btn-sm';
+      db2.style.cssText='background:#2a0a0a;color:#e24b4a;border:1px solid #e24b4a33';
+      db2.innerHTML='🗑 Sil';
+      db2.dataset.pnr=t.pnr;
+      db2.addEventListener('click',function(){
+        var pnr=this.dataset.pnr;
+        if(!confirm(pnr+' numaralı satışı ve tüm biletlerini silmek istediğinize emin misiniz?')) return;
+        biletSil(pnr);
+      });
+      islemTd.appendChild(db2);
+    }
     tbEl.appendChild(tr);
   });
   // rows rendered via DOM above
+}
+
+function biletSil(pnr){
+  db.ref('pnrler/'+pnr).once('value',function(snap){
+    var p=snap.val();
+    if(!p){toast('PNR bulunamadı','err');return;}
+    var biletNoList=p.biletler||[];
+    var islemler=[db.ref('pnrler/'+pnr).remove()];
+    biletNoList.forEach(function(bno){
+      islemler.push(biletlerRef.child(bno).remove());
+    });
+    // tickets node'undan da sil
+    db.ref('tickets').orderByChild('pnr').equalTo(pnr).once('value',function(tsnap){
+      tsnap.forEach(function(child){islemler.push(child.ref.remove());});
+      Promise.all(islemler).then(function(){
+        toast(pnr+' silindi ('+biletNoList.length+' bilet)','ok');
+        renderKapiGunBiletler();
+        updateKapiStats();
+      }).catch(function(e){toast('Hata: '+e.message,'err');});
+    });
+  });
 }
 
 function hizliGiris(pnr){
