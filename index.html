@@ -1732,7 +1732,7 @@ function renderDashboard(){
   var bugunBilet=filtered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);},0);
   var bugunGelir=filtered.reduce(function(a,t){return a+(t.toplam||0);},0);
   var today=todayStr();
-  var todayBilet=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);},0);
+  var todayBilet=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);},0);
   var todayGelir=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.toplam||0);},0);
 
   document.getElementById('kpiGrid').innerHTML=
@@ -1747,7 +1747,7 @@ function renderDashboard(){
   var totYab=filtered.reduce(function(a,t){return a+(t.yabanci||0);},0);
   var totDav=filtered.reduce(function(a,t){return a+(t.davetli||0);},0);
   var totKur=filtered.reduce(function(a,t){return a+(t.kurumsal||0);},0);
-  renderDonut(totTam,totCocuk,totYab,totDav);
+  renderDonut(totTam,totCocuk,totYab,totDav,totKur);
 
   // Seans bazlı satış - gerçek saatler
   var tumSaatler=['21:00','21:30','22:00','22:30','23:00'];
@@ -2160,7 +2160,7 @@ function deleteBatch(key){
 
 // ADMİN
 function renderAdminPage(){
-  document.getElementById('adminTotalTickets').textContent=tickets.reduce(function(a,t){return a+(t?((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)):0);},0).toLocaleString('tr-TR');
+  document.getElementById('adminTotalTickets').textContent=tickets.reduce(function(a,t){return a+(t?((t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0)):0);},0).toLocaleString('tr-TR');
   document.getElementById('adminTotalGelir').textContent=fmtMoney(tickets.reduce(function(a,t){return a+(t?(t.toplam||0):0);},0));
   document.getElementById('adminAktifKod').textContent=codes.filter(function(c){return c&&c.status==='aktif';}).length.toLocaleString('tr-TR');
   loadUserList();
