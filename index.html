@@ -530,6 +530,21 @@ td{padding:10px 14px}
 </div>
 
 <div class="print-area" id="printArea" style="display:none"></div>
+<!-- BİLETİ GETİR OVERLAY -->
+<div class="overlay" id="ov-biletigetir">
+  <div class="modal" style="max-width:420px">
+    <h3>✉️ Bileti Tekrar Gönder</h3>
+    <p id="bg-pnr-info" style="font-family:var(--mo);color:var(--ac);font-size:13px;margin-bottom:1rem"></p>
+    <label>Mail Adresi</label>
+    <input type="email" id="bg-mail" class="form-input" placeholder="musteri@mail.com" style="margin-bottom:.75rem">
+    <div id="bg-sonuc" style="font-size:13px;min-height:18px;margin-bottom:.75rem"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="document.getElementById('ov-biletigetir').classList.remove('open')">İptal</button>
+      <button class="btn btn-ac" id="bg-gonder-btn" onclick="biletiGetirGonder()">✉️ Gönder</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -2313,3 +2328,4 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 </script>
 </body>
 </html>
+
