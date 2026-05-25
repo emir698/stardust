@@ -1332,7 +1332,8 @@ function renderKapiGunBiletler(){
 
 function hizliGiris(pnr){
   if(!pnr)return;
-  openBiletiGetir(pnr,'');
+  document.getElementById('pnrInput').value=pnr;
+  sorgulaPNR();
 }
 
 function sorgulaPNRModal(){
