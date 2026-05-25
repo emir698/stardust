@@ -778,10 +778,10 @@ function buildTarihBtns(){
   container.innerHTML='';
   // Sonraki 30 gün içinde etkinlik günlerini bul
   var etkinlikGunler=[];
-  for(var i=0;i<=30;i++){
+  for(var i=0;i<=90;i++){
     var d=addDays(today,i);
     if(isEtkinlikGunu(d)) etkinlikGunler.push(d);
-    if(etkinlikGunler.length>=8) break;
+    if(etkinlikGunler.length>=20) break;
   }
   etkinlikGunler.forEach(function(d){
     var p=d.split('.');
@@ -1147,8 +1147,8 @@ async function biletPDFGonder(){
 
     for(var i=0;i<cards.length;i++){
       var pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-      var canvas=await html2canvas(cards[i],{scale:2,backgroundColor:'#ffffff',useCORS:true});
-      var imgData=canvas.toDataURL('image/jpeg',0.92);
+      var canvas=await html2canvas(cards[i],{scale:1.5,backgroundColor:'#ffffff',useCORS:true});
+      var imgData=canvas.toDataURL('image/jpeg',0.75);
       var pageW=pdf.internal.pageSize.getWidth();
       var pageH=pdf.internal.pageSize.getHeight();
       var imgW=pageW-20;
@@ -1255,10 +1255,10 @@ function buildKapiTarihBtns(){
   if(!container)return;
   container.innerHTML='';
   var gunler=[];
-  for(var i=-3;i<=14;i++){
+  for(var i=-3;i<=90;i++){
     var d=addDays(today,i);
     if(isEtkinlikGunu(d)) gunler.push(d);
-    if(gunler.length>=10) break;
+    if(gunler.length>=20) break;
   }
   gunler.forEach(function(d){
     var p=d.split('.');
