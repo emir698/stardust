@@ -328,7 +328,7 @@ td{padding:10px 14px}
       <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Seçili Günün Biletleri</div>
       <div class="tw" style="margin-bottom:1.5rem">
         <table>
-          <thead><tr><th>PNR</th><th>Ad Soyad</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Satış Saati</th><th>Durum</th><th>İşlem</th></tr></thead>
+          <thead><tr><th>PNR</th><th>Ad Soyad</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Kurumsal</th><th>Satış Saati</th><th>Durum</th><th>İşlem</th></tr></thead>
           <tbody id="kapiGunBiletler"></tbody>
         </table>
       </div>
@@ -1292,7 +1292,7 @@ function renderKapiGunBiletler(){
   if(!el)return;
   var gunTickets=tickets.filter(function(t){return t&&t.tarih===kapiSelectedTarih;});
   if(!gunTickets.length){
-    el.innerHTML='<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--mu)">Bu gün için satış yok</td></tr>';
+    el.innerHTML='<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--mu)">Bu gün için satış yok</td></tr>';
     return;
   }
   var tbEl=document.getElementById('kapiGunBiletler');
@@ -1315,6 +1315,7 @@ function renderKapiGunBiletler(){
       '<td>'+(t.tam||0)+'</td>'+
       '<td>'+(t.cocuk||0)+'</td>'+
       '<td>'+(t.yabanci||0)+'</td>'+
+      '<td style="color:#a855f7;font-weight:600">'+(t.kurumsal||0)+'</td>'+
       '<td class="dc" style="font-size:11px">'+(t.satisSaati||t.saat||'-')+'</td>'+
       '<td>'+durum+'</td>'+
       '<td></td>';
