@@ -1386,41 +1386,104 @@ async function tekPDFIndir(pnr, ad, btn){
 
     var biletNoList = p.biletler||[];
     var biletDataList = await Promise.all(biletNoList.map(function(bno){
-      return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()||{}};});
+      return biletlerRef.child(bno).once('value').then(function(bs){
+        var bd=bs.val()||{};
+        var turCls={'Tam':'bilet-tam','Çocuk':'bilet-cocuk','Yabancı':'bilet-yabanci','Davetli':'bilet-davetli','Kurumsal Satış':'bilet-kurumsal'};
+        return {no:bno,tur:bd.tur||'Bilet',tarih:bd.tarih||p.tarih,seans:bd.seans||p.seans,cls:turCls[bd.tur]||'bilet-tam'};
+      });
     }));
 
-    var {jsPDF} = window.jspdf;
-    var doc = new jsPDF({unit:'mm',format:[80,120]});
+    // Biletleri gizli div'e render et (QR kodlarıyla)
+    var tmpWrap = document.createElement('div');
+    tmpWrap.style.cssText='position:fixed;left:-9999px;top:0;width:500px;background:#f5f5f5';
+    var innerWrap = document.createElement('div');
+    innerWrap.id='tekpdf-wrap';
+    tmpWrap.appendChild(innerWrap);
+    document.body.appendChild(tmpWrap);
+
+    biletDataList.forEach(function(b,idx){
+      var div=document.createElement('div');div.className='bilet-preview';
+      div.innerHTML='<div class="bilet-header">✦ STARDUST ✦</div>'+
+        '<div class="bilet-event">Astra Lumina İstanbul</div>'+
+        '<div class="bilet-meta">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
+        '<div class="bilet-musteri">'+(p.musteriAd||ad||'')+'</div>'+
+        '<div style="font-size:10px;color:#888;text-align:center;margin-bottom:4px;font-family:monospace">PNR: '+pnr+'</div>'+
+        '<div class="bilet-qr" id="tekpdf-qr-'+idx+'"></div>'+
+        '<div class="bilet-type-badge '+b.cls+'">'+b.tur+'</div>'+
+        '<div class="bilet-no">'+b.no+'</div>';
+      innerWrap.appendChild(div);
+    });
+
+    // QR kodlarının render olmasını bekle
+    biletDataList.forEach(function(b,idx){
+      try{new QRCode(document.getElementById('tekpdf-qr-'+idx),{text:b.no,width:110,height:110,colorDark:'#000',colorLight:'#fff'});}catch(e){}
+    });
+    await new Promise(function(r){setTimeout(r,600);});
+
+    // buildBiletPrintHTML ile tam tasarımlı HTML oluştur
+    // QR canvas'larını innerWrap'tan al
+    var fullHtml = document.createElement('div');
+    fullHtml.style.cssText='position:fixed;left:-9999px;top:0;width:500px;background:#f5f5f5';
+    
+    // Her bilet için buildBiletPrintHTML mantığını uygula
     var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal Satış':'#a855f7'};
-
-    btn.innerHTML='⏳ 0/'+biletDataList.length;
-
-    for(var i=0;i<biletDataList.length;i++){
-      var b = biletDataList[i];
-      var bd = b.data;
-      var el = document.createElement('div');
-      el.style.cssText='position:fixed;left:-9999px;top:0;width:300px;background:#fff';
-      el.innerHTML =
-        '<div style="background:#fff;padding:20px;width:280px;font-family:Arial,sans-serif;border-radius:10px">'+
-        '<div style="text-align:center;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
-        '<div style="text-align:center;font-size:16px;font-weight:700;margin-bottom:2px">Astra Lumina İstanbul</div>'+
-        '<div style="text-align:center;font-size:11px;color:#555;margin-bottom:6px">'+(bd.tarih||p.tarih)+' — Seans '+(bd.seans||p.seans)+'</div>'+
-        '<div style="text-align:center;font-size:13px;font-weight:600;margin-bottom:6px">'+(p.musteriAd||ad||'')+'</div>'+
-        '<div style="text-align:center;font-size:9px;color:#888;margin-bottom:6px;font-family:monospace">PNR: '+pnr+'</div>'+
-        '<div style="text-align:center;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:'+(turRenk[bd.tur]||'#e8c547')+'22;color:'+(turRenk[bd.tur]||'#e8c547')+';margin-bottom:6px">'+(bd.tur||'Bilet')+'</div>'+
-        '<div style="text-align:center;font-size:9px;color:#aaa;font-family:monospace">'+b.no+'</div>'+
+    var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal Satış':'rgba(168,85,247,.12)'};
+    
+    var cards = [];
+    biletDataList.forEach(function(b,idx){
+      var renk=turRenk[b.tur]||'#e8c547';
+      var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
+      var qrEl=document.getElementById('tekpdf-qr-'+idx);
+      var qrImg='';
+      if(qrEl){var canvas=qrEl.querySelector('canvas');if(canvas)qrImg=canvas.toDataURL('image/png');}
+      
+      var card=document.createElement('div');
+      card.style.cssText='background:#fff;border-radius:16px;width:420px;margin:0 auto 32px;box-shadow:0 2px 16px rgba(0,0,0,.08);overflow:hidden;page-break-inside:avoid;font-family:Arial,sans-serif';
+      card.innerHTML=
+        '<div style="background:#0f0f0f;padding:16px;text-align:center">'+
+          '<div style="color:#e8c547;font-size:10px;letter-spacing:4px;margin-bottom:4px">✦ STARDUST ✦</div>'+
+          '<div style="color:#fff;font-size:18px;font-weight:600;letter-spacing:0.5px">Astra Lumina İstanbul</div>'+
+        '</div>'+
+        '<div style="padding:24px 28px;text-align:center">'+
+          '<div style="font-size:13px;color:#777;margin-bottom:18px">'+getDayName(b.tarih)+', '+b.tarih+' &nbsp;·&nbsp; Seans '+b.seans+'</div>'+
+          (qrImg?'<img src="'+qrImg+'" style="width:160px;height:160px;margin:0 auto 16px;display:block;border-radius:8px" />':'<div style="width:160px;height:160px;background:#f0f0f0;margin:0 auto 16px;border-radius:8px"></div>')+
+          '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:6px 24px;font-size:14px;font-weight:600;margin-bottom:14px">'+b.tur+'</div>'+
+          '<div style="border-top:1px dashed #eee;margin:14px 0"></div>'+
+          '<div style="font-size:10px;color:#bbb;letter-spacing:1.5px;font-family:monospace">'+b.no+'</div>'+
+        '</div>'+
+        '<div style="background:#fafafa;border-top:1px solid #eee;padding:14px 20px">'+
+          '<div style="border:1.5px solid #222;border-radius:10px;padding:10px 14px;text-align:center">'+
+            '<div style="font-size:12px;font-weight:700;color:#111;margin-bottom:3px">PDF biletinizi yanınızda veya mobil cihazınızda bulundurmayı unutmayın!</div>'+
+            '<div style="font-size:11px;color:#555">PDF biletinizdeki karekod kapıda okutulacaktır.</div>'+
+          '</div>'+
         '</div>';
-      document.body.appendChild(el);
-      var canvas = await html2canvas(el,{scale:1.5,backgroundColor:'#ffffff',useCORS:true});
-      document.body.removeChild(el);
-      var imgData = canvas.toDataURL('image/jpeg',0.75);
-      if(i>0) doc.addPage([80,120]);
-      doc.addImage(imgData,'JPEG',0,0,80,120);
-      btn.innerHTML='⏳ '+(i+1)+'/'+biletDataList.length;
+      fullHtml.appendChild(card);
+      cards.push(card);
+    });
+    document.body.appendChild(fullHtml);
+
+    btn.innerHTML='⏳ 0/'+cards.length;
+
+    var {jsPDF} = window.jspdf;
+    var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pageW=doc.internal.pageSize.getWidth();
+    var pageH=doc.internal.pageSize.getHeight();
+
+    for(var i=0;i<cards.length;i++){
+      var canvas2 = await html2canvas(cards[i],{scale:1.5,backgroundColor:'#ffffff',useCORS:true});
+      var imgData = canvas2.toDataURL('image/jpeg',0.75);
+      var imgW=pageW-20;
+      var imgH=(canvas2.height*imgW)/canvas2.width;
+      var yPos=(pageH-imgH)/2;
+      if(i>0) doc.addPage();
+      doc.addImage(imgData,'JPEG',10,yPos,imgW,imgH);
+      btn.innerHTML='⏳ '+(i+1)+'/'+cards.length;
     }
 
+    document.body.removeChild(tmpWrap);
+    document.body.removeChild(fullHtml);
     doc.save('stardust-biletler-'+pnr+'.pdf');
-    toast('PDF indirildi! ('+biletDataList.length+' sayfa)','ok');
+    toast('PDF indirildi! ('+cards.length+' sayfa)','ok');
   } catch(err){
     toast('Hata: '+err.message,'err');
     console.error(err);
