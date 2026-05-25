@@ -505,6 +505,20 @@ td{padding:10px 14px}
   </div>
 </div>
 
+<!-- GİRİŞ VER OVERLAY -->
+<div class="overlay" id="ov-giris" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:480px">
+    <h3>🚪 Giriş Ver</h3>
+    <div id="giris-overlay-title" style="font-size:15px;font-weight:600;margin-bottom:4px"></div>
+    <div id="giris-overlay-info" style="font-size:12px;color:var(--mu);margin-bottom:1rem;font-family:var(--mo)"></div>
+    <div id="giris-overlay-body"></div>
+    <div class="mbtns" style="margin-top:1rem">
+      <button class="btn" onclick="document.getElementById('ov-giris').classList.remove('open')">İptal</button>
+      <button class="btn btn-ac" id="giris-ver-btn" style="font-size:15px;padding:12px 32px">✓ Seçili Biletlere Giriş Ver</button>
+    </div>
+  </div>
+</div>
+
 <!-- İSİM SEÇİM OVERLAY -->
 <div class="overlay" id="ov-isim-secim" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="max-width:480px">
@@ -1332,8 +1346,11 @@ function renderKapiGunBiletler(){
 
 function hizliGiris(pnr){
   if(!pnr)return;
-  document.getElementById('pnrInput').value=pnr;
-  sorgulaPNR();
+  db.ref('pnrler/'+pnr).once('value',function(snap){
+    var p=snap.val();
+    if(!p){toast('PNR bulunamadı','err');return;}
+    openGirisOverlay(pnr,p);
+  });
 }
 
 function sorgulaPNRModal(){
@@ -1379,120 +1396,72 @@ function sorgulaIsimModal(){
 function sorgulaPNR(){
   var val=document.getElementById('pnrInput').value.trim().toUpperCase();
   if(!val){toast('PNR giriniz','err');return;}
-  resetSorgu();
   db.ref('pnrler/'+val).once('value',function(snap){
     var p=snap.val();
-    var res=document.getElementById('scanResult');
-    res.style.display='block';
-    if(!p){
-      res.className='scan-result invalid';
-      document.getElementById('scanIcon').textContent='✗';
-      document.getElementById('scanMsg').textContent='PNR Bulunamadı';
-      document.getElementById('scanDetail').textContent='Bu PNR sistemde kayıtlı değil.';
-      return;
+    if(!p){toast('PNR bulunamadı','err');return;}
+    openGirisOverlay(val,p);
+  });
+}
+
+function openGirisOverlay(pnrVal, p){
+  var biletNoList=p.biletler||[];
+  var promises=biletNoList.map(function(bno){
+    return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});
+  });
+  Promise.all(promises).then(function(biletResults){
+    var bekleyenler=biletResults.filter(function(b){return b.data&&!b.data.kullanildi;});
+    var kullanilanlar=biletResults.filter(function(b){return b.data&&b.data.kullanildi;});
+    var overlay=document.getElementById('ov-giris');
+    var body=document.getElementById('giris-overlay-body');
+    document.getElementById('giris-overlay-title').textContent=p.musteriAd||pnrVal;
+    document.getElementById('giris-overlay-info').textContent=p.tarih+' · Seans '+p.seans+' · Tam: '+(p.tam||0)+' · Çocuk: '+(p.cocuk||0)+' · Yabancı: '+(p.yabanci||0);
+    body.innerHTML='';
+    if(kullanilanlar.length>0){
+      var kd=document.createElement('div');
+      kd.style.cssText='font-size:12px;color:var(--mu);margin-bottom:8px';
+      kd.textContent=kullanilanlar.length+' bilet daha önce kullanıldı.';
+      body.appendChild(kd);
     }
-    res.className='scan-result valid';
-    document.getElementById('scanIcon').textContent='📋';
-    document.getElementById('scanMsg').textContent='PNR Bulundu — Biletleri Seç';
-
-    // Her biletin durumunu göster, seçim yap
-    var biletNoList=p.biletler||[];
-    var dc=document.getElementById('scanDetail');
-    dc.innerHTML='';
-
-    // Müşteri bilgileri
-    var info=document.createElement('div');
-    info.style.cssText='margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.1)';
-    info.innerHTML='<strong style="font-size:15px">'+p.musteriAd+'</strong><br>'+
-      (p.musteriTel?'<span style="font-size:12px;color:var(--mu)">'+p.musteriTel+'</span><br>':'')+
-      '<span style="font-size:12px;color:var(--mu)">'+p.tarih+' · Seans '+p.seans+'</span><br>'+
-      '<span style="font-size:12px;color:var(--mu)">Tam: '+(p.tam||0)+' · Çocuk: '+(p.cocuk||0)+' · Yabancı: '+(p.yabanci||0)+'</span>';
-    dc.appendChild(info);
-
-    // Bilet listesi - her biri seçilebilir
-    var biletListEl=document.createElement('div');
-    biletListEl.style.cssText='margin-bottom:12px';
-    var biletPromises=biletNoList.map(function(bno){
-      return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});
-    });
-    Promise.all(biletPromises).then(function(biletResults){
-      var bekleyenler=biletResults.filter(function(b){return b.data&&!b.data.kullanildi;});
-      var kullanilanlar=biletResults.filter(function(b){return b.data&&b.data.kullanildi;});
-
-      if(kullanilanlar.length>0){
-        var kulDiv=document.createElement('div');
-        kulDiv.style.cssText='font-size:12px;color:var(--mu);margin-bottom:8px';
-        kulDiv.textContent=kullanilanlar.length+' bilet daha önce kullanıldı.';
-        biletListEl.appendChild(kulDiv);
-      }
-
-      if(bekleyenler.length===0){
-        var hepsi=document.createElement('div');
-        hepsi.style.cssText='color:var(--rd);font-size:13px;text-align:center;padding:12px';
-        hepsi.textContent='Tüm biletler kullanılmış!';
-        biletListEl.appendChild(hepsi);
-        dc.appendChild(biletListEl);
-        return;
-      }
-
+    if(bekleyenler.length===0){
+      var hd=document.createElement('div');
+      hd.style.cssText='color:var(--rd);font-size:13px;text-align:center;padding:16px';
+      hd.textContent='Tüm biletler kullanılmış!';
+      body.appendChild(hd);
+      document.getElementById('giris-ver-btn').style.display='none';
+    } else {
+      var bl=document.createElement('div');
       var baslik=document.createElement('div');
       baslik.style.cssText='font-size:12px;color:var(--mu);margin-bottom:8px';
-      baslik.textContent='Giriş verilecek biletleri seçin ('+bekleyenler.length+' bilet bekliyor):';
-      biletListEl.appendChild(baslik);
-
-      bekleyenler.forEach(function(b,idx){
+      baslik.textContent='Giriş verilecek biletleri seçin ('+bekleyenler.length+' bekliyor):';
+      bl.appendChild(baslik);
+      bekleyenler.forEach(function(b){
         var row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:6px';
-        var cb=document.createElement('input');
-        cb.type='checkbox';
-        cb.checked=true;
-        cb.dataset.no=b.no;
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px;background:var(--sf2);border-radius:8px;margin-bottom:6px';
+        var cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.dataset.no=b.no;
         cb.style.cssText='width:18px;height:18px;cursor:pointer;accent-color:var(--ac)';
         var lbl=document.createElement('label');
-        lbl.style.cssText='font-size:12px;font-family:var(--mo);color:var(--ac);cursor:pointer;flex:1';
-        lbl.textContent=b.no+(b.data?(' · '+b.data.tur):'');
-        row.appendChild(cb);
-        row.appendChild(lbl);
-        biletListEl.appendChild(row);
+        lbl.style.cssText='font-size:12px;font-family:var(--mo);color:var(--ac);flex:1';
+        lbl.textContent=b.no+(b.data?' · '+b.data.tur:'');
+        row.appendChild(cb);row.appendChild(lbl);bl.appendChild(row);
       });
-      dc.appendChild(biletListEl);
-
-      // Giriş ver butonu
-      var girisDiv=document.getElementById('girisVerBtn');
-      girisDiv.style.display='block';
-      girisDiv.innerHTML='';
-      var girisBtn=document.createElement('button');
-      girisBtn.className='btn btn-ac';
-      girisBtn.style.cssText='font-size:15px;padding:12px 32px';
-      girisBtn.textContent='✓ Seçili Biletlere Giriş Ver';
-      girisBtn.onclick=function(){
+      body.appendChild(bl);
+      var gb=document.getElementById('giris-ver-btn');
+      gb.style.display='block';
+      gb.onclick=function(){
         var secili=[];
-        biletListEl.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){
-          secili.push(cb.dataset.no);
-        });
-        if(secili.length===0){toast('En az 1 bilet seçin','err');return;}
+        body.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){secili.push(cb.dataset.no);});
+        if(!secili.length){toast('En az 1 bilet seçin','err');return;}
         var now=new Date();
         var saat=pad(now.getHours())+':'+pad(now.getMinutes());
-        secili.forEach(function(bno){
-          biletlerRef.child(bno).update({kullanildi:true,kullanildiSaat:saat});
-        });
-        // PNR'ı da güncelle - hepsi kullanıldıysa
-        if(secili.length===bekleyenler.length){
-          db.ref('pnrler/'+val).update({kullanildi:true,kullanildiSaat:saat});
-        }
-        kapiLogs.unshift({no:val,seans:p.seans,tur:secili.length+' bilet',tarih:p.tarih,saat:saat,musteriAd:p.musteriAd||'-'});
-        if(kapiLogs.length>15)kapiLogs.pop();
-        renderKapiLog();
-        updateKapiStats();
-        renderKapiGunBiletler();
+        secili.forEach(function(bno){biletlerRef.child(bno).update({kullanildi:true,kullanildiSaat:saat});});
+        if(secili.length===bekleyenler.length) db.ref('pnrler/'+pnrVal).update({kullanildi:true,kullanildiSaat:saat});
+        updateKapiStats();renderKapiGunBiletler();
         toast(secili.length+' bilete giriş verildi!','ok');
-        resetSorgu();
+        overlay.classList.remove('open');
         document.getElementById('pnrInput').value='';
       };
-      girisDiv.appendChild(girisBtn);
-    });
-    dc.appendChild(biletListEl);
-    currentSorgu={type:'pnr',pnr:val,data:p};
+    }
+    overlay.classList.add('open');
   });
 }
 
@@ -1577,8 +1546,6 @@ function sorgulaIsim(){
 
 function resetSorgu(){
   currentSorgu=null;
-  document.getElementById('girisVerBtn').style.display='none';
-  document.getElementById('scanResult').style.display='none';
 }
 
 function sorgulaKod(){
