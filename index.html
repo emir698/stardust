@@ -108,6 +108,9 @@ td{padding:10px 14px}
 .tarih-btn{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);transition:all .15s;white-space:nowrap}
 .tarih-btn:hover{border-color:var(--ac);color:var(--ac)}
 .tarih-btn.active{background:var(--ac);color:#000;border-color:var(--ac);font-weight:600}
+.tarih-ay-grup{margin-bottom:12px}
+.tarih-ay-baslik{font-size:11px;font-weight:600;color:var(--mu);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-left:2px}
+.tarih-ay-btnler{display:flex;flex-wrap:wrap;gap:8px}
 .tarih-custom{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;cursor:pointer}
 .tarih-custom:focus{border-color:var(--ac)}
 .seans-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -789,28 +792,47 @@ function isEtkinlikGunu(ds){
   return getSaatler(ds)!==null;
 }
 
+var AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
 function buildTarihBtns(){
   var today=todayStr();
   var container=document.getElementById('tarihBtns');
   container.innerHTML='';
-  // Sonraki 30 gün içinde etkinlik günlerini bul
   var etkinlikGunler=[];
   for(var i=0;i<=90;i++){
     var d=addDays(today,i);
     if(isEtkinlikGunu(d)) etkinlikGunler.push(d);
     if(etkinlikGunler.length>=20) break;
   }
+  // Ay gruplarına böl
+  var ayGruplari={};
+  var aySirasi=[];
   etkinlikGunler.forEach(function(d){
     var p=d.split('.');
-    var gun=new Date(p[2],p[1]-1,p[0]).getDay();
-    var gunAd=['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
-    var label=d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(p[0])+'.'+parseInt(p[1]));
-    if(OZEL_GUNLER[d]) label+=' ⭐';
-    var btn=document.createElement('button');
-    btn.className='tarih-btn'+(selectedTarih===d?' active':'');
-    btn.textContent=label;
-    (function(date){btn.onclick=function(){selectTarih(date);};})(d);
-    container.appendChild(btn);
+    var ayKey=p[2]+'-'+p[1];
+    if(!ayGruplari[ayKey]){ayGruplari[ayKey]=[];aySirasi.push(ayKey);}
+    ayGruplari[ayKey].push(d);
+  });
+  aySirasi.forEach(function(ayKey){
+    var p=ayKey.split('-');
+    var ayAd=AYLAR[parseInt(p[1])-1]+' '+p[0];
+    var grup=document.createElement('div');grup.className='tarih-ay-grup';
+    var baslik=document.createElement('div');baslik.className='tarih-ay-baslik';baslik.textContent=ayAd;
+    var btnler=document.createElement('div');btnler.className='tarih-ay-btnler';
+    ayGruplari[ayKey].forEach(function(d){
+      var dp=d.split('.');
+      var gun=new Date(dp[2],dp[1]-1,dp[0]).getDay();
+      var gunAd=['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+      var label=d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(dp[0]));
+      if(OZEL_GUNLER[d]) label+=' ⭐';
+      var btn=document.createElement('button');
+      btn.className='tarih-btn'+(selectedTarih===d?' active':'');
+      btn.textContent=label;
+      (function(date){btn.onclick=function(){selectTarih(date);};})(d);
+      btnler.appendChild(btn);
+    });
+    grup.appendChild(baslik);grup.appendChild(btnler);
+    container.appendChild(grup);
   });
   var inp=document.createElement('input');
   inp.type='date';inp.className='tarih-custom';inp.title='Özel tarih';
@@ -1277,16 +1299,33 @@ function buildKapiTarihBtns(){
     if(isEtkinlikGunu(d)) gunler.push(d);
     if(gunler.length>=20) break;
   }
+  // Ay gruplarına böl
+  var ayGruplari={};var aySirasi=[];
   gunler.forEach(function(d){
     var p=d.split('.');
-    var gun=new Date(p[2],p[1]-1,p[0]).getDay();
-    var gunAd=['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
-    var label=d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(p[0])+'.'+parseInt(p[1]));
-    var btn=document.createElement('button');
-    btn.className='tarih-btn'+(kapiSelectedTarih===d?' active':'');
-    btn.textContent=label;
-    (function(date){btn.onclick=function(){selectKapiTarih(date);};})(d);
-    container.appendChild(btn);
+    var ayKey=p[2]+'-'+p[1];
+    if(!ayGruplari[ayKey]){ayGruplari[ayKey]=[];aySirasi.push(ayKey);}
+    ayGruplari[ayKey].push(d);
+  });
+  aySirasi.forEach(function(ayKey){
+    var p=ayKey.split('-');
+    var ayAd=AYLAR[parseInt(p[1])-1]+' '+p[0];
+    var grup=document.createElement('div');grup.className='tarih-ay-grup';
+    var baslik=document.createElement('div');baslik.className='tarih-ay-baslik';baslik.textContent=ayAd;
+    var btnler=document.createElement('div');btnler.className='tarih-ay-btnler';
+    ayGruplari[ayKey].forEach(function(d){
+      var dp=d.split('.');
+      var gun=new Date(dp[2],dp[1]-1,dp[0]).getDay();
+      var gunAd=['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+      var label=d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(dp[0]));
+      var btn=document.createElement('button');
+      btn.className='tarih-btn'+(kapiSelectedTarih===d?' active':'');
+      btn.textContent=label;
+      (function(date){btn.onclick=function(){selectKapiTarih(date);};})(d);
+      btnler.appendChild(btn);
+    });
+    grup.appendChild(baslik);grup.appendChild(btnler);
+    container.appendChild(grup);
   });
   if(!kapiSelectedTarih&&gunler.length>0){
     // Bugün etkinlik varsa bugünü seç, yoksa en yakın gelecek günü seç
