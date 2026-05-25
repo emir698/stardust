@@ -775,11 +775,11 @@ function getDateRange(){
 // Etkinlik takvimi
 var OZEL_GUNLER={};
 var HAFTA_SEANS={
-  3:['21:00','21:30','22:00','22:30'],          // Çarşamba - Haziran
-  4:['21:00','21:30','22:00','22:30'],          // Perşembe - Mayıs
-  5:['21:00','21:30','22:00','22:30','23:00'],  // Cuma
-  6:['21:00','21:30','22:00','22:30','23:00'],  // Cumartesi
-  0:['21:00','21:30','22:00','22:30']           // Pazar
+  3:['21:00','21:30','22:00','22:30'],                    // Çarşamba - Haziran
+  4:['20:45','21:00','21:30','22:00','22:30'],            // Perşembe - Mayıs
+  5:['20:45','21:00','21:30','22:00','22:30'],            // Cuma
+  6:['20:45','21:00','21:30','22:00','22:30'],            // Cumartesi
+  0:['20:45','21:00','21:30','22:00']                     // Pazar
 };
 
 function getSaatler(ds){
@@ -787,10 +787,14 @@ function getSaatler(ds){
   var p=ds.split('.');
   var ay=parseInt(p[1]);
   var gun=new Date(p[2],p[1]-1,p[0]).getDay();
-  // Mayıs: Per(4), Cum(5), Cmt(6), Paz(0)
-  // Haziran: Car(3), Cum(5), Cmt(6), Paz(0)
-  if(ay===5 && gun===3) return null; // Mayıs'ta Çarşamba yok
-  if(ay!==5 && gun===4) return null; // Mayıs dışında Perşembe yok
+  if(ay===5 && gun===3) return null;  // Mayıs'ta Çarşamba yok
+  if(ay!==5 && gun===4) return null;  // Mayıs dışında Perşembe yok
+  // Haziran: Cum/Cmt 23:00 ekstra seans var, Pazar 22:30 var
+  if(ay!==5){
+    if(gun===5||gun===6) return ['21:00','21:30','22:00','22:30','23:00'];
+    if(gun===0) return ['21:00','21:30','22:00','22:30'];
+    if(gun===3) return ['21:00','21:30','22:00','22:30'];
+  }
   return HAFTA_SEANS[gun]||null;
 }
 
@@ -2113,7 +2117,7 @@ function renderDashboard(){
   renderDonut(totTam,totCocuk,totYab,totDav,totKur);
 
   // Seans bazlı satış - gerçek saatler
-  var tumSaatler=['21:00','21:30','22:00','22:30','23:00'];
+  var tumSaatler=['20:45','21:00','21:30','22:00','22:30','23:00'];
   var spEl=document.getElementById('seansSatisPanel');
   spEl.innerHTML='';
   tumSaatler.forEach(function(saat,idx){
