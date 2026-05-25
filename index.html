@@ -302,23 +302,14 @@ td{padding:10px 14px}
       </div>
 
       <!-- Sorgulama Bölümleri -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:1.5rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem">
 
         <!-- PNR Sorgula -->
         <div class="page-section" style="margin-bottom:0">
           <div class="section-title">PNR ile Sorgula</div>
           <div style="display:flex;gap:8px;flex-direction:column">
-            <input type="text" id="pnrInput" class="form-input" placeholder="PNR-XXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaPNR()">
-            <button class="btn btn-ac" onclick="sorgulaPNR()">Sorgula</button>
-          </div>
-        </div>
-
-        <!-- Bilet No Sorgula -->
-        <div class="page-section" style="margin-bottom:0">
-          <div class="section-title">Bilet No ile Sorgula</div>
-          <div style="display:flex;gap:8px;flex-direction:column">
-            <input type="text" id="biletNoInput" class="form-input" placeholder="SD-X-XXXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaBiletNo()">
-            <button class="btn btn-ac" onclick="sorgulaBiletNo()">Sorgula</button>
+            <input type="text" id="pnrInput" class="form-input" placeholder="PNR-XXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaPNRModal()">
+            <button class="btn btn-ac" onclick="sorgulaPNRModal()">Sorgula</button>
           </div>
         </div>
 
@@ -326,28 +317,18 @@ td{padding:10px 14px}
         <div class="page-section" style="margin-bottom:0">
           <div class="section-title">Ad Soyad ile Sorgula</div>
           <div style="display:flex;gap:8px;flex-direction:column">
-            <input type="text" id="isimInput" class="form-input" placeholder="Ad veya soyad..." onkeydown="if(event.key==='Enter')sorgulaIsim()">
-            <button class="btn btn-ac" onclick="sorgulaIsim()">Sorgula</button>
+            <input type="text" id="isimInput" class="form-input" placeholder="Ad veya soyad..." onkeydown="if(event.key==='Enter')sorgulaIsimModal()">
+            <button class="btn btn-ac" onclick="sorgulaIsimModal()">Sorgula</button>
           </div>
         </div>
 
-      </div>
-
-      <!-- Sorgu Sonucu -->
-      <div class="scan-result" id="scanResult" style="margin-bottom:1.5rem">
-        <div class="scan-icon" id="scanIcon"></div>
-        <div class="scan-msg" id="scanMsg"></div>
-        <div class="scan-detail" id="scanDetail"></div>
-        <div id="girisVerBtn" style="margin-top:1rem;display:none">
-          <button class="btn btn-ac" onclick="girisVer()" style="font-size:15px;padding:12px 32px">✓ Giriş Ver</button>
-        </div>
       </div>
 
       <!-- Seçili Günün Biletleri -->
       <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Seçili Günün Biletleri</div>
       <div class="tw" style="margin-bottom:1.5rem">
         <table>
-          <thead><tr><th>PNR</th><th>Ad Soyad</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Durum</th><th>İşlem</th></tr></thead>
+          <thead><tr><th>PNR</th><th>Ad Soyad</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Satış Saati</th><th>Durum</th><th>İşlem</th></tr></thead>
           <tbody id="kapiGunBiletler"></tbody>
         </table>
       </div>
@@ -520,6 +501,18 @@ td{padding:10px 14px}
     <div class="mbtns">
       <button class="btn" onclick="document.getElementById('ov-batch').classList.remove('open')">İptal</button>
       <button class="btn btn-ac" onclick="saveBatch()">Grubu Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- İSİM SEÇİM OVERLAY -->
+<div class="overlay" id="ov-isim-secim" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:480px">
+    <h3>🔍 Birden Fazla Kayıt Bulundu</h3>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:1rem">Hangi müşteriyi görüntülemek istiyorsunuz?</p>
+    <div id="isim-secim-liste"></div>
+    <div class="mbtns" style="margin-top:.5rem">
+      <button class="btn" onclick="document.getElementById('ov-isim-secim').classList.remove('open')">İptal</button>
     </div>
   </div>
 </div>
@@ -1016,7 +1009,7 @@ function tamamlaSatis(){
   var sonToplam=gelir2-indTutar;
   var satis={
     id:genID(),pnr:pnr,seans:selectedSeans,tarih:selectedTarih,
-    saat:pad(now.getHours())+':'+pad(now.getMinutes()),
+    saat:pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()),
     tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,davetli:(qty.davetli||0),kurumsal:(qty.kurumsal||0),
     indirimKodu:aktifIndirimKodu?aktifIndirimKodu.code:'',
     indirim:indTutar,
@@ -1287,7 +1280,7 @@ function renderKapiGunBiletler(){
   if(!el)return;
   var gunTickets=tickets.filter(function(t){return t&&t.tarih===kapiSelectedTarih;});
   if(!gunTickets.length){
-    el.innerHTML='<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mu)">Bu gün için satış yok</td></tr>';
+    el.innerHTML='<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--mu)">Bu gün için satış yok</td></tr>';
     return;
   }
   var tbEl=document.getElementById('kapiGunBiletler');
@@ -1310,6 +1303,7 @@ function renderKapiGunBiletler(){
       '<td>'+(t.tam||0)+'</td>'+
       '<td>'+(t.cocuk||0)+'</td>'+
       '<td>'+(t.yabanci||0)+'</td>'+
+      '<td class="dc" style="font-size:11px">'+(t.satisSaati||t.saat||'-')+'</td>'+
       '<td>'+durum+'</td>'+
       '<td></td>';
     var islemTd=tr.querySelector('td:last-child');
@@ -1338,8 +1332,47 @@ function renderKapiGunBiletler(){
 
 function hizliGiris(pnr){
   if(!pnr)return;
-  document.getElementById('pnrInput').value=pnr;
-  sorgulaPNR();
+  openBiletiGetir(pnr,'');
+}
+
+function sorgulaPNRModal(){
+  var val=document.getElementById('pnrInput').value.trim().toUpperCase();
+  if(!val){toast('PNR giriniz','err');return;}
+  openBiletiGetir(val,'');
+  document.getElementById('pnrInput').value='';
+}
+
+function sorgulaIsimModal(){
+  var val=document.getElementById('isimInput').value.trim();
+  if(!val){toast('İsim giriniz','err');return;}
+  var aramaStr=val.toLowerCase();
+  var bulunanlar=tickets.filter(function(t){
+    return t&&t.musteriAd&&t.musteriAd.toLowerCase().indexOf(aramaStr)>=0;
+  });
+  if(!bulunanlar.length){toast('Kayıt bulunamadı','err');return;}
+  if(bulunanlar.length===1){
+    openBiletiGetir(bulunanlar[0].pnr, bulunanlar[0].musteriAd);
+    document.getElementById('isimInput').value='';
+    return;
+  }
+  // Birden fazla sonuç - seçim yap
+  var overlay=document.getElementById('ov-isim-secim');
+  var liste=document.getElementById('isim-secim-liste');
+  liste.innerHTML='';
+  bulunanlar.forEach(function(t){
+    var item=document.createElement('div');
+    item.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--sf2);border-radius:10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--bd)';
+    item.innerHTML='<div><div style="font-size:13px;font-weight:500">'+t.musteriAd+'</div>'+
+      '<div style="font-size:11px;color:var(--mu);font-family:var(--mo)">'+t.tarih+' · '+t.seans+' · '+(t.pnr||'')+'</div></div>'+
+      '<span class="cc" style="font-size:11px">→</span>';
+    (function(ticket){item.onclick=function(){
+      overlay.classList.remove('open');
+      openBiletiGetir(ticket.pnr, ticket.musteriAd);
+      document.getElementById('isimInput').value='';
+    };})(t);
+    liste.appendChild(item);
+  });
+  overlay.classList.add('open');
 }
 
 function sorgulaPNR(){
