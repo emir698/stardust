@@ -753,14 +753,12 @@ function getDateRange(){
 
 // TARİH
 // Etkinlik takvimi
-var OZEL_GUNLER={
-  '19.05.2026':['20:45','21:00','21:30','22:00'],
-  '28.05.2026':['20:45','21:00','21:30','22:00','22:30']
-};
+var OZEL_GUNLER={};
 var HAFTA_SEANS={
-  5:['20:45','21:00','21:30','22:00','22:30'], // Cuma
-  6:['20:45','21:00','21:30','22:00','22:30'], // Cumartesi
-  0:['20:45','21:00','21:30','22:00']          // Pazar (22:30 yok)
+  3:['21:00','21:30','22:00','22:30'],          // Çarşamba
+  5:['21:00','21:30','22:00','22:30','23:00'],  // Cuma
+  6:['21:00','21:30','22:00','22:30','23:00'],  // Cumartesi
+  0:['21:00','21:30','22:00','22:30']           // Pazar
 };
 
 function getSaatler(ds){
@@ -1717,7 +1715,7 @@ function renderDashboard(){
   renderDonut(totTam,totCocuk,totYab,totDav);
 
   // Seans bazlı satış - gerçek saatler
-  var tumSaatler=['20:45','21:00','21:30','22:00','22:30'];
+  var tumSaatler=['21:00','21:30','22:00','22:30','23:00'];
   var spEl=document.getElementById('seansSatisPanel');
   spEl.innerHTML='';
   tumSaatler.forEach(function(saat,idx){
