@@ -1338,7 +1338,7 @@ function renderKapiGunBiletler(){
       mb.addEventListener('click',function(){openBiletiGetir(this.dataset.pnr,this.dataset.ad);});
       islemTd.appendChild(mb);
     }
-    if(t.pnr&&currentUser&&currentUser.role==='admin'){
+    if(t.pnr&&currentRole==='admin'){
       var db2=document.createElement('button');
       db2.className='btn btn-sm';
       db2.style.cssText='background:#2a0a0a;color:#e24b4a;border:1px solid #e24b4a33';
