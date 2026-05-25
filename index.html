@@ -1355,24 +1355,6 @@ function renderKapiGunBiletler(){
       mb.addEventListener('click',function(){openBiletiGetir(this.dataset.pnr,this.dataset.ad);});
       islemTd.appendChild(mb);
 
-      var zb=document.createElement('button');
-      zb.className='btn btn-sm';
-      zb.style.cssText='background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa33';
-      zb.innerHTML='📦 ZIP';
-      zb.dataset.pnr=t.pnr;
-      zb.dataset.ad=t.musteriAd||'';
-      zb.addEventListener('click',function(){zipBiletIndir(this.dataset.pnr,this.dataset.ad,this);});
-      islemTd.appendChild(zb);
-
-      var pb=document.createElement('button');
-      pb.className='btn btn-sm';
-      pb.style.cssText='background:#0a2a0a;color:#4ade80;border:1px solid #4ade8033';
-      pb.innerHTML='📄 Tek PDF';
-      pb.dataset.pnr=t.pnr;
-      pb.dataset.ad=t.musteriAd||'';
-      pb.addEventListener('click',function(){tekPDFIndir(this.dataset.pnr,this.dataset.ad,this);});
-      islemTd.appendChild(pb);
-
       var sgb=document.createElement('button');
       sgb.className='btn btn-sm';
       sgb.style.cssText='background:#1a0a2a;color:#c084fc;border:1px solid #c084fc33';
@@ -2631,4 +2613,3 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 </script>
 </body>
 </html>
-
