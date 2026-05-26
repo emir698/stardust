@@ -170,6 +170,10 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
     <div class="scan-body">
 
 
+      <!-- Gizli barkod input - el terminali için -->
+      <input id="barcodeHidden" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"
+        style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;z-index:-1">
+
       <!-- QR Tara - Büyük -->
       <div class="qr-card">
         <div id="qr-reader"></div>
@@ -267,6 +271,61 @@ var selectedGun=null,selectedSeans=null;
 var tickets=[],biletler={},logs=[];
 var currentSorgu=null,qrScanner=null;
 
+// BARKOD OKUYUCU BUFFER SİSTEMİ
+// El terminali barkod okuyucusu tetiklenince gizli input'a yazar
+var barcodeBuffer='';
+var barcodeTimer=null;
+
+function setupBarcodeInput(){
+  var hidden = document.getElementById('barcodeHidden');
+  if(!hidden) return;
+
+  // Her zaman bu input'a odaklan (sheet veya liste açık değilse)
+  function refocus(){
+    if(document.getElementById('scanScreen').style.display==='none') return;
+    if(document.getElementById('resultOverlay').classList.contains('open')) return;
+    if(document.getElementById('listeOverlay').classList.contains('open')) return;
+    var active = document.activeElement;
+    if(active && (active.id==='pnrInput'||active.id==='biletNoInput')) return;
+    hidden.focus();
+  }
+
+  document.addEventListener('click', function(e){
+    setTimeout(refocus, 100);
+  });
+
+  hidden.addEventListener('keydown', function(e){
+    if(e.key==='Enter'){
+      var val = hidden.value.trim().toUpperCase();
+      hidden.value = '';
+      if(val.length > 3){
+        if(qrScanner){ kameraKapat(function(){ islemYap(val); }); }
+        else { islemYap(val); }
+      }
+      e.preventDefault();
+    }
+  });
+
+  // Input dışında bir yere tıklanınca geri odaklan
+  document.addEventListener('touchend', function(e){
+    setTimeout(refocus, 200);
+  });
+}
+
+function islemYap(val){
+  if(val.startsWith('SD-')){
+    document.getElementById('biletNoInput').value=val;
+    sorgulaBiletNo();
+  } else if(val.startsWith('PNR-')){
+    document.getElementById('pnrInput').value=val;
+    sorgulaPNR();
+  } else {
+    // PNR formatında olmasa bile dene
+    document.getElementById('pnrInput').value=val;
+    sorgulaPNR();
+  }
+}
+
 auth.onAuthStateChanged(function(user){
   if(user){currentUser=user;usersRef.child(user.uid).once('value',function(snap){var ud=snap.val();currentName=ud?ud.name:user.email;showApp();});}
   else{showLogin();}
@@ -358,6 +417,12 @@ function selectSeans(saat){
   document.getElementById('seansScreen').style.display='none';
   document.getElementById('scanScreen').style.display='block';
   document.getElementById('scanSaatLabel').textContent=saat;
+  updateStats();
+  setupBarcodeInput();
+  setTimeout(function(){
+    var hidden=document.getElementById('barcodeHidden');
+    if(hidden) hidden.focus();
+  }, 300);
   updateStats();logs=[];renderLogs();
 }
 
@@ -470,7 +535,14 @@ function acListeSheet(){
 }
 
 // SORGU
-function kapatSheet(){document.getElementById('resultOverlay').classList.remove('open');currentSorgu=null;}
+function kapatSheet(){
+  document.getElementById('resultOverlay').classList.remove('open');
+  currentSorgu=null;
+  setTimeout(function(){
+    var hidden=document.getElementById('barcodeHidden');
+    if(hidden) hidden.focus();
+  }, 300);
+}
 
 function showSheet(icon,title,cls,name,info,biletHTML,giris){
   document.getElementById('rIcon').textContent=icon;
