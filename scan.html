@@ -195,9 +195,9 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
         <div class="manuel-title">📡 Barkod / Manuel Sorgula</div>
         <div class="input-row">
           <input class="ti" type="text" id="barcodeHidden" 
-            placeholder="Tetik çek veya manuel gir..." 
+            placeholder="👆 Buraya dokun, tetik çek" 
             autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
-            style="font-size:15px;padding:14px"
+            style="font-size:15px;padding:16px;text-align:center;background:#1a2a1a;border:2px solid #4ade80;color:#4ade80;font-weight:600;border-radius:12px;width:100%"
             oninput="otoBarkodKontrol(this.value)"
             onkeydown="if(event.key==='Enter'){otoBarkodSorgula();event.preventDefault();}">
         </div>
@@ -445,10 +445,10 @@ function selectSeans(saat){
   document.getElementById('scanSaatLabel').textContent=saat;
   updateStats();
   setupBarcodeInput();
-  setTimeout(function(){
-    var hidden=document.getElementById('barcodeHidden');
-    if(hidden) hidden.focus();
-  }, 300);  updateStats();logs=[];renderLogs();
+  // Kullanıcı tıklama anında focus — Android'de çalışır
+  var hidden=document.getElementById('barcodeHidden');
+  if(hidden) hidden.focus();
+  updateStats();logs=[];renderLogs();
 }
 
 function autoSelectSeans(){
