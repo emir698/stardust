@@ -170,9 +170,10 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
     <div class="scan-body">
 
 
-      <!-- Gizli barkod input - el terminali için -->
-      <input id="barcodeHidden" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"
-        style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;z-index:-1">
+      <!-- Barkod input - el terminali için -->
+      <input id="barcodeHidden" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters"
+        placeholder="Okutmaya hazır..."
+        style="width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:10px 14px;color:#444;font-size:13px;margin-bottom:12px;outline:none;caret-color:transparent">
 
       <!-- QR Tara - Büyük -->
       <div class="qr-card">
