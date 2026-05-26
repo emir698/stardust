@@ -299,19 +299,21 @@ function setupBarcodeInput(){
     }
   }
 
-  // Tüm event'leri dinle
-  ['input','change','keyup','keydown','paste'].forEach(function(ev){
-    hidden.addEventListener(ev, function(e){
-      if(e.type==='keydown'&&e.key==='Enter'){
-        kontrol();
-        return;
-      }
-      clearTimeout(barcodeTimer);
-      barcodeTimer = setTimeout(kontrol, 300);
-    });
+  // input event — cihaz değeri set edince tetiklenir
+  hidden.addEventListener('input', function(){
+    clearTimeout(barcodeTimer);
+    barcodeTimer = setTimeout(kontrol, 200);
   });
 
-  // Polling de devam etsin
+  // keydown — keyCode 229 (Android IME) veya F21 (tetik) gelince sorgula
+  hidden.addEventListener('keydown', function(e){
+    if(e.keyCode===229 || e.code==='F21' || e.key==='Enter'){
+      clearTimeout(barcodeTimer);
+      barcodeTimer = setTimeout(kontrol, 100);
+    }
+  });
+
+  // Polling yedek
   setInterval(function(){
     if(document.getElementById('scanScreen').style.display==='none') return;
     if(document.getElementById('resultOverlay').classList.contains('open')) return;
