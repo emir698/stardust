@@ -284,36 +284,26 @@ function setupBarcodeInput(){
   var hidden = document.getElementById('barcodeHidden');
   if(!hidden) return;
 
-  // Her zaman bu input'a odaklan (sheet veya liste açık değilse)
   function refocus(){
     if(document.getElementById('scanScreen').style.display==='none') return;
     if(document.getElementById('resultOverlay').classList.contains('open')) return;
     if(document.getElementById('listeOverlay').classList.contains('open')) return;
-    var active = document.activeElement;
-    if(active && (active.id==='pnrInput'||active.id==='biletNoInput')) return;
     hidden.focus();
   }
 
-  document.addEventListener('click', function(e){
-    setTimeout(refocus, 100);
-  });
-
-  hidden.addEventListener('keydown', function(e){
-    if(e.key==='Enter'){
-      var val = hidden.value.trim().toUpperCase();
+  // Her 150ms'de input değerini kontrol et
+  setInterval(function(){
+    if(document.getElementById('scanScreen').style.display==='none') return;
+    if(document.getElementById('resultOverlay').classList.contains('open')) return;
+    var val = hidden.value.trim().toUpperCase();
+    if(val.length >= 8){
       hidden.value = '';
-      if(val.length > 3){
-        if(qrScanner){ kameraKapat(function(){ islemYap(val); }); }
-        else { islemYap(val); }
-      }
-      e.preventDefault();
+      islemYap(val);
     }
-  });
+  }, 150);
 
-  // Input dışında bir yere tıklanınca geri odaklan
-  document.addEventListener('touchend', function(e){
-    setTimeout(refocus, 200);
-  });
+  document.addEventListener('touchend', function(){setTimeout(refocus,200);});
+  document.addEventListener('click', function(){setTimeout(refocus,200);});
 }
 
 function otoBarkodKontrol(val){
