@@ -396,18 +396,26 @@ function kameraAc(){
     {fps:10,qrbox:{width:260,height:260}},
     function(text){
       var val=text.trim().toUpperCase();
-      kameraKapat();
-      if(val.startsWith('SD-')){document.getElementById('biletNoInput').value=val;sorgulaBiletNo();}
-      else{document.getElementById('pnrInput').value=val;sorgulaPNR();}
+      kameraKapat(function(){
+        if(val.startsWith('SD-')){document.getElementById('biletNoInput').value=val;sorgulaBiletNo();}
+        else{document.getElementById('pnrInput').value=val;sorgulaPNR();}
+      });
     },
     function(){}
   ).catch(function(){toast('Kamera açılamadı','err');kameraKapat();});
 }
-function kameraKapat(){
+function kameraKapat(callback){
   document.getElementById('qr-reader').style.display='none';
   document.getElementById('qrStartArea').style.display='block';
   document.getElementById('qrStopArea').style.display='none';
-  if(qrScanner){qrScanner.stop().catch(function(){});qrScanner=null;}
+  if(qrScanner){
+    qrScanner.stop().catch(function(){}).finally(function(){
+      qrScanner=null;
+      if(callback) callback();
+    });
+  } else {
+    if(callback) callback();
+  }
 }
 
 // LİSTE
@@ -535,11 +543,7 @@ function girisVer(){
   }
   updateStats();
   kapatSheet();
-  // Sheet kapandıktan sonra kamerayı otomatik yeniden başlat
-  setTimeout(function(){
-    if(qrScanner) return; // Zaten açıksa bir şey yapma
-    kameraAc();
-  }, 400);
+  setTimeout(function(){ kameraAc(); }, 350);
   document.getElementById('pnrInput').value='';
   document.getElementById('biletNoInput').value='';
 }
