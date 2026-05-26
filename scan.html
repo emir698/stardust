@@ -491,6 +491,11 @@ function sorgulaPNR(){
   db.ref('pnrler/'+val).once('value',function(snap){
     var p=snap.val();
     if(!p){showSheet('✗','PNR Bulunamadı','red','','Bu PNR sistemde kayıtlı değil.','',false);return;}
+    // Seans kontrolü
+    if(p.tarih!==selectedGun||p.seans!==selectedSeans){
+      showSheet('⚠️','Yanlış Seans','red',p.musteriAd,'Bu bilet '+p.tarih+' · Seans '+p.seans+' için geçerlidir.\nŞu an: '+selectedGun+' · Seans '+selectedSeans,'',false);
+      return;
+    }
     var biletNoList=p.biletler||[];
     var promises=biletNoList.map(function(bno){return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()};});});
     Promise.all(promises).then(function(results){
@@ -516,6 +521,11 @@ function sorgulaBiletNo(){
   biletlerRef.child(val).once('value',function(snap){
     var b=snap.val();
     if(!b){showSheet('✗','Geçersiz Bilet','red','','Bu bilet bulunamadı.','',false);return;}
+    // Seans kontrolü
+    if(b.tarih!==selectedGun||b.seans!==selectedSeans){
+      showSheet('⚠️','Yanlış Seans','red',b.musteriAd||'','Bu bilet '+b.tarih+' · Seans '+b.seans+' için geçerlidir.\nŞu an: '+selectedGun+' · Seans '+selectedSeans,'',false);
+      return;
+    }
     if(b.kullanildi){showSheet('✗','Kullanılmış','red',b.musteriAd||'',b.kullanildiSaat+' saatinde giriş yapıldı.','',false);return;}
     currentSorgu={type:'bilet',no:val,data:b};
     showSheet('✓','Bilet Geçerli','green',b.musteriAd||'','Seans: '+b.seans+' · '+b.tur+'\n'+b.tarih,'',true);
