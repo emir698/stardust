@@ -533,7 +533,13 @@ function girisVer(){
     addLog(b.musteriAd||'-',b.seans,saat,b.tur);
     toast('✓ Giriş verildi!','ok');
   }
-  updateStats();kapatSheet();
+  updateStats();
+  kapatSheet();
+  // Sheet kapandıktan sonra kamerayı otomatik yeniden başlat
+  setTimeout(function(){
+    if(qrScanner) return; // Zaten açıksa bir şey yapma
+    kameraAc();
+  }, 400);
   document.getElementById('pnrInput').value='';
   document.getElementById('biletNoInput').value='';
 }
