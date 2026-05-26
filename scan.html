@@ -190,17 +190,20 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
         </div>
       </div>
 
-      <!-- Manuel -->
+      <!-- Manuel / Barkod -->
       <div class="manuel-card">
-        <div class="manuel-title">Manuel Sorgula</div>
+        <div class="manuel-title">📡 Barkod / Manuel Sorgula</div>
         <div class="input-row">
-          <input class="ti" type="text" id="pnrInput" placeholder="PNR-XXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaPNR()">
-          <button class="sb" onclick="sorgulaPNR()">PNR</button>
+          <input class="ti" type="text" id="barcodeHidden" 
+            placeholder="Tetik çek veya manuel gir..." 
+            autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
+            style="font-size:15px;padding:14px"
+            oninput="otoBarkodKontrol(this.value)"
+            onkeydown="if(event.key==='Enter'){otoBarkodSorgula();event.preventDefault();}">
         </div>
-        <div class="input-row">
-          <input class="ti" type="text" id="biletNoInput" placeholder="SD-X-XXXXXXXXX" onkeydown="if(event.key==='Enter')sorgulaBiletNo()">
-          <button class="sb" onclick="sorgulaBiletNo()">Bilet</button>
-        </div>
+        <!-- Gizli eski inputlar - geriye dönük uyumluluk için -->
+        <input type="hidden" id="pnrInput">
+        <input type="hidden" id="biletNoInput">
       </div>
 
 
@@ -313,17 +316,31 @@ function setupBarcodeInput(){
   });
 }
 
+function otoBarkodKontrol(val){
+  // Barkod okuyucu genellikle çok hızlı yazar (50ms'den az)
+  // SD- veya PNR- ile başlıyorsa ve yeterince uzunsa otomatik sorgula
+  var v = val.trim().toUpperCase();
+  if((v.startsWith('SD-') && v.length >= 10) || (v.startsWith('PNR-') && v.length >= 10)){
+    clearTimeout(barcodeTimer);
+    barcodeTimer = setTimeout(function(){ otoBarkodSorgula(); }, 80);
+  }
+}
+
+function otoBarkodSorgula(){
+  var input = document.getElementById('barcodeHidden');
+  var val = input.value.trim().toUpperCase();
+  if(!val || val.length < 4) return;
+  input.value = '';
+  islemYap(val);
+}
+
 function islemYap(val){
   if(val.startsWith('SD-')){
-    document.getElementById('biletNoInput').value=val;
-    sorgulaBiletNo();
-  } else if(val.startsWith('PNR-')){
-    document.getElementById('pnrInput').value=val;
-    sorgulaPNR();
+    document.getElementById('biletNoInput').value = val;
+    sorgulaBiletNo(val);
   } else {
-    // PNR formatında olmasa bile dene
-    document.getElementById('pnrInput').value=val;
-    sorgulaPNR();
+    document.getElementById('pnrInput').value = val;
+    sorgulaPNR(val);
   }
 }
 
@@ -423,8 +440,7 @@ function selectSeans(saat){
   setTimeout(function(){
     var hidden=document.getElementById('barcodeHidden');
     if(hidden) hidden.focus();
-  }, 300);
-  updateStats();logs=[];renderLogs();
+  }, 300);  updateStats();logs=[];renderLogs();
 }
 
 function autoSelectSeans(){
@@ -557,8 +573,8 @@ function showSheet(icon,title,cls,name,info,biletHTML,giris){
   document.getElementById('resultOverlay').classList.add('open');
 }
 
-function sorgulaPNR(){
-  var val=document.getElementById('pnrInput').value.trim().toUpperCase();
+function sorgulaPNR(valParam){
+  var val=(valParam||document.getElementById('pnrInput').value||'').toString().trim().toUpperCase();
   if(!val){toast('PNR giriniz','err');return;}
   currentSorgu=null;
   db.ref('pnrler/'+val).once('value',function(snap){
@@ -587,8 +603,8 @@ function sorgulaPNR(){
   });
 }
 
-function sorgulaBiletNo(){
-  var val=document.getElementById('biletNoInput').value.trim().toUpperCase();
+function sorgulaBiletNo(valParam){
+  var val=(valParam||document.getElementById('biletNoInput').value||'').toString().trim().toUpperCase();
   if(!val){toast('Bilet no giriniz','err');return;}
   currentSorgu=null;
   biletlerRef.child(val).once('value',function(snap){
