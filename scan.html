@@ -555,10 +555,12 @@ function acListeSheet(){
 function kapatSheet(){
   document.getElementById('resultOverlay').classList.remove('open');
   currentSorgu=null;
+  document.getElementById('pnrInput').value='';
+  document.getElementById('biletNoInput').value='';
   setTimeout(function(){
     var hidden=document.getElementById('barcodeHidden');
-    if(hidden) hidden.focus();
-  }, 300);
+    if(hidden){hidden.value='';hidden.focus();}
+  }, 200);
 }
 
 function showSheet(icon,title,cls,name,info,biletHTML,giris){
@@ -641,10 +643,11 @@ function girisVer(){
     toast('✓ Giriş verildi!','ok');
   }
   updateStats();
-  kapatSheet();
-  setTimeout(function(){ kameraAc(); }, 350);
-  document.getElementById('pnrInput').value='';
-  document.getElementById('biletNoInput').value='';
+  // 2 saniye sonra otomatik kapat ve hazır ol
+  document.getElementById('girisBtn').textContent='✓ Giriş Verildi!';
+  setTimeout(function(){
+    kapatSheet();
+  }, 2000);
 }
 
 function addLog(name,seans,saat,tur){
