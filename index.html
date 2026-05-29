@@ -884,9 +884,12 @@ function buildSeansTickets(){
 }
 
 function updateKapiStats(){
+  // Toplam bilet sayısını tickets tablosundan al (Dashboard ile tutarlı olsun)
+  var gunTickets=kapiSelectedTarih?tickets.filter(function(t){return t&&t.tarih===kapiSelectedTarih;}):tickets;
+  var total=gunTickets.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);},0);
+  // Giriş yapılanı biletler tablosundan al (kapı kontrolü için)
   var vals=Object.values(biletler);
   var gunVals=kapiSelectedTarih?vals.filter(function(b){return b&&b.tarih===kapiSelectedTarih;}):vals;
-  var total=gunVals.length;
   var giris=gunVals.filter(function(b){return b&&b.kullanildi;}).length;
   var elT=document.getElementById('kapiTotal');
   var elG=document.getElementById('kapiGiris');
