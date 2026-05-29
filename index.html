@@ -368,7 +368,7 @@ td{padding:10px 14px}
       </div>
 
       <!-- KPI Kartları -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem" id="kpiGrid"></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem" id="kpiGrid"></div>
 
 
 
@@ -396,7 +396,6 @@ td{padding:10px 14px}
 
     <!-- İNDİRİM KODLARI -->
     <div id="page-indirim" style="display:none">
-      <div class="kpi-grid" id="indirim-stats"></div>
       <div class="toolbar">
         <div class="sw"><span class="si">🔍</span><input type="text" id="si1" placeholder="Kod ara..." oninput="applyFilter()"></div>
         <select id="sf1" onchange="applyFilter()"><option value="hepsi">Tüm Kodlar</option><option value="aktif">Sadece Aktif</option><option value="deaktif">Sadece Deaktif</option></select>
@@ -889,6 +888,7 @@ function loadCodes(){
     }
     fil=codes.slice();
     if(document.getElementById('page-indirim').style.display!=='none'){renderIndirim();renderIndirimStats();}
+    if(document.getElementById('page-dashboard').style.display!=='none')renderDashboard();
   });
 }
 function loadTickets(){
@@ -2335,9 +2335,15 @@ function renderDashboard(){
   var todayBilet=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);},0);
   var todayGelir=tickets.filter(function(t){return t&&t.tarih===today;}).reduce(function(a,t){return a+(t.toplam||0);},0);
 
+  var kodToplam=codes.length;
+  var kodAktif=codes.filter(function(c){return c&&c.status==='aktif';}).length;
+  var kodKullanilan=kodToplam-kodAktif;
+  var kodDonem=codes.filter(function(c){return c&&c.date&&dateInRange(c.date,range.start,range.end);}).length;
   document.getElementById('kpiGrid').innerHTML=
     '<div class="kpi"><div class="kpi-label">Seçili Dönem Bilet</div><div class="kpi-val ac">'+bugunBilet+'</div><div class="kpi-sub">kişi</div></div>'+
-    '<div class="kpi"><div class="kpi-label">Seçili Dönem Gelir</div><div class="kpi-val gn">'+fmtMoney(bugunGelir)+'</div></div>';
+    '<div class="kpi"><div class="kpi-label">Seçili Dönem Gelir</div><div class="kpi-val gn">'+fmtMoney(bugunGelir)+'</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Aktif İndirim Kodu</div><div class="kpi-val bl">'+kodAktif.toLocaleString("tr-TR")+'</div><div class="kpi-sub">'+kodKullanilan.toLocaleString("tr-TR")+' kullanıldı</div></div>'+
+    '<div class="kpi"><div class="kpi-label">Dönem Kod Kullanımı</div><div class="kpi-val rd">'+kodDonem+'</div><div class="kpi-sub">seçili aralıkta</div></div>';
 
 
 
@@ -2369,21 +2375,16 @@ function renderDashboard(){
 }
 
 function renderDashKodlar(){
-  var today=todayStr();
+  var range=getDateRange();
   var toplam=codes.length;
   var aktif=codes.filter(function(c){return c&&c.status==='aktif';}).length;
   var kullanilan=toplam-aktif;
-  var bugun=codes.filter(function(c){return c&&c.date===today;}).length;
+  var donem=codes.filter(function(c){return c&&c.date&&dateInRange(c.date,range.start,range.end);}).length;
   var genel_pct=toplam>0?Math.round(kullanilan/toplam*100):0;
 
-  // KPI kartları
+  // KPI kartları — kaldırıldı, üstteki kpiGrid'e taşındı
   var kpiEl=document.getElementById('dashKodKpiGrid');
-  if(kpiEl){
-    kpiEl.innerHTML=
-      '<div class="kpi"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+toplam.toLocaleString('tr-TR')+'</div></div>'+
-      '<div class="kpi"><div class="kpi-label">Aktif Kod</div><div class="kpi-val gn">'+aktif.toLocaleString('tr-TR')+'</div></div>'+
-      '<div class="kpi"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+kullanilan.toLocaleString('tr-TR')+'</div><div class="kpi-sub">Bugün: +'+bugun+'</div></div>';
-  }
+  if(kpiEl){ kpiEl.innerHTML=''; }
 
   // Genel progress bar
   var grafEl=document.getElementById('dashKodGrafik');
@@ -2420,11 +2421,11 @@ function renderDashKodlar(){
       var cd=codes.find(function(x){return x&&x.code===c;});
       return cd&&cd.status==='deaktif';
     }).length;
-    var bugunKul=(b.codes||[]).filter(function(c){
+    var donemKul=(b.codes||[]).filter(function(c){
       var cd=codes.find(function(x){return x&&x.code===c;});
-      return cd&&cd.status==='deaktif'&&cd.date===today;
+      return cd&&cd.status==='deaktif'&&cd.date&&dateInRange(cd.date,range.start,range.end);
     }).length;
-    return {name:b.name,toplam:tot,kullanilan:kul,aktif:tot-kul,bugun:bugunKul};
+    return {name:b.name,toplam:tot,kullanilan:kul,aktif:tot-kul,donem:donemKul};
   });
 
   // Doluluk oranına göre sırala (en çok tükenen üstte)
@@ -2446,7 +2447,7 @@ function renderDashKodlar(){
           '<div style="display:flex;align-items:center;gap:8px">'+
             '<span style="font-size:13px;font-weight:600">'+g.name+'</span>'+
             (uyari?'<span style="font-size:10px;background:rgba(248,113,113,.15);color:var(--rd);border:1px solid rgba(248,113,113,.3);border-radius:20px;padding:2px 8px;font-weight:600">⚠ Stok Azalıyor</span>':'')+
-            (g.bugun>0?'<span style="font-size:10px;background:rgba(96,165,250,.1);color:var(--bl);border:1px solid rgba(96,165,250,.25);border-radius:20px;padding:2px 8px;font-family:var(--mo)">Bugün +'+g.bugun+'</span>':'')+
+            (g.donem>0?'<span style="font-size:10px;background:rgba(96,165,250,.1);color:var(--bl);border:1px solid rgba(96,165,250,.25);border-radius:20px;padding:2px 8px;font-family:var(--mo)">Dönem: +'+g.donem+'</span>':'')+
           '</div>'+
           '<span style="font-size:12px;font-family:var(--mo);color:var(--mu)">'+
             g.kullanilan.toLocaleString('tr-TR')+' / '+g.toplam.toLocaleString('tr-TR')+
