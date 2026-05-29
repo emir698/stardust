@@ -498,7 +498,7 @@ td{padding:10px 14px}
               <div><label class="form-label">Ad Soyad</label><input class="form-input" id="vito-ad" placeholder="Mehmet Kara"></div>
               <div><label class="form-label">Plaka</label><input class="form-input" id="vito-plaka" placeholder="34 ABC 123"></div>
               <div><label class="form-label">Telefon</label><input class="form-input" id="vito-tel" placeholder="0532 000 00 00"></div>
-              <div><label class="form-label">Komisyon Tutarı (₺)</label><input class="form-input" type="number" id="vito-kom-inp" placeholder="500" min="0"></div>
+              <div style="background:#1a1500;border:1px solid #3a2e00;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--mu)">Komisyon: <span style="color:var(--ac);font-family:var(--mo);font-weight:600">500₺ / tur</span> <span style="color:#555">(sabit)</span></div>
               <button class="btn btn-ac" onclick="vitoAddDriver()">Sürücü Ekle</button>
             </div>
           </div>
@@ -513,31 +513,37 @@ td{padding:10px 14px}
       </div>
 
       <!-- SATILAN BİLETLER -->
-      <div id="vpanel-satislar" style="display:none;padding:1.5rem">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-          <div class="section-title" style="margin:0">Transfer Satışları</div>
-          <select class="form-input" id="vito-satis-filtre" onchange="renderVitoSatislar()" style="font-size:12px;padding:4px 10px;width:auto">
-            <option value="hepsi">Tüm Satışlar</option>
-            <option value="bugun">Bugün</option>
-            <option value="hafta">Bu Hafta</option>
-          </select>
+      <div id="vpanel-satislar" style="display:none">
+        <div style="padding:1.5rem 1.5rem 0">
+          <div class="page-section">
+            <div class="section-title">Gün Seç</div>
+            <div class="tarih-row" id="vito-satis-tarihBtns"></div>
+          </div>
         </div>
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>Tarih</th>
-                <th>Seans</th>
-                <th>Müşteri</th>
-                <th>Sürücü</th>
-                <th>Bilet</th>
-                <th>Tutar</th>
-                <th>Saat</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="vito-satis-list"></tbody>
-          </table>
+        <div style="padding:0 1.5rem 1.5rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+            <div class="section-title" style="margin:0">Satılan Biletler — <span id="vito-satis-tarihLabel" style="color:var(--ac);text-transform:none;font-weight:400"></span></div>
+          </div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>PNR</th>
+                  <th>Müşteri</th>
+                  <th>Sürücü</th>
+                  <th>Seans</th>
+                  <th>Tam</th>
+                  <th>Çocuk</th>
+                  <th>Yabancı</th>
+                  <th>Tutar</th>
+                  <th>Saat</th>
+                  <th>Durum</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="vito-satis-list"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -893,6 +899,7 @@ function loadTickets(){
     if(document.getElementById('page-sat').style.display!=='none')refreshSeansGrid();
     if(document.getElementById('page-dashboard').style.display!=='none')renderDashboard();
     if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
+    if(document.getElementById('page-vito').style.display!=='none'&&document.getElementById('vpanel-satislar').style.display!=='none')renderVitoSatislar();
   });
 }
 function loadBiletler(){
@@ -1269,11 +1276,11 @@ function tamamlaSatis(){
   var vitoSurucuSel=document.getElementById('vito-surucu-sel');
   if(vitoSurucuSel&&vitoSurucuSel.value&&vitoDrivers[vitoSurucuSel.value]){
     var vd=vitoDrivers[vitoSurucuSel.value];
-    var vKom=vd.kom;
     satis.surucu=vd.id;
     satis.surucuAd=vd.ad;
     satis.surucuPlaka=vd.plaka;
-    satis.surucuKomisyon=vKom;
+    satis.surucuKomisyon=500;
+    satis.vitoSatis=true;
   }
   var biletlerArr=[];
   var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'},{k:'davetli',l:'Davetli',cls:'bilet-davetli'},{k:'kurumsal',l:'Kurumsal Satış',cls:'bilet-kurumsal'}];
@@ -2891,6 +2898,7 @@ var vitoDrivers = {};
 
 vitoDriversRef.on('value', function(snap) {
   vitoDrivers = snap.val() || {};
+  vitoFixKomisyonlar();
   renderVitoBiletSurucuSel();
   if(document.getElementById('page-vito').style.display !== 'none') renderVitoPage();
 });
@@ -2899,15 +2907,21 @@ function vitoAddDriver() {
   var ad = document.getElementById('vito-ad').value.trim();
   var plaka = document.getElementById('vito-plaka').value.trim().toUpperCase();
   var tel = document.getElementById('vito-tel').value.trim();
-  var kom = parseInt(document.getElementById('vito-kom-inp') ? document.getElementById('vito-kom-inp').value : document.getElementById('vito-kom').value) || 10;
   if (!ad || !plaka || !tel) { toast('Tüm alanları doldurun', 'err'); return; }
   var key = vitoDriversRef.push().key;
-  vitoDriversRef.child(key).set({ id: key, ad: ad, plaka: plaka, tel: tel, kom: kom, aktif: true, odendi: false });
+  vitoDriversRef.child(key).set({ id: key, ad: ad, plaka: plaka, tel: tel, kom: 500, aktif: true, odendi: false });
   document.getElementById('vito-ad').value = '';
   document.getElementById('vito-plaka').value = '';
   document.getElementById('vito-tel').value = '';
-  document.getElementById('vito-kom').value = '';
   toast('Sürücü eklendi', 'ok');
+}
+
+function vitoFixKomisyonlar() {
+  Object.keys(vitoDrivers).forEach(function(key) {
+    if (vitoDrivers[key] && vitoDrivers[key].kom !== 500) {
+      vitoDriversRef.child(key).update({ kom: 500 });
+    }
+  });
 }
 
 function vitoToggleAktif(key) {
@@ -3116,7 +3130,7 @@ function switchVTab(name) {
   if(name==='komisyon') renderVitoPage();
   if(name==='surucu') renderVitoSurucuList();
   if(name==='bilet') { buildVitoTarihBtns(); vitoRefreshSeansGrid(); renderVitoBiletSurucuSel2(); }
-  if(name==='satislar') renderVitoSatislar();
+  if(name==='satislar') { buildVitoSatisTarihBtns(); renderVitoSatislar(); }
 }
 
 var vitoSelectedTarih=null, vitoSelectedSeans=null;
@@ -3308,69 +3322,162 @@ function renderVitoSurucuList() {
 }
 
 // ─── VİTO SATILAN BİLETLER ───────────────────────────────────────
-function renderVitoSatislar() {
-  var filtre = document.getElementById('vito-satis-filtre') ? document.getElementById('vito-satis-filtre').value : 'hepsi';
+var vitoSatisTarih = null;
+
+function buildVitoSatisTarihBtns() {
   var today = todayStr();
+  var container = document.getElementById('vito-satis-tarihBtns');
+  if (!container) return;
+  container.innerHTML = '';
+  var gunler = [];
+  for (var i = -3; i <= 90; i++) {
+    var d = addDays(today, i);
+    if (isEtkinlikGunu(d)) gunler.push(d);
+    if (gunler.length >= 20) break;
+  }
+  var ayGruplari = {}; var aySirasi = [];
+  gunler.forEach(function(d) {
+    var p = d.split('.');
+    var ayKey = p[2] + '-' + p[1];
+    if (!ayGruplari[ayKey]) { ayGruplari[ayKey] = []; aySirasi.push(ayKey); }
+    ayGruplari[ayKey].push(d);
+  });
+  aySirasi.forEach(function(ayKey) {
+    var p = ayKey.split('-');
+    var ayAd = AYLAR[parseInt(p[1])-1] + ' ' + p[0];
+    var grup = document.createElement('div'); grup.className = 'tarih-ay-grup';
+    var baslik = document.createElement('div'); baslik.className = 'tarih-ay-baslik'; baslik.textContent = ayAd;
+    var btnler = document.createElement('div'); btnler.className = 'tarih-ay-btnler';
+    ayGruplari[ayKey].forEach(function(d) {
+      var dp = d.split('.');
+      var gun = new Date(dp[2], dp[1]-1, dp[0]).getDay();
+      var gunAd = ['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+      var label = d === today ? 'Bugün' : (addDays(today,1) === d ? 'Yarın' : gunAd + ' ' + parseInt(dp[0]));
+      var btn = document.createElement('button');
+      btn.className = 'tarih-btn' + (vitoSatisTarih === d ? ' active' : '');
+      btn.textContent = label;
+      (function(date) { btn.onclick = function() { selectVitoSatisTarih(date); }; })(d);
+      btnler.appendChild(btn);
+    });
+    grup.appendChild(baslik); grup.appendChild(btnler);
+    container.appendChild(grup);
+  });
+  if (!vitoSatisTarih && gunler.length > 0) {
+    var bugunVar = gunler.indexOf(today) > -1;
+    var hedef = bugunVar ? today : (gunler.filter(function(g){return g>=today;})[0] || gunler[0]);
+    selectVitoSatisTarih(hedef);
+  }
+}
+
+function selectVitoSatisTarih(d) {
+  vitoSatisTarih = d;
+  buildVitoSatisTarihBtns();
+  renderVitoSatislar();
+}
+
+function renderVitoSatislar() {
   var tbody = document.getElementById('vito-satis-list');
-  if(!tbody) return;
+  if (!tbody) return;
+  var lbl = document.getElementById('vito-satis-tarihLabel');
 
-  // tickets tablosundan vitoSatis:true olanları filtrele
+  if (!vitoSatisTarih) { buildVitoSatisTarihBtns(); return; }
+  if (lbl) {
+    var dp = vitoSatisTarih.split('.');
+    var gunAd = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][new Date(dp[2],dp[1]-1,dp[0]).getDay()];
+    lbl.textContent = gunAd + ', ' + vitoSatisTarih;
+  }
+
+  // seçili güne ait vitoSatis:true biletler
   var satislar = tickets.filter(function(t) {
-    if(!t || !t.vitoSatis) return false;
-    if(filtre === 'bugun' && t.tarih !== today) return false;
-    if(filtre === 'hafta') {
-      var tp = today.split('.');
-      var now = new Date(tp[2], tp[1]-1, tp[0]);
-      var gp = (t.satisTarihi || t.tarih).split('.');
-      var gDate = new Date(gp[2], gp[1]-1, gp[0]);
-      if((now - gDate) / 86400000 > 7) return false;
-    }
-    return true;
+    if (!t || !t.vitoSatis) return false;
+    return t.tarih === vitoSatisTarih;
   });
 
-  // Tarihe göre sırala — en yeni üstte
   satislar.sort(function(a, b) {
-    var aDate = (a.satisTarihi || a.tarih) + ' ' + (a.saat || '');
-    var bDate = (b.satisTarihi || b.tarih) + ' ' + (b.saat || '');
-    return bDate.localeCompare(aDate);
+    return (a.saat||'').localeCompare(b.saat||'');
   });
 
-  if(satislar.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:24px">Transfer satışı bulunamadı</td></tr>';
+  if (satislar.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--mu);padding:24px">Bu gün için vito satışı yok</td></tr>';
     return;
   }
 
-  tbody.innerHTML = satislar.map(function(t) {
-    var biletSayisi = (t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);
-    var biletDetay = [];
-    if(t.tam>0) biletDetay.push(t.tam+'× Tam');
-    if(t.cocuk>0) biletDetay.push(t.cocuk+'× Çocuk');
-    if(t.yabanci>0) biletDetay.push(t.yabanci+'× Yabancı');
-    var surucuBilgi = t.surucuAd ? (t.surucuAd + (t.surucuPlaka ? ' · <span style="font-family:var(--mo);color:var(--ac)">' + t.surucuPlaka + '</span>' : '')) : '<span style="color:var(--mu)">—</span>';
-    return '<tr>' +
-      '<td style="font-size:12px">' + (t.satisTarihi || t.tarih) + '</td>' +
-      '<td style="font-family:var(--mo);color:var(--ac)">' + t.seans + '</td>' +
-      '<td style="font-weight:500;color:var(--tx)">' + (t.musteriAd||'—') + '</td>' +
-      '<td>' + surucuBilgi + '</td>' +
-      '<td>' + biletDetay.join(', ') + ' <span style="color:var(--mu);font-size:11px">(' + biletSayisi + ' kişi)</span></td>' +
+  tbody.innerHTML = '';
+  satislar.forEach(function(t) {
+    var kullanildi = false;
+    if (t.biletler && t.biletler.length > 0) {
+      kullanildi = t.biletler.every(function(bno) { return biletler[bno] && biletler[bno].kullanildi; });
+    }
+    var durum = kullanildi ?
+      '<span class="badge bdd">Kullanıldı</span>' :
+      '<span class="badge ba">Bekliyor</span>';
+    var surucuBilgi = t.surucuAd ?
+      (t.surucuAd + (t.surucuPlaka ? ' <span style="font-family:var(--mo);color:var(--ac);font-size:11px">· ' + t.surucuPlaka + '</span>' : '')) :
+      '<span style="color:var(--mu)">—</span>';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><span class="cc" style="font-size:11px">' + (t.pnr||'—') + '</span></td>' +
+      '<td style="font-weight:500">' + (t.musteriAd||'—') + '</td>' +
+      '<td style="font-size:12px">' + surucuBilgi + '</td>' +
+      '<td class="dc">' + (t.seans||'—') + '</td>' +
+      '<td>' + (t.tam||0) + '</td>' +
+      '<td>' + (t.cocuk||0) + '</td>' +
+      '<td>' + (t.yabanci||0) + '</td>' +
       '<td style="color:var(--gn);font-weight:600">' + fmtMoney(t.toplam||0) + '</td>' +
       '<td style="font-size:11px;color:var(--mu);font-family:var(--mo)">' + (t.saat||'—') + '</td>' +
-      '<td><button class="btn btn-sm btn-r" data-id="' + t.id + '" onclick="vitoSatisSil(this.dataset.id)">Sil</button></td>' +
-      '</tr>';
-  }).join('');
-}
+      '<td>' + durum + '</td>' +
+      '<td></td>';
 
-function vitoSatisSil(satisId) {
-  if(!confirm('Bu transfer satışını silmek istediğinizden emin misiniz?')) return;
-  ticketsRef.child(satisId).remove(function(err) {
-    if(err) {
-      toast('Silme başarısız', 'err');
-    } else {
-      toast('Satış silindi', 'ok');
-      renderVitoSatislar();
+    var islemTd = tr.querySelector('td:last-child');
+    islemTd.style.cssText = 'display:flex;gap:6px;align-items:center;padding:8px 14px;flex-wrap:wrap';
+
+    if (!kullanildi && t.pnr) {
+      var gb = document.createElement('button');
+      gb.className = 'btn btn-sm btn-ac';
+      gb.textContent = 'Giriş Ver';
+      gb.dataset.pnr = t.pnr;
+      gb.addEventListener('click', function() { hizliGiris(this.dataset.pnr); });
+      islemTd.appendChild(gb);
     }
+
+    if (t.pnr) {
+      var mb = document.createElement('button');
+      mb.className = 'btn btn-sm';
+      mb.innerHTML = '✉️ Bileti Getir';
+      mb.dataset.pnr = t.pnr;
+      mb.dataset.ad = t.musteriAd || '';
+      mb.addEventListener('click', function() { openBiletiGetir(this.dataset.pnr, this.dataset.ad); });
+      islemTd.appendChild(mb);
+
+      var sgb = document.createElement('button');
+      sgb.className = 'btn btn-sm';
+      sgb.style.cssText = 'background:#1a0a2a;color:#c084fc;border:1px solid #c084fc33';
+      sgb.innerHTML = '📧 PDF Gönder';
+      sgb.dataset.pnr = t.pnr;
+      sgb.dataset.ad = t.musteriAd || '';
+      sgb.addEventListener('click', function() { openPDFGonderModal(this.dataset.pnr, this.dataset.ad); });
+      islemTd.appendChild(sgb);
+    }
+
+    if (t.pnr && currentRole === 'admin') {
+      var db2 = document.createElement('button');
+      db2.className = 'btn btn-sm';
+      db2.style.cssText = 'background:#2a0a0a;color:#e24b4a;border:1px solid #e24b4a33';
+      db2.innerHTML = '🗑 Sil';
+      db2.dataset.pnr = t.pnr;
+      db2.addEventListener('click', function() {
+        var pnr = this.dataset.pnr;
+        if (!confirm(pnr + ' numaralı satışı ve tüm biletlerini silmek istediğinize emin misiniz?')) return;
+        biletSil(pnr);
+      });
+      islemTd.appendChild(db2);
+    }
+
+    tbody.appendChild(tr);
   });
 }
+
 
 </script>
 </body>
