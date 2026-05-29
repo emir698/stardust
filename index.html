@@ -2298,7 +2298,7 @@ function updatePag(){
 }
 function changePg(d){pg+=d;renderIndirim();}
 function confDe(idx){if(!confirm('"'+codes[idx].code+'" deaktif edilsin mi?'))return;var k=codes[idx]._key;db.ref('codes/'+k).update({status:'deaktif',date:todayStr()},function(err){if(!err)toast('Deaktif edildi','ok');});}
-function reAk(idx){var k=codes[idx]._key;db.ref('codes/'+k).update({status:'aktif',date:''},function(err){if(!err)toast('Aktif edildi','ok');}); }
+function reAk(idx){var k=codes[idx]._key;db.ref('codes/'+k).update({status:'aktif',date:'',kullanan:''},function(err){if(!err)toast('Aktif edildi','ok');}); }
 function openBulk(){document.getElementById('bki').value='';document.getElementById('ov3').classList.add('open');}
 function bulkDo(){
   var list=document.getElementById('bki').value.split(',').map(function(s){return s.trim().toUpperCase();}).filter(Boolean);
