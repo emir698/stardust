@@ -1256,20 +1256,23 @@ function tamamlaSatis(){
   toast('Satış tamamlandı! '+biletlerArr.length+' bilet oluşturuldu.','ok');
 }
 
-function gosterBiletler(biletlerArr,adSoyad,pnr){
-  var wrap=document.getElementById('biletlerWrap');wrap.innerHTML='';
+function gosterBiletler(biletlerArr,adSoyad,pnr,targetWrapId){
+  var wrapId = targetWrapId || 'biletlerWrap';
+  var wrap=document.getElementById(wrapId);if(!wrap)wrap=document.getElementById('biletlerWrap');
+  wrap.innerHTML='';
   biletlerArr.forEach(function(b,idx){
+    var qrId='qr-'+wrapId+'-'+idx;
     var div=document.createElement('div');div.className='bilet-preview';
     div.innerHTML='<div class="bilet-header">✦ STARDUST ✦</div>'+
       '<div class="bilet-event">Astra Lumina İstanbul</div>'+
       '<div class="bilet-meta">'+getDayName(b.tarih)+', '+b.tarih+' — Seans '+b.seans+'</div>'+
       '<div class="bilet-musteri">'+adSoyad+'</div>'+
       '<div style="font-size:10px;color:#888;text-align:center;margin-bottom:4px;font-family:monospace">PNR: '+pnr+'</div>'+
-      '<div class="bilet-qr" id="qr-'+idx+'"></div>'+
+      '<div class="bilet-qr" id="'+qrId+'"></div>'+
       '<div class="bilet-type-badge '+b.cls+'">'+b.tur+'</div>'+
       '<div class="bilet-no">'+b.no+'</div>';
     wrap.appendChild(div);
-    setTimeout(function(i,no){try{new QRCode(document.getElementById('qr-'+i),{text:no,width:110,height:110,colorDark:'#000',colorLight:'#fff'});}catch(e){}}.bind(null,idx,b.no),150);
+    setTimeout(function(i,no){try{new QRCode(document.getElementById(i),{text:no,width:110,height:110,colorDark:'#000',colorLight:'#fff'});}catch(e){}}.bind(null,qrId,b.no),200);
   });
   document.getElementById('printArea').innerHTML=wrap.innerHTML;
   document.getElementById('ov-bilet').classList.add('open');
@@ -2802,7 +2805,7 @@ function openBiletiGetir(pnr, ad){
       currentBiletlerMail = '';
       currentBiletlerData = biletlerArr;
       // Mevcut gosterBiletler fonksiyonunu çağır
-      gosterBiletler(biletlerArr, adSoyad, pnr);
+      gosterBiletler(biletlerArr, adSoyad, pnr, 'vito-biletlerWrap');
     });
   });
 }
@@ -3136,11 +3139,7 @@ function vitoSatisOzet() {
   var wrap = document.getElementById('vito-biletlerWrap');
   wrap.innerHTML = '';
   gosterBiletler(biletlerArr, adSoyad, pnr);
-  // Biletleri vito wrap'e taşı
-  setTimeout(function(){
-    var orig = document.getElementById('biletlerWrap');
-    if(orig && orig.innerHTML) { wrap.innerHTML = orig.innerHTML; orig.innerHTML = ''; }
-  }, 100);
+
   vitoResetForm();
   toast('Vito satışı tamamlandı! '+biletlerArr.length+' bilet.','ok');
 }
