@@ -2551,7 +2551,7 @@ async function gunlukRaporGonder(){
   var gunAdi=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][new Date(parts[2],parseInt(parts[1])-1,parseInt(parts[0])).getDay()];
 
   // Bugünün biletleri
-  var filtered=tickets.filter(function(t){return t&&t.tarih===today;});
+  var filtered=tickets.filter(function(t){return t&&(t.tarih===today||t.satisTarihi===today);});
   var tamT=0,cocukT=0,yabanciT=0,davetliT=0,kurumsalT=0,toplamCiro=0;
   var seansMap={};
   var vitoSuruculer={};
@@ -2752,7 +2752,7 @@ async function gunlukRaporGonder(){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           to:'emir@devin.com.tr',toName:'Ömer Baş',
-          subject:'Stardust Günlük Rapor — '+tarihStr,
+          subject:'Stardust Günlük Rapor — '+today,
           htmlContent:mailHtml
         })
     });
