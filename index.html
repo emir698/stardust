@@ -2862,9 +2862,9 @@ function renderVitoPage() {
         '<td style="color:var(--gn)">%' + d.kom + '</td>' +
         '<td>' + st.bilet + '</td>' +
         '<td style="color:var(--gn);font-weight:600">' + fmtMoney(st.kom) + '</td>' +
-        '<td><span class="role-badge ' + (d.aktif ? 'role-admin' : 'role-gise') + '" style="cursor:pointer" onclick="vitoToggleAktif('' + d.id + '')">' + (d.aktif ? 'Aktif' : 'Pasif') + '</span></td>' +
-        '<td><span class="role-badge ' + (d.odendi ? 'role-admin' : 'role-gise') + '" style="cursor:pointer;background:' + (d.odendi?'':'#2a2200') + ';color:' + (d.odendi?'':'var(--ac)') + '" onclick="vitoToggleOdeme('' + d.id + '')">' + (d.odendi ? 'Ödendi' : 'Bekliyor') + '</span></td>' +
-        '<td><button class="btn btn-sm btn-r" onclick="vitoDeleteDriver('' + d.id + '')">Sil</button></td>' +
+        '<td><span class="role-badge ' + (d.aktif ? 'role-admin' : 'role-gise') + '" style="cursor:pointer" data-key="' + d.id + '" onclick="vitoToggleAktif(this.dataset.key)">' + (d.aktif ? 'Aktif' : 'Pasif') + '</span></td>' +
+        '<td><span class="role-badge ' + (d.odendi ? 'role-admin' : 'role-gise') + '" style="cursor:pointer;background:' + (d.odendi?'':'#2a2200') + ';color:' + (d.odendi?'':'var(--ac)') + '" data-key="' + d.id + '" onclick="vitoToggleOdeme(this.dataset.key)">' + (d.odendi ? 'Ödendi' : 'Bekliyor') + '</span></td>' +
+        '<td><button class="btn btn-sm btn-r" data-key="' + d.id + '" onclick="vitoDeleteDriver(this.dataset.key)">Sil</button></td>' +
         '</tr>';
     });
     document.getElementById('vito-driver-list').innerHTML = listHtml || '<tr><td colspan="9" style="text-align:center;color:var(--mu);padding:16px">Henüz sürücü eklenmedi</td></tr>';
@@ -2880,7 +2880,7 @@ function renderVitoPage() {
         '<td style="color:var(--mu)">' + d.tel + '</td>' +
         '<td>' + st.bilet + '</td>' +
         '<td style="color:var(--gn);font-weight:600">' + fmtMoney(st.kom) + '</td>' +
-        '<td><span onclick="vitoToggleOdeme('' + d.id + '')" style="cursor:pointer;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:' + (d.odendi?'#0d2a1a':'#2a2200') + ';color:' + (d.odendi?'var(--gn)':'var(--ac)') + '">' + (d.odendi?'Ödendi':'Bekliyor') + '</span></td>' +
+        '<td><span data-key="' + d.id + '" onclick="vitoToggleOdeme(this.dataset.key)" style="cursor:pointer;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:' + (d.odendi?'#0d2a1a':'#2a2200') + ';color:' + (d.odendi?'var(--gn)':'var(--ac)') + '">' + (d.odendi?'Ödendi':'Bekliyor') + '</span></td>' +
         '</tr>';
     });
     document.getElementById('vito-rapor-list').innerHTML = raporHtml || '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:16px">Henüz veri yok</td></tr>';
