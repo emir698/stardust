@@ -497,7 +497,7 @@ td{padding:10px 14px}
               <div><label class="form-label">Ad Soyad</label><input class="form-input" id="vito-ad" placeholder="Mehmet Kara"></div>
               <div><label class="form-label">Plaka</label><input class="form-input" id="vito-plaka" placeholder="34 ABC 123"></div>
               <div><label class="form-label">Telefon</label><input class="form-input" id="vito-tel" placeholder="0532 000 00 00"></div>
-              <div><label class="form-label">Komisyon (%)</label><input class="form-input" type="number" id="vito-kom-inp" placeholder="10" min="1" max="100"></div>
+              <div><label class="form-label">Komisyon Tutarı (₺)</label><input class="form-input" type="number" id="vito-kom-inp" placeholder="500" min="0"></div>
               <button class="btn btn-ac" onclick="vitoAddDriver()">Sürücü Ekle</button>
             </div>
           </div>
@@ -1223,7 +1223,7 @@ function tamamlaSatis(){
   var vitoSurucuSel=document.getElementById('vito-surucu-sel');
   if(vitoSurucuSel&&vitoSurucuSel.value&&vitoDrivers[vitoSurucuSel.value]){
     var vd=vitoDrivers[vitoSurucuSel.value];
-    var vKom=Math.round(sonToplam*vd.kom/100);
+    var vKom=vd.kom;
     satis.surucu=vd.id;
     satis.surucuAd=vd.ad;
     satis.surucuPlaka=vd.plaka;
@@ -2878,11 +2878,11 @@ function vitoUpdateKomisyonPreview() {
   var d = vitoDrivers[sel.value];
   if (!d) { box.style.display = 'none'; return; }
   var toplam = calcToplam();
-  var kom = Math.round(toplam * d.kom / 100);
+  var kom = d.kom;
   document.getElementById('vp-ad').textContent = d.ad;
   document.getElementById('vp-plaka').textContent = d.plaka;
   document.getElementById('vp-tutar').textContent = fmtMoney(toplam);
-  document.getElementById('vp-oran').textContent = '%' + d.kom;
+  document.getElementById('vp-oran').textContent = fmtMoney(d.kom)+' sabit';
   document.getElementById('vp-kom').textContent = fmtMoney(kom);
   box.style.display = 'block';
 }
@@ -2938,7 +2938,7 @@ function renderVitoPage() {
         '<td style="font-weight:600;color:var(--tx)">' + d.ad + '</td>' +
         '<td style="font-family:var(--mo);color:var(--ac);font-size:12px">' + d.plaka + '</td>' +
         '<td style="color:var(--mu)">' + d.tel + '</td>' +
-        '<td style="color:var(--gn)">%' + d.kom + '</td>' +
+        '<td style="color:var(--gn)">' + fmtMoney(d.kom) + '</td>' +
         '<td>' + st.bilet + '</td>' +
         '<td style="color:var(--gn);font-weight:600">' + fmtMoney(st.kom) + '</td>' +
         '<td><span class="role-badge ' + (d.aktif ? 'role-admin' : 'role-gise') + '" style="cursor:pointer" data-key="' + d.id + '" onclick="vitoToggleAktif(this.dataset.key)">' + (d.aktif ? 'Aktif' : 'Pasif') + '</span></td>' +
@@ -3076,14 +3076,14 @@ function vitoUpdateKomisyonPreview2() {
   if(bilgi) {
     document.getElementById('vsb-plaka').textContent = d.plaka;
     document.getElementById('vsb-tel').textContent = d.tel;
-    document.getElementById('vsb-kom').textContent = '%'+d.kom+' komisyon';
+    document.getElementById('vsb-kom').textContent = fmtMoney(d.kom)+' / satış';
     bilgi.style.display = 'block';
   }
   var toplam = vitoGetToplam();
   if(toplam > 0 && box) {
-    var kom = Math.round(toplam * d.kom / 100);
+    var kom = d.kom;
     document.getElementById('vkp-tutar').textContent = fmtMoney(toplam);
-    document.getElementById('vkp-oran').textContent = '%'+d.kom;
+    document.getElementById('vkp-oran').textContent = fmtMoney(d.kom)+' sabit';
     document.getElementById('vkp-kom').textContent = fmtMoney(kom);
     box.style.display = 'block';
   }
@@ -3116,7 +3116,7 @@ function vitoSatisOzet() {
     satis.surucu = vd.id;
     satis.surucuAd = vd.ad;
     satis.surucuPlaka = vd.plaka;
-    satis.surucuKomisyon = Math.round(toplam * vd.kom / 100);
+    satis.surucuKomisyon = vd.kom;
   }
   var biletlerArr = [];
   var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'}];
@@ -3163,7 +3163,7 @@ function renderVitoSurucuList() {
       '<td style="font-weight:600;color:var(--tx)">' + d.ad + '</td>' +
       '<td style="font-family:var(--mo);color:var(--ac);font-size:12px">' + d.plaka + '</td>' +
       '<td style="color:var(--mu)">' + d.tel + '</td>' +
-      '<td style="color:var(--gn)">%' + d.kom + '</td>' +
+      '<td style="color:var(--gn)">' + fmtMoney(d.kom) + '</td>' +
       '<td><span class="role-badge ' + (d.aktif?'role-admin':'role-gise') + '" data-key="' + d.id + '" style="cursor:pointer" onclick="vitoToggleAktif(this.dataset.key)">' + (d.aktif?'Aktif':'Pasif') + '</span></td>' +
       '<td><button class="btn btn-sm btn-r" data-key="' + d.id + '" onclick="vitoDeleteDriver(this.dataset.key)">Sil</button></td>' +
       '</tr>';
