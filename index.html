@@ -1389,7 +1389,7 @@ async function biletPDFGonder(){
         subject:'Sayın '+musteriAd+', Astra Lumina İstanbul biletleriniz oluşturulmuştur',
         htmlContent:'<div style="font-family:Arial,sans-serif;background:#f5f5f5;padding:0;margin:0"><div style="background:#0f0f0f;padding:24px;text-align:center;width:100%"><div style="color:#e8c547;font-size:11px;letter-spacing:4px;margin-bottom:6px">✦ STARDUST ✦</div><div style="color:#fff;font-size:20px;font-weight:600;letter-spacing:0.5px">Astra Lumina İstanbul</div></div><div style="background:#fff;padding:32px 40px"><p style="color:#222;font-size:15px;margin:0 0 16px">Merhaba <strong>'+musteriAd+'</strong>,</p><p style="color:#444;font-size:14px;line-height:1.8;margin:0 0 12px">Etkinlik biletiniz ekte PDF olarak yer almaktadır.</p><p style="color:#444;font-size:14px;line-height:1.8;margin:0 0 12px">Seans saatinizden <strong>30 dakika önce</strong> alanda bulunmanız gerekmektedir.</p><p style="color:#444;font-size:14px;line-height:1.8;margin:0 0 12px">Seans saatinin kaçırılması durumunda <strong>ücret iadesi yapılmaz.</strong></p><p style="color:#444;font-size:14px;line-height:1.8;margin:0">Girişlerde biletinizin QR kodunu okutmanız yeterli olacaktır.</p></div><div style="background:#f5f5f5;padding:16px 40px;border-top:1px solid #eee;text-align:center"><p style="color:#999;font-size:12px;margin:0">Astra Lumina İstanbul · Stardust</p></div></div>',
         attachments:attachments
-      }})
+      })
     });
 
     if(res.ok||res.status===201){
@@ -1809,7 +1809,7 @@ async function pdfGonderGonder(){
         subject:'Stardust — Biletleriniz ('+pdfGonderPNR+')',
         htmlContent:'<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto"><div style="background:#0f0f0f;padding:20px;text-align:center"><div style="color:#e8c547;font-size:11px;letter-spacing:3px">✦ STARDUST ✦</div><div style="color:#fff;font-size:18px;font-weight:600;margin-top:6px">Astra Lumina İstanbul</div></div><div style="padding:24px;background:#fff"><p>Merhaba <strong>'+(p.musteriAd||pdfGonderAd||'')+'</strong>,</p><p>Etkinlik biletiniz ekte PDF olarak yer almaktadır.</p><p>Seans saatinizden <strong>30 dakika önce</strong> alanda bulunmanız gerekmektedir.</p><p>Seans saatinin kaçırılması durumunda <strong>ücret iadesi yapılmaz.</strong></p><p>Girişlerde biletinizin QR kodunu okutmanız yeterli olacaktır.</p></div><div style="background:#f5f5f5;padding:14px;text-align:center;font-size:11px;color:#aaa">Astra Lumina İstanbul · Stardust</div></div>',
         attachments:[{content:pdfB64,name:'Stardust-Biletler-'+pdfGonderPNR+'.pdf',type:'application/pdf',disposition:'attachment'}]
-      }})
+      })
     });
 
     if(res.ok||res.status===201){
