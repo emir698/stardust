@@ -1224,6 +1224,7 @@ function tamamlaSatis(){
   var satis={
     id:genID(),pnr:pnr,seans:selectedSeans,tarih:selectedTarih,
     saat:pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()),
+    satisTarihi:todayStr(),
     tam:qty.tam,cocuk:qty.cocuk,yabanci:qty.yabanci,davetli:(qty.davetli||0),kurumsal:(qty.kurumsal||0),
     indirimKodu:aktifIndirimKodu?aktifIndirimKodu.code:'',
     indirim:indTutar,
@@ -1305,10 +1306,6 @@ function buildBiletPrintHTML(biletlerArr){
     var renk=turRenk[b.tur]||'#e8c547';
     var turBg={'Tam':'rgba(232,197,71,.12)','Çocuk':'rgba(96,165,250,.12)','Yabancı':'rgba(74,222,128,.12)','Davetli':'rgba(74,222,128,.12)','Kurumsal Satış':'rgba(168,85,247,.12)'};
     var bg=turBg[b.tur]||'rgba(232,197,71,.12)';
-    // QR kodunu al
-    var qrEl=document.getElementById('qr-'+idx);
-    var qrImg='';
-    if(qrEl){var canvas=qrEl.querySelector('canvas');if(canvas)qrImg=canvas.toDataURL('image/png');}
     html+=
       '<div style="background:#fff;border-radius:16px;width:420px;margin:0 auto 32px;box-shadow:0 2px 16px rgba(0,0,0,.08);overflow:hidden;page-break-inside:avoid;font-family:Arial,sans-serif">'+
         '<div style="background:#0f0f0f;padding:16px;text-align:center">'+
@@ -1317,7 +1314,7 @@ function buildBiletPrintHTML(biletlerArr){
         '</div>'+
         '<div style="padding:24px 28px;text-align:center">'+
           '<div style="font-size:13px;color:#777;margin-bottom:18px">'+getDayName(b.tarih)+', '+b.tarih+' &nbsp;·&nbsp; Seans '+b.seans+'</div>'+
-          (qrImg?'<img src="'+qrImg+'" style="width:160px;height:160px;margin:0 auto 16px;display:block;border-radius:8px" />':'<div style="width:160px;height:160px;background:#f0f0f0;margin:0 auto 16px;border-radius:8px"></div>')+
+          '<img id="pdf-bilet-qr-'+idx+'" src="" style="width:160px;height:160px;margin:0 auto 16px;display:block;border-radius:8px" />'+
           '<div style="display:inline-block;background:'+bg+';color:'+renk+';border:1.5px solid '+renk+';border-radius:30px;padding:6px 24px;font-size:14px;font-weight:600;margin-bottom:14px">'+b.tur+'</div>'+
           '<div style="border-top:1px dashed #eee;margin:14px 0"></div>'+
           '<div style="font-size:10px;color:#bbb;letter-spacing:1.5px;font-family:monospace">'+b.no+'</div>'+
@@ -1354,7 +1351,38 @@ async function biletPDFGonder(){
     tmpDiv.innerHTML=buildBiletPrintHTML(currentBiletlerData);
     document.body.appendChild(tmpDiv);
 
-    // Her bilet için ayrı PDF oluştur
+    // QR kodlarını oluştur ve render edilmesini bekle
+    // QRCode.js asenkron çizim yaptığı için her biri için ayrı div açıp bekliyoruz
+    var qrPromises = currentBiletlerData.map(function(b, idx) {
+      return new Promise(function(resolve) {
+        var qrContainer = document.createElement('div');
+        qrContainer.style.cssText = 'position:fixed;left:-9999px;top:0;width:120px;height:120px';
+        qrContainer.id = 'pdf-qr-gen-' + idx;
+        document.body.appendChild(qrContainer);
+        try {
+          new QRCode(qrContainer, {
+            text: b.no,
+            width: 120,
+            height: 120,
+            colorDark: '#000000',
+            colorLight: '#ffffff'
+          });
+        } catch(e) {}
+        // QRCode.js canvas çizimi için kısa bir bekleme
+        setTimeout(function() {
+          var canvas = qrContainer.querySelector('canvas');
+          var dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+          // Oluşturulan QR görüntüsünü bilet kartındaki img'ye yerleştir
+          var imgEl = tmpDiv.querySelector('#pdf-bilet-qr-' + idx);
+          if(imgEl && dataUrl) imgEl.src = dataUrl;
+          document.body.removeChild(qrContainer);
+          resolve(dataUrl);
+        }, 300);
+      });
+    });
+    await Promise.all(qrPromises);
+
+    // Tüm QR'lar hazır, şimdi html2canvas çalıştır
     var { jsPDF } = window.jspdf;
     var cards=tmpDiv.querySelectorAll('div[style*="page-break-inside"]');
     var attachments=[];
@@ -2255,7 +2283,12 @@ var AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos'
 
 function renderDashboard(){
   var range=getDateRange();
-  var filtered=tickets.filter(function(t){return t&&t.tarih&&dateInRange(t.tarih,range.start,range.end);});
+  // satisTarihi varsa satış tarihine, yoksa seans tarihine (tarih) göre filtrele
+  var filtered=tickets.filter(function(t){
+    if(!t) return false;
+    var filterDate = t.satisTarihi || t.tarih;
+    return filterDate && dateInRange(filterDate, range.start, range.end);
+  });
   var bugunBilet=filtered.reduce(function(a,t){return a+(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);},0);
   var bugunGelir=filtered.reduce(function(a,t){return a+(t.toplam||0);},0);
   var today=todayStr();
@@ -3179,6 +3212,7 @@ function vitoSatisOzet() {
   var satis = {
     id:genID(), pnr:pnr, seans:vitoSelectedSeans, tarih:vitoSelectedTarih,
     saat:pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()),
+    satisTarihi:todayStr(),
     tam:vitoQty.tam||0, cocuk:vitoQty.cocuk||0, yabanci:vitoQty.yabanci||0, davetli:0, kurumsal:0,
     indirimKodu:'', indirim:0, toplam:toplam,
     kasiyerAd:currentName, musteriAd:adSoyad, musteriTel:tel, musteriMail:mail,
