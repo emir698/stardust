@@ -212,7 +212,7 @@ td{padding:10px 14px}
   <div class="main">
     <div class="tabs">
       <button class="tab active" id="tab-sat" onclick="switchTab('sat')" style="display:none">🎫 Bilet Sat</button>
-      <button class="tab" id="tab-vito" onclick="switchTab('vito')" style="display:none">🚐 Vito</button>
+      <button class="tab" id="tab-vito" onclick="switchTab('vito')" style="display:none">🚐 Transfer</button>
       <button class="tab" id="tab-kapi" onclick="switchTab('kapi')" style="display:none">🎫 Bilet Sorgulama</button>
       <button class="tab" id="tab-dashboard" onclick="switchTab('dashboard')" style="display:none">📊 Dashboard</button>
       <button class="tab" id="tab-indirim" onclick="switchTab('indirim')" style="display:none">🏷️ İndirim Kodları</button>
@@ -236,7 +236,7 @@ td{padding:10px 14px}
           <div><label class="form-label">Soyad</label><input class="form-input" type="text" id="musteriSoyad" placeholder="Soyad"></div>
           <div><label class="form-label">Telefon</label><input class="form-input" type="tel" id="musteriTel" placeholder="+90 555 000 00 00"></div>
           <div><label class="form-label">E-posta</label><input class="form-input" type="email" id="musteriMail" placeholder="musteri@mail.com"></div>
-          <div><label class="form-label" style="color:var(--ac)">Vito Sürücüsü <span style="color:var(--mu);font-size:10px">(opsiyonel)</span></label>
+          <div><label class="form-label" style="color:var(--ac)">Transfer Sürücüsü <span style="color:var(--mu);font-size:10px">(opsiyonel)</span></label>
             <select class="form-input" id="vito-surucu-sel" onchange="vitoUpdateKomisyonPreview()">
               <option value="">— Sürücü yok —</option>
             </select>
@@ -421,7 +421,7 @@ td{padding:10px 14px}
       <div id="vpanel-bilet">
         <!-- Sürücü seçim banner -->
         <div class="page-section" style="background:#1a1500;border-bottom:1px solid #3a2e00;padding:1rem 1.5rem">
-          <div class="section-title" style="color:var(--ac);margin-bottom:.5rem">Vito Sürücüsü</div>
+          <div class="section-title" style="color:var(--ac);margin-bottom:.5rem">Transfer Sürücüsü</div>
           <div class="musteri-grid" style="grid-template-columns:1fr 1fr;gap:10px">
             <div>
               <label class="form-label">Sürücü Seç</label>
@@ -515,7 +515,7 @@ td{padding:10px 14px}
       <div id="vpanel-komisyon" style="display:none;padding:1.5rem">
         <div class="kpi-grid" style="margin-bottom:1.5rem">
           <div class="kpi-card"><div class="kpi-label">Toplam Komisyon</div><div class="kpi-val" id="vito-kpi-kom" style="color:var(--gn)">0₺</div></div>
-          <div class="kpi-card"><div class="kpi-label">Vito Bileti</div><div class="kpi-val" id="vito-kpi-bilet">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Transfer Bileti</div><div class="kpi-val" id="vito-kpi-bilet">0</div></div>
           <div class="kpi-card"><div class="kpi-label">Aktif Sürücü</div><div class="kpi-val" id="vito-kpi-aktif">0</div></div>
           <div class="kpi-card"><div class="kpi-label">Bekleyen Ödeme</div><div class="kpi-val" id="vito-kpi-bekle" style="color:var(--ac)">0</div></div>
         </div>
@@ -849,6 +849,7 @@ function loadTickets(){
     tickets=Object.values(data);
     buildSeansTickets();
     if(document.getElementById('page-sat').style.display!=='none')refreshSeansGrid();
+    if(document.getElementById('page-vito').style.display!=='none')vitoRefreshSeansGrid();
     if(document.getElementById('page-dashboard').style.display!=='none')renderDashboard();
     if(document.getElementById('page-kapi').style.display!=='none'){updateKapiStats();renderKapiGunBiletler();}
   });
@@ -891,7 +892,7 @@ function switchTab(id){
   if(id==='indirim'){renderIndirim();renderIndirimStats();}
   if(id==='dashboard')renderDashboard();
   if(id==='admin')renderAdminPage();
-  if(id==='vito')renderVitoPage();
+  if(id==='vito'){renderVitoPage();buildVitoTarihBtns();renderVitoBiletSurucuSel2();}
   if(id==='kapi'){buildKapiTarihBtns();updateKapiStats();renderKapiGunBiletler();}
 }
 
@@ -2820,7 +2821,11 @@ var vitoDrivers = {};
 vitoDriversRef.on('value', function(snap) {
   vitoDrivers = snap.val() || {};
   renderVitoBiletSurucuSel();
-  if(document.getElementById('page-vito').style.display !== 'none') renderVitoPage();
+  if(document.getElementById('page-vito').style.display !== 'none') {
+    renderVitoPage();
+    buildVitoTarihBtns();
+    renderVitoBiletSurucuSel2();
+  }
 });
 
 function vitoAddDriver() {
@@ -2989,75 +2994,30 @@ var VPRICES={tam:1500,cocuk:1200,yabanci:2250};
 function buildVitoTarihBtns() {
   var cont = document.getElementById('vito-tarihBtns');
   if(!cont) return;
-  cont.innerHTML = '';
-  var today = todayStr();
-  var etkinlikGunler = [];
-  for(var i = 0; i <= 90; i++) {
-    var d = addDays(today, i);
-    if(isEtkinlikGunu(d)) etkinlikGunler.push(d);
-    if(etkinlikGunler.length >= 20) break;
-  }
-  var ayGruplari = {}, aySirasi = [];
-  etkinlikGunler.forEach(function(d) {
-    var p = d.split('.');
-    var ayKey = p[2]+'-'+p[1];
-    if(!ayGruplari[ayKey]){ayGruplari[ayKey]=[];aySirasi.push(ayKey);}
-    ayGruplari[ayKey].push(d);
+  // Mevcut tarih butonlarını kopyala
+  var orig = document.getElementById('tarihBtns');
+  if(orig) cont.innerHTML = orig.innerHTML;
+  cont.querySelectorAll('button').forEach(function(btn) {
+    var d = btn.dataset.tarih || btn.getAttribute('onclick');
+    btn.onclick = function() { vitoSelectTarih(btn.dataset.tarih || btn.textContent); };
   });
-  aySirasi.forEach(function(ayKey) {
-    var p = ayKey.split('-');
-    var ayAd = AYLAR[parseInt(p[1])-1]+' '+p[0];
-    var grup = document.createElement('div'); grup.className = 'tarih-ay-grup';
-    var baslik = document.createElement('div'); baslik.className = 'tarih-ay-baslik'; baslik.textContent = ayAd;
-    var btnler = document.createElement('div'); btnler.className = 'tarih-ay-btnler';
-    ayGruplari[ayKey].forEach(function(d) {
-      var dp = d.split('.');
-      var gun = new Date(dp[2], dp[1]-1, dp[0]).getDay();
-      var gunAd = ['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
-      var label = d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(dp[0]));
-      var btn = document.createElement('button');
-      btn.className = 'tarih-btn' + (vitoSelectedTarih===d?' active':'');
-      btn.textContent = label;
-      (function(date){ btn.onclick = function(){ vitoSelectTarih(date); }; })(d);
-      btnler.appendChild(btn);
-    });
-    grup.appendChild(baslik); grup.appendChild(btnler);
-    cont.appendChild(grup);
-  });
-  if(!vitoSelectedTarih && etkinlikGunler.length > 0) vitoSelectTarih(etkinlikGunler[0]);
 }
 
 function vitoSelectTarih(tarih) {
   vitoSelectedTarih = tarih;
   vitoSelectedSeans = null;
   vitoQty = {tam:0,cocuk:0,yabanci:0};
-  buildVitoTarihBtns();
-  document.getElementById('vito-secilenTarihLabel').textContent = getDayName(tarih)+', '+tarih;
+  document.getElementById('vito-secilenTarihLabel').textContent = tarih;
   document.getElementById('vito-seansSection').style.display = 'block';
   document.getElementById('vito-biletSection').style.display = 'none';
-  vitoRefreshSeansGrid();
-}
-
-function vitoRefreshSeansGrid() {
-  if(!vitoSelectedTarih) return;
-  var saatler = getSaatler(vitoSelectedTarih) || [];
-  var html = '';
-  saatler.forEach(function(saat) {
-    var key = vitoSelectedTarih+'_'+saat;
-    var sd = seansTickets[key] || {tam:0,cocuk:0,yabanci:0};
-    var sold = sd.tam+sd.cocuk+sd.yabanci+(sd.davetli||0)+(sd.kurumsal||0);
-    var sel = vitoSelectedSeans===saat?' selected':'';
-    html += '<div class="seans-card'+sel+'" data-seans="'+saat+'">' +
-      '<div class="seans-no" style="font-size:20px">'+saat+'</div>' +
-      '<div class="seans-label">Seans</div>' +
-      '<div class="seans-sold">'+sold+' kişi</div>' +
-      '</div>';
-  });
+  // Seans gridini kopyala
+  var orig = document.getElementById('seansGrid');
   var vg = document.getElementById('vito-seansGrid');
-  if(vg) {
-    vg.innerHTML = html;
+  if(orig && vg) {
+    vg.innerHTML = orig.innerHTML;
     vg.querySelectorAll('.seans-card').forEach(function(el) {
-      el.onclick = function(){ vitoSelectSeans(this.getAttribute('data-seans')); };
+      var s = el.dataset.seans || el.getAttribute('data-seans');
+      el.onclick = function() { vitoSelectSeans(s); };
     });
   }
 }
@@ -3157,7 +3117,7 @@ function vitoSatisOzet() {
     tam:vitoQty.tam||0, cocuk:vitoQty.cocuk||0, yabanci:vitoQty.yabanci||0, davetli:0, kurumsal:0,
     indirimKodu:'', indirim:0, toplam:toplam,
     kasiyerAd:currentName, musteriAd:adSoyad, musteriTel:tel, musteriMail:mail,
-    biletler:[], vitoSatis:true
+    biletler:[], transferSatis:true
   };
   if(surucuId && vitoDrivers[surucuId]) {
     var vd = vitoDrivers[surucuId];
@@ -3186,7 +3146,7 @@ function vitoSatisOzet() {
   gosterBiletler(biletlerArr, adSoyad, pnr);
 
   vitoResetForm();
-  toast('Vito satışı tamamlandı! '+biletlerArr.length+' bilet.','ok');
+  toast('Transfer satışı tamamlandı! '+biletlerArr.length+' bilet.','ok');
 }
 
 function vitoResetForm() {
