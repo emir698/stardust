@@ -212,11 +212,11 @@ td{padding:10px 14px}
   <div class="main">
     <div class="tabs">
       <button class="tab active" id="tab-sat" onclick="switchTab('sat')" style="display:none">🎫 Bilet Sat</button>
+      <button class="tab" id="tab-vito" onclick="switchTab('vito')" style="display:none">🚐 Vito</button>
       <button class="tab" id="tab-kapi" onclick="switchTab('kapi')" style="display:none">🎫 Bilet Sorgulama</button>
       <button class="tab" id="tab-dashboard" onclick="switchTab('dashboard')" style="display:none">📊 Dashboard</button>
       <button class="tab" id="tab-indirim" onclick="switchTab('indirim')" style="display:none">🏷️ İndirim Kodları</button>
       <button class="tab" id="tab-admin" onclick="switchTab('admin')" style="display:none">⚙️ Admin</button>
-      <button class="tab" id="tab-vito" onclick="switchTab('vito')" style="display:none">🚐 Vito</button>
     </div>
 
     <!-- BİLET SAT -->
@@ -407,50 +407,127 @@ td{padding:10px 14px}
       <div class="pag"><span class="pi" id="pi1"></span><div style="display:flex;gap:8px"><button class="btn" id="pb1" onclick="changePg(-1)">← Önceki</button><button class="btn" id="nb1" onclick="changePg(1)">Sonraki →</button></div></div>
     </div>
 
-    <!-- ADMİN -->
+    <!-- VİTO -->
     <div id="page-vito" style="display:none">
-      <div class="main" style="padding:1.5rem">
 
-        <!-- KPI -->
-        <div class="kpi-grid" style="margin-bottom:1.5rem" id="vito-kpi-row">
-          <div class="kpi-card"><div class="kpi-label">Toplam Komisyon</div><div class="kpi-val" id="vito-kpi-kom" style="color:var(--gn)">0₺</div></div>
-          <div class="kpi-card"><div class="kpi-label">Vito Bileti</div><div class="kpi-val" id="vito-kpi-bilet">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Aktif Sürücü</div><div class="kpi-val" id="vito-kpi-aktif">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Bekleyen Ödeme</div><div class="kpi-val" id="vito-kpi-bekle" style="color:var(--ac)">0</div></div>
+      <!-- Alt sekmeler: Bilet Sat / Sürücüler / Komisyon -->
+      <div style="display:flex;gap:6px;padding:12px 16px 0;border-bottom:1px solid var(--bd);background:var(--sf)">
+        <button class="tab active" id="vtab-bilet" onclick="switchVTab('bilet')" style="font-size:12px">Bilet Sat</button>
+        <button class="tab" id="vtab-surucu" onclick="switchVTab('surucu')" style="font-size:12px">Sürücüler</button>
+        <button class="tab" id="vtab-komisyon" onclick="switchVTab('komisyon')" style="font-size:12px">Komisyon Raporu</button>
+      </div>
+
+      <!-- BİLET SAT -->
+      <div id="vpanel-bilet">
+        <!-- Sürücü seçim banner -->
+        <div class="page-section" style="background:#1a1500;border-bottom:1px solid #3a2e00;padding:1rem 1.5rem">
+          <div class="section-title" style="color:var(--ac);margin-bottom:.5rem">Vito Sürücüsü</div>
+          <div class="musteri-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="form-label">Sürücü Seç</label>
+              <select class="form-input" id="vito-surucu-sel2" onchange="vitoUpdateKomisyonPreview2()">
+                <option value="">— Sürücü yok —</option>
+              </select>
+            </div>
+            <div id="vito-surucu-bilgi" style="display:none;background:#1e1a00;border:1px solid #3a2e00;border-radius:8px;padding:8px 12px;font-size:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Plaka</span><span id="vsb-plaka" style="font-family:var(--mo);color:var(--ac)">—</span></div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--mu)">Telefon</span><span id="vsb-tel" style="color:var(--tx)">—</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--mu)">Komisyon</span><span id="vsb-kom" style="color:var(--gn);font-weight:600">—</span></div>
+            </div>
+          </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:1.5rem;margin-bottom:1.5rem">
-          <!-- Sürücü Ekle -->
+        <!-- Tarih Seç -->
+        <div class="page-section">
+          <div class="section-title">Tarih Seç</div>
+          <div class="tarih-row" id="vito-tarihBtns"></div>
+        </div>
+        <!-- Seans Seç -->
+        <div class="page-section" id="vito-seansSection" style="display:none">
+          <div class="section-title">Seans Seç — <span id="vito-secilenTarihLabel" style="color:var(--ac);text-transform:none"></span></div>
+          <div class="seans-grid" id="vito-seansGrid"></div>
+        </div>
+        <!-- Bilet Bilgileri -->
+        <div class="page-section" id="vito-biletSection" style="display:none">
+          <div class="section-title">Müşteri Bilgileri</div>
+          <div class="musteri-grid">
+            <div><label class="form-label">Ad</label><input class="form-input" type="text" id="vito-musteriAd" placeholder="Ad"></div>
+            <div><label class="form-label">Soyad</label><input class="form-input" type="text" id="vito-musteriSoyad" placeholder="Soyad"></div>
+            <div><label class="form-label">Telefon</label><input class="form-input" type="tel" id="vito-musteriTel" placeholder="+90 555 000 00 00"></div>
+            <div><label class="form-label">E-posta</label><input class="form-input" type="email" id="vito-musteriMail" placeholder="musteri@mail.com"></div>
+          </div>
+          <div class="section-title" style="margin-top:1rem">Bilet Türü — Seans <span id="vito-secilenSeansLabel" style="color:var(--ac);text-transform:none"></span></div>
+          <div class="bilet-row">
+            <div><div class="bilet-type-name">Tam</div><div class="bilet-type-sub">18 yaş üstü</div></div>
+            <div class="bilet-price">1.500 ₺</div>
+            <div class="bilet-qty"><button class="qty-btn" onclick="vitoChangeQty('tam',-1)">−</button><span class="qty-num" id="vqty-tam">0</span><button class="qty-btn" onclick="vitoChangeQty('tam',1)">+</button></div>
+          </div>
+          <div class="bilet-row">
+            <div><div class="bilet-type-name">Çocuk</div><div class="bilet-type-sub">4–18 yaş</div></div>
+            <div class="bilet-price">1.200 ₺</div>
+            <div class="bilet-qty"><button class="qty-btn" onclick="vitoChangeQty('cocuk',-1)">−</button><span class="qty-num" id="vqty-cocuk">0</span><button class="qty-btn" onclick="vitoChangeQty('cocuk',1)">+</button></div>
+          </div>
+          <div class="bilet-row">
+            <div><div class="bilet-type-name">Yabancı</div><div class="bilet-type-sub">Tüm yaşlar</div></div>
+            <div class="bilet-price">2.250 ₺</div>
+            <div class="bilet-qty"><button class="qty-btn" onclick="vitoChangeQty('yabanci',-1)">−</button><span class="qty-num" id="vqty-yabanci">0</span><button class="qty-btn" onclick="vitoChangeQty('yabanci',1)">+</button></div>
+          </div>
+          <div class="ozet-box" id="vito-ozetBox" style="display:none"></div>
+          <!-- Komisyon önizleme -->
+          <div id="vito-kom-preview2" style="display:none;background:#1a1500;border:1px solid #3a2e00;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px">
+            <div style="color:var(--ac);font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Komisyon Önizleme</div>
+            <div style="display:flex;justify-content:space-between;color:#aaa;margin-bottom:3px"><span>Bilet Tutarı</span><span id="vkp-tutar">—</span></div>
+            <div style="display:flex;justify-content:space-between;color:#aaa;margin-bottom:3px"><span>Komisyon Oranı</span><span id="vkp-oran">—</span></div>
+            <div style="display:flex;justify-content:space-between;color:var(--gn);font-weight:600;border-top:1px solid #3a2e00;margin-top:6px;padding-top:6px"><span>Komisyon Tutarı</span><span id="vkp-kom">—</span></div>
+          </div>
+          <div style="margin-top:1.5rem;display:flex;gap:10px">
+            <button class="btn btn-ac" style="flex:1" onclick="vitoSatisOzet()">Satışı Tamamla</button>
+            <button class="btn" onclick="vitoResetForm()">Temizle</button>
+          </div>
+          <div id="vito-biletlerWrap" style="margin-top:1rem"></div>
+        </div>
+      </div>
+
+      <!-- SÜRÜCÜLER -->
+      <div id="vpanel-surucu" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:1.5rem;padding:1.5rem">
           <div class="panel-card">
             <div class="panel-title">Yeni Sürücü Ekle</div>
             <div style="display:flex;flex-direction:column;gap:10px">
               <div><label class="form-label">Ad Soyad</label><input class="form-input" id="vito-ad" placeholder="Mehmet Kara"></div>
               <div><label class="form-label">Plaka</label><input class="form-input" id="vito-plaka" placeholder="34 ABC 123"></div>
               <div><label class="form-label">Telefon</label><input class="form-input" id="vito-tel" placeholder="0532 000 00 00"></div>
-              <div><label class="form-label">Komisyon (%)</label><input class="form-input" type="number" id="vito-kom" placeholder="10" min="1" max="100"></div>
+              <div><label class="form-label">Komisyon (%)</label><input class="form-input" type="number" id="vito-kom-inp" placeholder="10" min="1" max="100"></div>
               <button class="btn btn-ac" onclick="vitoAddDriver()">Sürücü Ekle</button>
             </div>
           </div>
-          <!-- Sürücü Listesi -->
           <div class="panel-card">
             <div class="panel-title">Kayıtlı Sürücüler</div>
             <div class="tw"><table>
-              <thead><tr><th>Ad Soyad</th><th>Plaka</th><th>Telefon</th><th>Kom.</th><th>Bilet</th><th>Komisyon</th><th>Durum</th><th>Ödeme</th><th></th></tr></thead>
+              <thead><tr><th>Ad Soyad</th><th>Plaka</th><th>Telefon</th><th>Kom.</th><th>Durum</th><th></th></tr></thead>
               <tbody id="vito-driver-list"></tbody>
             </table></div>
           </div>
         </div>
+      </div>
 
-        <!-- Komisyon Raporu -->
+      <!-- KOMİSYON RAPORU -->
+      <div id="vpanel-komisyon" style="display:none;padding:1.5rem">
+        <div class="kpi-grid" style="margin-bottom:1.5rem">
+          <div class="kpi-card"><div class="kpi-label">Toplam Komisyon</div><div class="kpi-val" id="vito-kpi-kom" style="color:var(--gn)">0₺</div></div>
+          <div class="kpi-card"><div class="kpi-label">Vito Bileti</div><div class="kpi-val" id="vito-kpi-bilet">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Aktif Sürücü</div><div class="kpi-val" id="vito-kpi-aktif">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Bekleyen Ödeme</div><div class="kpi-val" id="vito-kpi-bekle" style="color:var(--ac)">0</div></div>
+        </div>
         <div class="panel-card">
-          <div class="panel-title">Günlük Komisyon Özeti</div>
+          <div class="panel-title">Sürücü Bazlı Komisyon</div>
           <div class="tw"><table>
-            <thead><tr><th>#</th><th>Sürücü</th><th>Plaka</th><th>Telefon</th><th>Bilet Sayısı</th><th>Toplam Komisyon</th><th>Ödeme Durumu</th></tr></thead>
+            <thead><tr><th>#</th><th>Sürücü</th><th>Plaka</th><th>Telefon</th><th>Bilet</th><th>Komisyon</th><th>Ödeme</th></tr></thead>
             <tbody id="vito-rapor-list"></tbody>
           </table></div>
         </div>
-
       </div>
+
     </div>
 
     <div id="page-admin" style="display:none">
@@ -2747,7 +2824,7 @@ function vitoAddDriver() {
   var ad = document.getElementById('vito-ad').value.trim();
   var plaka = document.getElementById('vito-plaka').value.trim().toUpperCase();
   var tel = document.getElementById('vito-tel').value.trim();
-  var kom = parseInt(document.getElementById('vito-kom').value) || 10;
+  var kom = parseInt(document.getElementById('vito-kom-inp') ? document.getElementById('vito-kom-inp').value : document.getElementById('vito-kom').value) || 10;
   if (!ad || !plaka || !tel) { toast('Tüm alanları doldurun', 'err'); return; }
   var key = vitoDriversRef.push().key;
   vitoDriversRef.child(key).set({ id: key, ad: ad, plaka: plaka, tel: tel, kom: kom, aktif: true, odendi: false });
@@ -2776,19 +2853,21 @@ function vitoDeleteDriver(key) {
 }
 
 function renderVitoBiletSurucuSel() {
-  var sel = document.getElementById('vito-surucu-sel');
-  if (!sel) return;
-  var val = sel.value;
-  sel.innerHTML = '<option value="">— Sürücü yok —</option>';
-  Object.values(vitoDrivers).forEach(function(d) {
-    if (d.aktif) {
-      var opt = document.createElement('option');
-      opt.value = d.id;
-      opt.textContent = d.ad + ' · ' + d.plaka;
-      sel.appendChild(opt);
-    }
+  ['vito-surucu-sel','vito-surucu-sel2'].forEach(function(selId) {
+    var sel = document.getElementById(selId);
+    if (!sel) return;
+    var val = sel.value;
+    sel.innerHTML = '<option value="">— Sürücü yok —</option>';
+    Object.values(vitoDrivers).forEach(function(d) {
+      if (d.aktif) {
+        var opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.ad + ' · ' + d.plaka;
+        sel.appendChild(opt);
+      }
+    });
+    if (val) sel.value = val;
   });
-  if (val) sel.value = val;
 }
 
 function vitoUpdateKomisyonPreview() {
@@ -2885,6 +2964,210 @@ function renderVitoPage() {
     });
     document.getElementById('vito-rapor-list').innerHTML = raporHtml || '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:16px">Henüz veri yok</td></tr>';
   });
+}
+
+// ─── VİTO ALT SEKME & BİLET FONK ────────────────────────────────
+function switchVTab(name) {
+  ['bilet','surucu','komisyon'].forEach(function(t) {
+    var tb = document.getElementById('vtab-'+t);
+    var pn = document.getElementById('vpanel-'+t);
+    if(tb) tb.classList.toggle('active', t===name);
+    if(pn) pn.style.display = t===name ? '' : 'none';
+  });
+  if(name==='komisyon') renderVitoPage();
+  if(name==='surucu') renderVitoSurucuList();
+  if(name==='bilet') { buildVitoTarihBtns(); renderVitoBiletSurucuSel2(); }
+}
+
+var vitoSelectedTarih=null, vitoSelectedSeans=null;
+var vitoQty={tam:0,cocuk:0,yabanci:0};
+var VPRICES={tam:1500,cocuk:1200,yabanci:2250};
+
+function buildVitoTarihBtns() {
+  var cont = document.getElementById('vito-tarihBtns');
+  if(!cont) return;
+  // Mevcut tarih butonlarını kopyala
+  var orig = document.getElementById('tarihBtns');
+  if(orig) cont.innerHTML = orig.innerHTML;
+  cont.querySelectorAll('button').forEach(function(btn) {
+    var d = btn.dataset.tarih || btn.getAttribute('onclick');
+    btn.onclick = function() { vitoSelectTarih(btn.dataset.tarih || btn.textContent); };
+  });
+}
+
+function vitoSelectTarih(tarih) {
+  vitoSelectedTarih = tarih;
+  vitoSelectedSeans = null;
+  vitoQty = {tam:0,cocuk:0,yabanci:0};
+  document.getElementById('vito-secilenTarihLabel').textContent = tarih;
+  document.getElementById('vito-seansSection').style.display = 'block';
+  document.getElementById('vito-biletSection').style.display = 'none';
+  // Seans gridini kopyala
+  var orig = document.getElementById('seansGrid');
+  var vg = document.getElementById('vito-seansGrid');
+  if(orig && vg) {
+    vg.innerHTML = orig.innerHTML;
+    vg.querySelectorAll('.seans-card').forEach(function(el) {
+      var s = el.dataset.seans || el.getAttribute('data-seans');
+      el.onclick = function() { vitoSelectSeans(s); };
+    });
+  }
+}
+
+function vitoSelectSeans(saat) {
+  vitoSelectedSeans = saat;
+  vitoQty = {tam:0,cocuk:0,yabanci:0};
+  document.getElementById('vito-secilenSeansLabel').textContent = saat;
+  document.getElementById('vito-biletSection').style.display = 'block';
+  ['tam','cocuk','yabanci'].forEach(function(k){ document.getElementById('vqty-'+k).textContent='0'; });
+  document.getElementById('vito-ozetBox').style.display='none';
+  document.getElementById('vito-biletlerWrap').innerHTML='';
+}
+
+function vitoChangeQty(tip, delta) {
+  vitoQty[tip] = Math.max(0, (vitoQty[tip]||0) + delta);
+  document.getElementById('vqty-'+tip).textContent = vitoQty[tip];
+  vitoUpdateOzet();
+  vitoUpdateKomisyonPreview2();
+}
+
+function vitoGetToplam() {
+  return (vitoQty.tam||0)*VPRICES.tam + (vitoQty.cocuk||0)*VPRICES.cocuk + (vitoQty.yabanci||0)*VPRICES.yabanci;
+}
+
+function vitoUpdateOzet() {
+  var t = vitoGetToplam();
+  var box = document.getElementById('vito-ozetBox');
+  if(t===0){box.style.display='none';return;}
+  var html='';
+  if(vitoQty.tam>0) html+='<div class="ozet-row"><span>Tam × '+vitoQty.tam+'</span><span>'+fmtMoney(vitoQty.tam*VPRICES.tam)+'</span></div>';
+  if(vitoQty.cocuk>0) html+='<div class="ozet-row"><span>Çocuk × '+vitoQty.cocuk+'</span><span>'+fmtMoney(vitoQty.cocuk*VPRICES.cocuk)+'</span></div>';
+  if(vitoQty.yabanci>0) html+='<div class="ozet-row"><span>Yabancı × '+vitoQty.yabanci+'</span><span>'+fmtMoney(vitoQty.yabanci*VPRICES.yabanci)+'</span></div>';
+  html+='<div class="ozet-row" style="font-weight:700;color:var(--ac);border-top:1px solid var(--bd);padding-top:8px;margin-top:6px"><span>Toplam</span><span>'+fmtMoney(t)+'</span></div>';
+  box.innerHTML=html; box.style.display='block';
+}
+
+function renderVitoBiletSurucuSel2() {
+  var sel = document.getElementById('vito-surucu-sel2');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Sürücü yok —</option>';
+  Object.values(vitoDrivers).forEach(function(d) {
+    if(d.aktif) {
+      var opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.ad + ' · ' + d.plaka;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function vitoUpdateKomisyonPreview2() {
+  var sel = document.getElementById('vito-surucu-sel2');
+  var bilgi = document.getElementById('vito-surucu-bilgi');
+  var box = document.getElementById('vito-kom-preview2');
+  if(!sel) return;
+  if(!sel.value) {
+    if(bilgi) bilgi.style.display='none';
+    if(box) box.style.display='none';
+    return;
+  }
+  var d = vitoDrivers[sel.value];
+  if(!d) return;
+  if(bilgi) {
+    document.getElementById('vsb-plaka').textContent = d.plaka;
+    document.getElementById('vsb-tel').textContent = d.tel;
+    document.getElementById('vsb-kom').textContent = '%'+d.kom+' komisyon';
+    bilgi.style.display = 'block';
+  }
+  var toplam = vitoGetToplam();
+  if(toplam > 0 && box) {
+    var kom = Math.round(toplam * d.kom / 100);
+    document.getElementById('vkp-tutar').textContent = fmtMoney(toplam);
+    document.getElementById('vkp-oran').textContent = '%'+d.kom;
+    document.getElementById('vkp-kom').textContent = fmtMoney(kom);
+    box.style.display = 'block';
+  }
+}
+
+function vitoSatisOzet() {
+  var ad = document.getElementById('vito-musteriAd').value.trim();
+  var soyad = document.getElementById('vito-musteriSoyad').value.trim();
+  var tel = document.getElementById('vito-musteriTel').value.trim();
+  var mail = document.getElementById('vito-musteriMail').value.trim();
+  var toplam = vitoGetToplam();
+  if(!ad){toast('Müşteri adı giriniz','err');return;}
+  if(!vitoSelectedSeans){toast('Seans seçiniz','err');return;}
+  if(toplam===0){toast('En az 1 bilet seçiniz','err');return;}
+  var adSoyad = ad+' '+soyad;
+  var now = new Date();
+  var pnr = 'PNR-'+genID().substr(0,8);
+  var surucuSel = document.getElementById('vito-surucu-sel2');
+  var surucuId = surucuSel ? surucuSel.value : '';
+  var satis = {
+    id:genID(), pnr:pnr, seans:vitoSelectedSeans, tarih:vitoSelectedTarih,
+    saat:pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()),
+    tam:vitoQty.tam||0, cocuk:vitoQty.cocuk||0, yabanci:vitoQty.yabanci||0, davetli:0, kurumsal:0,
+    indirimKodu:'', indirim:0, toplam:toplam,
+    kasiyerAd:currentName, musteriAd:adSoyad, musteriTel:tel, musteriMail:mail,
+    biletler:[], vitoSatis:true
+  };
+  if(surucuId && vitoDrivers[surucuId]) {
+    var vd = vitoDrivers[surucuId];
+    satis.surucu = vd.id;
+    satis.surucuAd = vd.ad;
+    satis.surucuPlaka = vd.plaka;
+    satis.surucuKomisyon = Math.round(toplam * vd.kom / 100);
+  }
+  var biletlerArr = [];
+  var types=[{k:'tam',l:'Tam',cls:'bilet-tam'},{k:'cocuk',l:'Çocuk',cls:'bilet-cocuk'},{k:'yabanci',l:'Yabancı',cls:'bilet-yabanci'}];
+  types.forEach(function(tp){
+    for(var i=0;i<(vitoQty[tp.k]||0);i++){
+      var bNo='SD-'+vitoSelectedSeans+'-'+genID();
+      biletlerArr.push({no:bNo,pnr:pnr,seans:vitoSelectedSeans,tur:tp.l,cls:tp.cls,tarih:vitoSelectedTarih,saat:satis.saat,musteriAd:adSoyad});
+      satis.biletler.push(bNo);
+    }
+  });
+  ticketsRef.child(satis.id).set(satis);
+  db.ref('pnrler/'+pnr).set({satisId:satis.id,pnr:pnr,musteriAd:adSoyad,musteriTel:tel,musteriMail:mail,tarih:vitoSelectedTarih,seans:vitoSelectedSeans,tam:vitoQty.tam||0,cocuk:vitoQty.cocuk||0,yabanci:vitoQty.yabanci||0,toplam:toplam,biletler:satis.biletler,kullanildi:false});
+  biletlerArr.forEach(function(b){
+    biletlerRef.child(b.no).set({no:b.no,pnr:b.pnr,seans:b.seans,tur:b.tur,tarih:b.tarih,saat:b.saat,musteriAd:b.musteriAd,kullanildi:false});
+  });
+  // Biletleri göster
+  var wrap = document.getElementById('vito-biletlerWrap');
+  wrap.innerHTML = '';
+  gosterBiletler(biletlerArr, adSoyad, pnr);
+  // Biletleri vito wrap'e taşı
+  setTimeout(function(){
+    var orig = document.getElementById('biletlerWrap');
+    if(orig && orig.innerHTML) { wrap.innerHTML = orig.innerHTML; orig.innerHTML = ''; }
+  }, 100);
+  vitoResetForm();
+  toast('Vito satışı tamamlandı! '+biletlerArr.length+' bilet.','ok');
+}
+
+function vitoResetForm() {
+  vitoSelectedSeans = null; vitoQty={tam:0,cocuk:0,yabanci:0};
+  ['vqty-tam','vqty-cocuk','vqty-yabanci'].forEach(function(id){ var el=document.getElementById(id); if(el)el.textContent='0'; });
+  ['vito-musteriAd','vito-musteriSoyad','vito-musteriTel','vito-musteriMail'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+  var ob=document.getElementById('vito-ozetBox'); if(ob)ob.style.display='none';
+  var kp=document.getElementById('vito-kom-preview2'); if(kp)kp.style.display='none';
+  var bs=document.getElementById('vito-biletSection'); if(bs)bs.style.display='none';
+}
+
+function renderVitoSurucuList() {
+  var list = document.getElementById('vito-driver-list');
+  if(!list) return;
+  var drivers = Object.values(vitoDrivers);
+  list.innerHTML = drivers.map(function(d) {
+    return '<tr>' +
+      '<td style="font-weight:600;color:var(--tx)">' + d.ad + '</td>' +
+      '<td style="font-family:var(--mo);color:var(--ac);font-size:12px">' + d.plaka + '</td>' +
+      '<td style="color:var(--mu)">' + d.tel + '</td>' +
+      '<td style="color:var(--gn)">%' + d.kom + '</td>' +
+      '<td><span class="role-badge ' + (d.aktif?'role-admin':'role-gise') + '" data-key="' + d.id + '" style="cursor:pointer" onclick="vitoToggleAktif(this.dataset.key)">' + (d.aktif?'Aktif':'Pasif') + '</span></td>' +
+      '<td><button class="btn btn-sm btn-r" data-key="' + d.id + '" onclick="vitoDeleteDriver(this.dataset.key)">Sil</button></td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:16px">Henüz sürücü eklenmedi</td></tr>';
 }
 
 </script>
