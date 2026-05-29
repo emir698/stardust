@@ -3140,13 +3140,46 @@ var VPRICES={tam:1500,cocuk:1200,yabanci:2250};
 function buildVitoTarihBtns() {
   var cont = document.getElementById('vito-tarihBtns');
   if(!cont) return;
-  // Mevcut tarih butonlarını kopyala
-  var orig = document.getElementById('tarihBtns');
-  if(orig) cont.innerHTML = orig.innerHTML;
-  cont.querySelectorAll('button').forEach(function(btn) {
-    var d = btn.dataset.tarih || btn.getAttribute('onclick');
-    btn.onclick = function() { vitoSelectTarih(btn.dataset.tarih || btn.textContent); };
+  cont.innerHTML = '';
+  var today = todayStr();
+  var gunler = [];
+  for(var i = -3; i <= 90; i++) {
+    var d = addDays(today, i);
+    if(isEtkinlikGunu(d)) gunler.push(d);
+    if(gunler.length >= 20) break;
+  }
+  var ayGruplari = {}; var aySirasi = [];
+  gunler.forEach(function(d) {
+    var p = d.split('.');
+    var ayKey = p[2]+'-'+p[1];
+    if(!ayGruplari[ayKey]){ayGruplari[ayKey]=[];aySirasi.push(ayKey);}
+    ayGruplari[ayKey].push(d);
   });
+  aySirasi.forEach(function(ayKey) {
+    var p = ayKey.split('-');
+    var ayAd = AYLAR[parseInt(p[1])-1]+' '+p[0];
+    var grup = document.createElement('div'); grup.className = 'tarih-ay-grup';
+    var baslik = document.createElement('div'); baslik.className = 'tarih-ay-baslik'; baslik.textContent = ayAd;
+    var btnler = document.createElement('div'); btnler.className = 'tarih-ay-btnler';
+    ayGruplari[ayKey].forEach(function(d) {
+      var dp = d.split('.');
+      var gun = new Date(dp[2],dp[1]-1,dp[0]).getDay();
+      var gunAd = ['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+      var label = d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(dp[0]));
+      var btn = document.createElement('button');
+      btn.className = 'tarih-btn'+(vitoSelectedTarih===d?' active':'');
+      btn.textContent = label;
+      (function(date){btn.onclick=function(){vitoSelectTarih(date);};})(d);
+      btnler.appendChild(btn);
+    });
+    grup.appendChild(baslik); grup.appendChild(btnler);
+    cont.appendChild(grup);
+  });
+  if(!vitoSelectedTarih && gunler.length > 0) {
+    var bugunVar = gunler.indexOf(today) > -1;
+    var hedef = bugunVar ? today : (gunler.filter(function(g){return g>=today;})[0] || gunler[0]);
+    vitoSelectTarih(hedef);
+  }
 }
 
 function vitoSelectTarih(tarih) {
