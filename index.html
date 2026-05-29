@@ -2979,7 +2979,7 @@ function switchVTab(name) {
   });
   if(name==='komisyon') renderVitoPage();
   if(name==='surucu') renderVitoSurucuList();
-  if(name==='bilet') { buildVitoTarihBtns(); renderVitoBiletSurucuSel2(); }
+  if(name==='bilet') { buildVitoTarihBtns(); vitoRefreshSeansGrid(); renderVitoBiletSurucuSel2(); }
 }
 
 var vitoSelectedTarih=null, vitoSelectedSeans=null;
@@ -2989,30 +2989,75 @@ var VPRICES={tam:1500,cocuk:1200,yabanci:2250};
 function buildVitoTarihBtns() {
   var cont = document.getElementById('vito-tarihBtns');
   if(!cont) return;
-  // Mevcut tarih butonlarını kopyala
-  var orig = document.getElementById('tarihBtns');
-  if(orig) cont.innerHTML = orig.innerHTML;
-  cont.querySelectorAll('button').forEach(function(btn) {
-    var d = btn.dataset.tarih || btn.getAttribute('onclick');
-    btn.onclick = function() { vitoSelectTarih(btn.dataset.tarih || btn.textContent); };
+  cont.innerHTML = '';
+  var today = todayStr();
+  var etkinlikGunler = [];
+  for(var i = 0; i <= 90; i++) {
+    var d = addDays(today, i);
+    if(isEtkinlikGunu(d)) etkinlikGunler.push(d);
+    if(etkinlikGunler.length >= 20) break;
+  }
+  var ayGruplari = {}, aySirasi = [];
+  etkinlikGunler.forEach(function(d) {
+    var p = d.split('.');
+    var ayKey = p[2]+'-'+p[1];
+    if(!ayGruplari[ayKey]){ayGruplari[ayKey]=[];aySirasi.push(ayKey);}
+    ayGruplari[ayKey].push(d);
   });
+  aySirasi.forEach(function(ayKey) {
+    var p = ayKey.split('-');
+    var ayAd = AYLAR[parseInt(p[1])-1]+' '+p[0];
+    var grup = document.createElement('div'); grup.className = 'tarih-ay-grup';
+    var baslik = document.createElement('div'); baslik.className = 'tarih-ay-baslik'; baslik.textContent = ayAd;
+    var btnler = document.createElement('div'); btnler.className = 'tarih-ay-btnler';
+    ayGruplari[ayKey].forEach(function(d) {
+      var dp = d.split('.');
+      var gun = new Date(dp[2], dp[1]-1, dp[0]).getDay();
+      var gunAd = ['Paz','Pzt','Sal','Car','Per','Cum','Cmt'][gun];
+      var label = d===today?'Bugün':(addDays(today,1)===d?'Yarın':gunAd+' '+parseInt(dp[0]));
+      var btn = document.createElement('button');
+      btn.className = 'tarih-btn' + (vitoSelectedTarih===d?' active':'');
+      btn.textContent = label;
+      (function(date){ btn.onclick = function(){ vitoSelectTarih(date); }; })(d);
+      btnler.appendChild(btn);
+    });
+    grup.appendChild(baslik); grup.appendChild(btnler);
+    cont.appendChild(grup);
+  });
+  if(!vitoSelectedTarih && etkinlikGunler.length > 0) vitoSelectTarih(etkinlikGunler[0]);
 }
 
 function vitoSelectTarih(tarih) {
   vitoSelectedTarih = tarih;
   vitoSelectedSeans = null;
   vitoQty = {tam:0,cocuk:0,yabanci:0};
-  document.getElementById('vito-secilenTarihLabel').textContent = tarih;
+  buildVitoTarihBtns();
+  document.getElementById('vito-secilenTarihLabel').textContent = getDayName(tarih)+', '+tarih;
   document.getElementById('vito-seansSection').style.display = 'block';
   document.getElementById('vito-biletSection').style.display = 'none';
-  // Seans gridini kopyala
-  var orig = document.getElementById('seansGrid');
+  vitoRefreshSeansGrid();
+}
+
+function vitoRefreshSeansGrid() {
+  if(!vitoSelectedTarih) return;
+  var saatler = getSaatler(vitoSelectedTarih) || [];
+  var html = '';
+  saatler.forEach(function(saat) {
+    var key = vitoSelectedTarih+'_'+saat;
+    var sd = seansTickets[key] || {tam:0,cocuk:0,yabanci:0};
+    var sold = sd.tam+sd.cocuk+sd.yabanci+(sd.davetli||0)+(sd.kurumsal||0);
+    var sel = vitoSelectedSeans===saat?' selected':'';
+    html += '<div class="seans-card'+sel+'" data-seans="'+saat+'">' +
+      '<div class="seans-no" style="font-size:20px">'+saat+'</div>' +
+      '<div class="seans-label">Seans</div>' +
+      '<div class="seans-sold">'+sold+' kişi</div>' +
+      '</div>';
+  });
   var vg = document.getElementById('vito-seansGrid');
-  if(orig && vg) {
-    vg.innerHTML = orig.innerHTML;
+  if(vg) {
+    vg.innerHTML = html;
     vg.querySelectorAll('.seans-card').forEach(function(el) {
-      var s = el.dataset.seans || el.getAttribute('data-seans');
-      el.onclick = function() { vitoSelectSeans(s); };
+      el.onclick = function(){ vitoSelectSeans(this.getAttribute('data-seans')); };
     });
   }
 }
