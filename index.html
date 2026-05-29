@@ -1385,7 +1385,7 @@ async function biletPDFGonder(){
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'api-key':'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'
+        'api-key':'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'
       },
       body:JSON.stringify({
         sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
@@ -1807,7 +1807,7 @@ async function pdfGonderGonder(){
 
     var res=await fetch('https://api.brevo.com/v3/smtp/email',{
       method:'POST',
-      headers:{'api-key':'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','Content-Type':'application/json'},
+      headers:{'api-key':'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','Content-Type':'application/json'},
       body:JSON.stringify({
         sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
         to:[{email:mail}],
@@ -2572,7 +2572,7 @@ async function gunlukRaporGonder(){
   try {
     var mailRes=await fetch('https://api.brevo.com/v3/smtp/email',{
         method:'POST',
-        headers:{'Content-Type':'application/json','api-key':'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'},
+        headers:{'Content-Type':'application/json','api-key':'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'},
         body:JSON.stringify({
           sender:{name:'Stardust Box Office',email:'emir@devin.com.tr'},
           to:[{email:'emir@devin.com.tr',name:'Ömer Baş'}],
