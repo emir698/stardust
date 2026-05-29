@@ -2544,21 +2544,18 @@ function bulkDo(){
 async function gunlukRaporGonder(){
   var btn=document.getElementById('raporBtn');
   var sonuc=document.getElementById('raporSonuc');
-  btn.disabled=true;
-  btn.textContent='Gönderiliyor...';
-  sonuc.textContent='';
+  btn.disabled=true;btn.textContent='Gönderiliyor...';sonuc.textContent='';
 
   var today=todayStr();
-  var tarihParts=today.split('.');
-  var gun=tarihParts[0],ay=tarihParts[1],yil=tarihParts[2];
-  var tarihStr=today;
-  var gunler=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
-  var gunAdi=gunler[new Date(yil,parseInt(ay)-1,parseInt(gun)).getDay()];
+  var parts=today.split('.');
+  var gunAdi=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][new Date(parts[2],parseInt(parts[1])-1,parseInt(parts[0])).getDay()];
 
-  // Bugünün biletlerini filtrele
+  // Bugünün biletleri
   var filtered=tickets.filter(function(t){return t&&t.tarih===today;});
   var tamT=0,cocukT=0,yabanciT=0,davetliT=0,kurumsalT=0,toplamCiro=0;
   var seansMap={};
+  var vitoSuruculer={};
+
   filtered.forEach(function(t){
     tamT+=(t.tam||0);cocukT+=(t.cocuk||0);yabanciT+=(t.yabanci||0);
     davetliT+=(t.davetli||0);kurumsalT+=(t.kurumsal||0);toplamCiro+=(t.toplam||0);
@@ -2566,10 +2563,17 @@ async function gunlukRaporGonder(){
     if(!seansMap[s])seansMap[s]={bilet:0,ciro:0};
     seansMap[s].bilet+=(t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);
     seansMap[s].ciro+=(t.toplam||0);
+    if(t.vitoSatis&&t.surucuAd){
+      var key=t.surucu||t.surucuAd;
+      if(!vitoSuruculer[key])vitoSuruculer[key]={ad:t.surucuAd,plaka:t.surucuPlaka||'',tur:0,kisi:0,hakedis:0};
+      vitoSuruculer[key].tur++;
+      vitoSuruculer[key].kisi+=(t.tam||0)+(t.cocuk||0)+(t.yabanci||0);
+      vitoSuruculer[key].hakedis+=500;
+    }
   });
   var toplamBilet=tamT+cocukT+yabanciT+davetliT+kurumsalT;
 
-  // İndirim kodu kullanımı
+  // İndirim kodları
   var bugunKodlar=codes.filter(function(c){return c&&c.date===today&&c.status==='deaktif';});
   var batchKullanim={};
   Object.values(batches).forEach(function(b){
@@ -2578,62 +2582,167 @@ async function gunlukRaporGonder(){
     if(kul.length>0)batchKullanim[b.name]={count:kul.length,indirim:b.indirim||10};
   });
 
-  function bar(label,count,total,color){
-    if(count===0)return '';
-    var pct=total>0?Math.round(count/total*100):0;
-    return '<tr><td style="padding:6px 10px;color:#555;font-size:13px;width:100px">'+label+'</td><td style="padding:6px 10px"><div style="background:#f0f0f0;border-radius:4px;height:18px;overflow:hidden;width:200px"><div style="width:'+pct+'%;background:'+color+';height:100%;border-radius:4px"></div></div></td><td style="padding:6px 10px;font-size:13px;font-weight:600;color:#111">'+count+'</td><td style="padding:6px 10px;font-size:12px;color:#888">%'+pct+'</td></tr>';
+  // Vito özet
+  var vitoSurucuSayisi=Object.keys(vitoSuruculer).length;
+  var vitoToplamTur=Object.values(vitoSuruculer).reduce(function(a,s){return a+s.tur;},0);
+  var vitoToplamKisi=Object.values(vitoSuruculer).reduce(function(a,s){return a+s.kisi;},0);
+  var vitoToplamHakedis=vitoToplamTur*500;
+
+  function pct(a,b){return b>0?Math.round(a/b*100):0;}
+  function fmtM(n){return Number(n).toLocaleString('tr-TR')+'₺';}
+
+  // Yardımcılar
+  function seksiyonBaslik(emoji,baslik){
+    return '<div style="padding:12px 20px;background:#f5f5f5;border-left:4px solid #e8c547;margin:0">'+
+      '<span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase">'+emoji+' '+baslik+'</span></div>';
   }
 
-  var seansHtml='';
-  Object.entries(seansMap).sort().forEach(function(e){
-    seansHtml+='<tr style="border-bottom:0.5px solid #eee"><td style="padding:8px 10px;color:#333;font-size:13px">'+e[0]+'</td><td style="padding:8px 10px;text-align:right;font-weight:600;font-size:13px">'+e[1].bilet+'</td><td style="padding:8px 10px;text-align:right;color:#1a7a4a;font-size:13px">'+e[1].ciro.toLocaleString('tr-TR')+'₺</td></tr>';
-  });
+  // Bilet türü satırları
+  var biletTurleri=[
+    {ad:'Tam',sayi:tamT,renk:'#e8c547'},{ad:'Çocuk',sayi:cocukT,renk:'#60a5fa'},
+    {ad:'Yabancı',sayi:yabanciT,renk:'#4ade80'},{ad:'Davetli',sayi:davetliT,renk:'#f97316'},
+    {ad:'Kurumsal',sayi:kurumsalT,renk:'#a855f7'}
+  ].filter(function(x){return x.sayi>0;});
 
-  var kodHtml='';
-  if(Object.keys(batchKullanim).length===0){
-    kodHtml='<tr><td colspan="3" style="padding:10px;color:#999;font-size:13px;text-align:center">Bugün kod kullanımı yok</td></tr>';
-  } else {
-    Object.entries(batchKullanim).forEach(function(e){
-      kodHtml+='<tr style="border-bottom:0.5px solid #eee"><td style="padding:8px 10px;color:#333;font-size:13px">'+e[0]+'</td><td style="padding:8px 10px;text-align:right;font-weight:600;color:#e24b4a;font-size:13px">'+e[1].count+'</td><td style="padding:8px 10px;text-align:right;color:#888;font-size:13px">%'+e[1].indirim+'</td></tr>';
-    });
-  }
+  var biletTurRows=biletTurleri.map(function(b){
+    var p=pct(b.sayi,toplamBilet);
+    return '<tr><td style="padding:8px 16px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+b.renk+';margin-right:8px"></span><span style="font-size:13px;color:#333">'+b.ad+'</span></td>'+
+      '<td style="padding:8px 16px;text-align:center;font-size:13px;font-weight:600;color:#1a1a1a">'+b.sayi+'</td>'+
+      '<td style="padding:8px 16px;text-align:right"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">'+
+      '<div style="width:80px;height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="width:'+p+'%;height:100%;background:'+b.renk+';border-radius:4px"></div></div>'+
+      '<span style="font-size:12px;color:#888;width:36px;text-align:right">%'+p+'</span></div></td></tr>';
+  }).join('');
 
-  var mailHtml='<div style="font-family:Arial,sans-serif;background:#f5f5f5;padding:0;margin:0">'+
-    '<div style="background:#0f0f0f;padding:20px;text-align:center"><div style="color:#e8c547;font-size:10px;letter-spacing:4px;margin-bottom:4px">✦ STARDUST ✦</div><div style="color:#fff;font-size:18px;font-weight:600">Astra Lumina İstanbul</div><div style="color:#888;font-size:12px;margin-top:4px">Günlük Rapor — '+gunAdi+', '+tarihStr+'</div></div>'+
-    '<div style="background:#fff;padding:28px 32px">'+
-    '<table style="width:100%;margin-bottom:24px"><tr>'+
-    '<td style="background:#f9f9f9;border-radius:8px;padding:14px;text-align:center;width:33%"><div style="font-size:11px;color:#888;margin-bottom:6px">Toplam Bilet</div><div style="font-size:26px;font-weight:700;color:#111">'+toplamBilet+'</div></td>'+
-    '<td style="width:8px"></td>'+
-    '<td style="background:#f9f9f9;border-radius:8px;padding:14px;text-align:center;width:33%"><div style="font-size:11px;color:#888;margin-bottom:6px">Toplam Ciro</div><div style="font-size:22px;font-weight:700;color:#1a7a4a">'+toplamCiro.toLocaleString('tr-TR')+'₺</div></td>'+
-    '<td style="width:8px"></td>'+
-    '<td style="background:#f9f9f9;border-radius:8px;padding:14px;text-align:center;width:33%"><div style="font-size:11px;color:#888;margin-bottom:6px">Kod Kullanımı</div><div style="font-size:26px;font-weight:700;color:#e8c547">'+bugunKodlar.length+'</div></td>'+
-    '</tr></table>'+
-    '<div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">BİLET TÜRÜ DAĞILIMI</div>'+
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:24px">'+bar('Tam',tamT,toplamBilet,'#e8c547')+bar('Çocuk',cocukT,toplamBilet,'#60a5fa')+bar('Yabancı',yabanciT,toplamBilet,'#4ade80')+bar('Davetli',davetliT,toplamBilet,'#f97316')+bar('Kurumsal',kurumsalT,toplamBilet,'#a855f7')+'</table>'+
-    '<div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">SEANS BAZLI DAĞILIM</div>'+
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:24px"><tr style="background:#f5f5f5"><th style="padding:8px 10px;text-align:left;color:#555;font-weight:500;font-size:12px">Seans</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">Bilet</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">Ciro</th></tr>'+
-    (seansHtml||'<tr><td colspan="3" style="padding:10px;color:#999;font-size:13px;text-align:center">Bugün satış yok</td></tr>')+'</table>'+
-    '<div style="font-size:12px;font-weight:600;color:#333;margin-bottom:8px">İNDİRİM KODU KULLANIMI</div>'+
-    '<table style="width:100%;border-collapse:collapse"><tr style="background:#f5f5f5"><th style="padding:8px 10px;text-align:left;color:#555;font-weight:500;font-size:12px">Grup</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">Kullanılan</th><th style="padding:8px 10px;text-align:right;color:#555;font-weight:500;font-size:12px">İndirim</th></tr>'+
-    kodHtml+'</table></div>'+
-    '<div style="background:#f5f5f5;padding:14px;text-align:center;border-top:1px solid #eee"><p style="color:#aaa;font-size:11px;margin:0">Astra Lumina İstanbul · Stardust · Günlük Rapor</p></div></div>';
+  // Seans satırları
+  var seansRows=Object.entries(seansMap).sort().map(function(e){
+    return '<tr><td style="padding:10px 16px;font-family:monospace;font-size:14px;color:#1a1a1a;font-weight:600">'+e[0]+'</td>'+
+      '<td style="padding:10px 16px;text-align:center;font-size:14px;color:#1a1a1a">'+e[1].bilet+' kişi</td>'+
+      '<td style="padding:10px 16px;text-align:right;font-size:14px;color:#2e7d32;font-weight:600">'+fmtM(e[1].ciro)+'</td></tr>';
+  }).join('');
 
-  var slackSeansText=Object.entries(seansMap).sort().map(function(e){return '• '+e[0]+' — '+e[1].bilet+' kişi, '+e[1].ciro.toLocaleString('tr-TR')+'₺';}).join('\n')||'Satış yok';
+  // Vito satırları
+  var vitoRows=Object.values(vitoSuruculer).map(function(s){
+    return '<tr><td style="padding:8px 16px;font-size:13px;font-weight:600;color:#1a1a1a">'+s.ad+'</td>'+
+      '<td style="padding:8px 16px;font-size:12px;color:#666;font-family:monospace">'+s.plaka+'</td>'+
+      '<td style="padding:8px 16px;text-align:center;font-size:13px">'+s.tur+'</td>'+
+      '<td style="padding:8px 16px;text-align:center;font-size:13px">'+s.kisi+'</td>'+
+      '<td style="padding:8px 16px;text-align:right;font-size:13px;font-weight:600;color:#e65100">'+fmtM(s.hakedis)+'</td></tr>';
+  }).join('');
+
+  // Kod satırları
+  var kodRows=Object.keys(batchKullanim).length>0
+    ?Object.entries(batchKullanim).map(function(e){
+      return '<tr><td style="padding:8px 16px;font-size:13px;color:#1a1a1a">'+e[0]+'</td>'+
+        '<td style="padding:8px 16px;text-align:center;font-size:13px;font-weight:600;color:#1565c0">'+e[1].count+'</td>'+
+        '<td style="padding:8px 16px;text-align:right;font-size:12px;color:#888">%'+e[1].indirim+' indirim</td></tr>';
+    }).join('')
+    :'<tr><td colspan="3" style="padding:12px 16px;text-align:center;color:#aaa;font-size:13px">Bugün kod kullanımı yok</td></tr>';
+
+  var mailHtml=
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif">'+
+    '<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)">'+
+    // HEADER
+    '<div style="background:#0f0f0f;padding:28px 24px;text-align:center">'+
+      '<div style="font-size:11px;letter-spacing:4px;color:#e8c547;font-weight:700">✦ STARDUST ✦</div>'+
+      '<div style="font-size:22px;font-weight:700;color:#fff;margin-top:8px">Astra Lumina İstanbul</div>'+
+      '<div style="font-size:13px;color:#888;margin-top:6px">Günlük Rapor — '+gunAdi+', '+today+'</div>'+
+    '</div>'+
+    // KPI
+    '<div style="padding:20px;background:#fafafa;border-bottom:1px solid #eee">'+
+      '<table style="width:100%;border-collapse:collapse"><tr>'+
+        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
+          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Toplam Bilet</div>'+
+          '<div style="font-size:30px;font-weight:700;color:#e8c547;font-family:monospace">'+toplamBilet+'</div></div></td>'+
+        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
+          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Toplam Ciro</div>'+
+          '<div style="font-size:22px;font-weight:700;color:#2e7d32;font-family:monospace">'+fmtM(toplamCiro)+'</div></div></td>'+
+        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
+          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Aktif Seans</div>'+
+          '<div style="font-size:30px;font-weight:700;color:#1a1a1a;font-family:monospace">'+Object.keys(seansMap).length+'</div></div></td>'+
+        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
+          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Kod Kullanımı</div>'+
+          '<div style="font-size:30px;font-weight:700;color:#1565c0;font-family:monospace">'+bugunKodlar.length+'</div></div></td>'+
+      '</tr></table>'+
+    '</div>'+
+    // BİLET TÜRÜ
+    seksiyonBaslik('🎟️','Bilet Türü Dağılımı')+
+    '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="background:#fafafa">'+
+        '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Tür</th>'+
+        '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Adet</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Oran</th>'+
+      '</tr></thead><tbody>'+(biletTurRows||'<tr><td colspan="3" style="padding:12px;text-align:center;color:#aaa">Veri yok</td></tr>')+'</tbody></table>'+
+    // SEANS
+    seksiyonBaslik('🕐','Seans Bazlı Satış')+
+    '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="background:#fafafa">'+
+        '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Seans</th>'+
+        '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Kişi</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Ciro</th>'+
+      '</tr></thead><tbody>'+(seansRows||'<tr><td colspan="3" style="padding:12px;text-align:center;color:#aaa">Satış yok</td></tr>')+'</tbody>'+
+      '<tfoot><tr style="background:#f5f5f5;border-top:2px solid #eee">'+
+        '<td style="padding:10px 16px;font-size:13px;font-weight:700">TOPLAM</td>'+
+        '<td style="padding:10px 16px;text-align:center;font-size:13px;font-weight:700">'+toplamBilet+' kişi</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-size:13px;font-weight:700;color:#2e7d32">'+fmtM(toplamCiro)+'</td>'+
+      '</tr></tfoot></table>'+
+    // VİTO
+    seksiyonBaslik('🚐','Vito Transfer')+
+    (vitoSurucuSayisi>0
+      ?'<table style="width:100%;border-collapse:collapse"><tr style="border-bottom:1px solid #eee">'+
+          '<td style="padding:14px;text-align:center;border-right:1px solid #eee"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Sürücü</div><div style="font-size:22px;font-weight:700">'+vitoSurucuSayisi+'</div></td>'+
+          '<td style="padding:14px;text-align:center;border-right:1px solid #eee"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Tur</div><div style="font-size:22px;font-weight:700">'+vitoToplamTur+'</div></td>'+
+          '<td style="padding:14px;text-align:center;border-right:1px solid #eee"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Kişi</div><div style="font-size:22px;font-weight:700">'+vitoToplamKisi+'</div></td>'+
+          '<td style="padding:14px;text-align:center"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Hakediş</div><div style="font-size:18px;font-weight:700;color:#e65100">'+fmtM(vitoToplamHakedis)+'</div></td>'+
+        '</tr></table>'+
+        '<table style="width:100%;border-collapse:collapse">'+
+          '<thead><tr style="background:#fafafa">'+
+            '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Sürücü</th>'+
+            '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Plaka</th>'+
+            '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Tur</th>'+
+            '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Kişi</th>'+
+            '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Hakediş</th>'+
+          '</tr></thead><tbody>'+vitoRows+'</tbody></table>'
+      :'<div style="padding:16px;text-align:center;color:#aaa;font-size:13px">Bugün Vito satışı yok</div>')+
+    // İNDİRİM
+    seksiyonBaslik('🏷️','İndirim Kodu Kullanımı')+
+    '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="background:#fafafa">'+
+        '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Grup</th>'+
+        '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Kullanım</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">İndirim</th>'+
+      '</tr></thead><tbody>'+kodRows+'</tbody>'+
+      (bugunKodlar.length>0?'<tfoot><tr style="background:#f5f5f5;border-top:2px solid #eee">'+
+        '<td style="padding:10px 16px;font-size:13px;font-weight:700">TOPLAM</td>'+
+        '<td style="padding:10px 16px;text-align:center;font-size:13px;font-weight:700;color:#1565c0">'+bugunKodlar.length+' kod</td>'+
+        '<td></td></tr></tfoot>':'')+
+    '</table>'+
+    // FOOTER
+    '<div style="padding:20px;text-align:center;background:#fafafa;border-top:1px solid #eee">'+
+      '<div style="font-size:11px;color:#bbb;letter-spacing:.5px">Astra Lumina İstanbul · Stardust Box Office</div>'+
+      '<div style="font-size:11px;color:#ddd;margin-top:4px">Otomatik Günlük Rapor · '+today+'</div>'+
+    '</div>'+
+    '</div></body></html>';
+
+  var slackSeansText=Object.entries(seansMap).sort().map(function(e){return '• '+e[0]+' — '+e[1].bilet+' kişi, '+fmtM(e[1].ciro);}).join('\n')||'Satış yok';
   var slackKodText=Object.keys(batchKullanim).length>0?Object.entries(batchKullanim).map(function(e){return '• '+e[0]+': '+e[1].count+' kullanım (%'+e[1].indirim+')';}).join('\n'):'Bugün kullanım yok';
+  var slackVitoText=vitoSurucuSayisi>0?Object.values(vitoSuruculer).map(function(s){return '• '+s.ad+' ('+s.plaka+'): '+s.tur+' tur, '+s.kisi+' kişi → '+fmtM(s.hakedis);}).join('\n'):'Bugün Vito satışı yok';
 
   var slackMsg={
-    text:'✦ STARDUST — Günlük Rapor — '+gunAdi+' '+tarihStr,
+    text:'✦ STARDUST — Günlük Rapor — '+gunAdi+' '+today,
     blocks:[
-      {type:'header',text:{type:'plain_text',text:'✦ Stardust Günlük Rapor — '+tarihStr}},
+      {type:'header',text:{type:'plain_text',text:'✦ Stardust Günlük Rapor — '+today+' '+gunAdi}},
       {type:'section',fields:[
         {type:'mrkdwn',text:'*Toplam Bilet*\n'+toplamBilet+' kişi'},
-        {type:'mrkdwn',text:'*Toplam Ciro*\n'+toplamCiro.toLocaleString('tr-TR')+'₺'},
-        {type:'mrkdwn',text:'*Kod Kullanımı*\n'+bugunKodlar.length+' adet'}
+        {type:'mrkdwn',text:'*Toplam Ciro*\n'+fmtM(toplamCiro)},
+        {type:'mrkdwn',text:'*Kod Kullanımı*\n'+bugunKodlar.length+' adet'},
+        {type:'mrkdwn',text:'*Aktif Seans*\n'+Object.keys(seansMap).length+' seans'}
       ]},
       {type:'divider'},
-      {type:'section',text:{type:'mrkdwn',text:'*Bilet Türleri:*\n🟡 Tam: '+tamT+'  🔵 Çocuk: '+cocukT+'  🟢 Yabancı: '+yabanciT+'  🟠 Davetli: '+davetliT+'  🟣 Kurumsal: '+kurumsalT}},
-      {type:'section',text:{type:'mrkdwn',text:'*Seans Bazlı:*\n'+slackSeansText}},
-      {type:'section',text:{type:'mrkdwn',text:'*İndirim Kodları:*\n'+slackKodText}}
+      {type:'section',text:{type:'mrkdwn',text:'*🎟️ Bilet Türleri*\n🟡 Tam: '+tamT+'  🔵 Çocuk: '+cocukT+'  🟢 Yabancı: '+yabanciT+'  🟠 Davetli: '+davetliT+'  🟣 Kurumsal: '+kurumsalT}},
+      {type:'section',text:{type:'mrkdwn',text:'*🕐 Seans Bazlı*\n'+slackSeansText}},
+      {type:'section',text:{type:'mrkdwn',text:'*🚐 Vito Transfer*\n'+slackVitoText}},
+      {type:'section',text:{type:'mrkdwn',text:'*🏷️ İndirim Kodları*\n'+slackKodText}},
+      {type:'context',elements:[{type:'mrkdwn',text:'Astra Lumina İstanbul · Stardust · Otomatik Günlük Rapor'}]}
     ]
   };
 
