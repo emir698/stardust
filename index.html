@@ -415,6 +415,7 @@ td{padding:10px 14px}
         <button class="tab active" id="vtab-bilet" onclick="switchVTab('bilet')" style="font-size:12px">Bilet Sat</button>
         <button class="tab" id="vtab-surucu" onclick="switchVTab('surucu')" style="font-size:12px">Sürücüler</button>
         <button class="tab" id="vtab-komisyon" onclick="switchVTab('komisyon')" style="font-size:12px">Komisyon Raporu</button>
+        <button class="tab" id="vtab-satislar" onclick="switchVTab('satislar')" style="font-size:12px">Satılan Biletler</button>
       </div>
 
       <!-- BİLET SAT -->
@@ -508,6 +509,35 @@ td{padding:10px 14px}
               <tbody id="vito-driver-list"></tbody>
             </table></div>
           </div>
+        </div>
+      </div>
+
+      <!-- SATILAN BİLETLER -->
+      <div id="vpanel-satislar" style="display:none;padding:1.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div class="section-title" style="margin:0">Transfer Satışları</div>
+          <select class="form-input" id="vito-satis-filtre" onchange="renderVitoSatislar()" style="font-size:12px;padding:4px 10px;width:auto">
+            <option value="hepsi">Tüm Satışlar</option>
+            <option value="bugun">Bugün</option>
+            <option value="hafta">Bu Hafta</option>
+          </select>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Seans</th>
+                <th>Müşteri</th>
+                <th>Sürücü</th>
+                <th>Bilet</th>
+                <th>Tutar</th>
+                <th>Saat</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="vito-satis-list"></tbody>
+          </table>
         </div>
       </div>
 
@@ -3077,7 +3107,7 @@ function vitoOdemeToggle(satisId) {
 
 // ─── VİTO ALT SEKME & BİLET FONK ────────────────────────────────
 function switchVTab(name) {
-  ['bilet','surucu','komisyon'].forEach(function(t) {
+  ['bilet','surucu','komisyon','satislar'].forEach(function(t) {
     var tb = document.getElementById('vtab-'+t);
     var pn = document.getElementById('vpanel-'+t);
     if(tb) tb.classList.toggle('active', t===name);
@@ -3085,7 +3115,8 @@ function switchVTab(name) {
   });
   if(name==='komisyon') renderVitoPage();
   if(name==='surucu') renderVitoSurucuList();
-  if(name==='bilet') { buildVitoTarihBtns(); renderVitoBiletSurucuSel2(); }
+  if(name==='bilet') { buildVitoTarihBtns(); vitoRefreshSeansGrid(); renderVitoBiletSurucuSel2(); }
+  if(name==='satislar') renderVitoSatislar();
 }
 
 var vitoSelectedTarih=null, vitoSelectedSeans=null;
@@ -3274,6 +3305,71 @@ function renderVitoSurucuList() {
       '<td><button class="btn btn-sm btn-r" data-key="' + d.id + '" onclick="vitoDeleteDriver(this.dataset.key)">Sil</button></td>' +
       '</tr>';
   }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:16px">Henüz sürücü eklenmedi</td></tr>';
+}
+
+// ─── VİTO SATILAN BİLETLER ───────────────────────────────────────
+function renderVitoSatislar() {
+  var filtre = document.getElementById('vito-satis-filtre') ? document.getElementById('vito-satis-filtre').value : 'hepsi';
+  var today = todayStr();
+  var tbody = document.getElementById('vito-satis-list');
+  if(!tbody) return;
+
+  // tickets tablosundan vitoSatis:true olanları filtrele
+  var satislar = tickets.filter(function(t) {
+    if(!t || !t.vitoSatis) return false;
+    if(filtre === 'bugun' && t.tarih !== today) return false;
+    if(filtre === 'hafta') {
+      var tp = today.split('.');
+      var now = new Date(tp[2], tp[1]-1, tp[0]);
+      var gp = (t.satisTarihi || t.tarih).split('.');
+      var gDate = new Date(gp[2], gp[1]-1, gp[0]);
+      if((now - gDate) / 86400000 > 7) return false;
+    }
+    return true;
+  });
+
+  // Tarihe göre sırala — en yeni üstte
+  satislar.sort(function(a, b) {
+    var aDate = (a.satisTarihi || a.tarih) + ' ' + (a.saat || '');
+    var bDate = (b.satisTarihi || b.tarih) + ' ' + (b.saat || '');
+    return bDate.localeCompare(aDate);
+  });
+
+  if(satislar.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:24px">Transfer satışı bulunamadı</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = satislar.map(function(t) {
+    var biletSayisi = (t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);
+    var biletDetay = [];
+    if(t.tam>0) biletDetay.push(t.tam+'× Tam');
+    if(t.cocuk>0) biletDetay.push(t.cocuk+'× Çocuk');
+    if(t.yabanci>0) biletDetay.push(t.yabanci+'× Yabancı');
+    var surucuBilgi = t.surucuAd ? (t.surucuAd + (t.surucuPlaka ? ' · <span style="font-family:var(--mo);color:var(--ac)">' + t.surucuPlaka + '</span>' : '')) : '<span style="color:var(--mu)">—</span>';
+    return '<tr>' +
+      '<td style="font-size:12px">' + (t.satisTarihi || t.tarih) + '</td>' +
+      '<td style="font-family:var(--mo);color:var(--ac)">' + t.seans + '</td>' +
+      '<td style="font-weight:500;color:var(--tx)">' + (t.musteriAd||'—') + '</td>' +
+      '<td>' + surucuBilgi + '</td>' +
+      '<td>' + biletDetay.join(', ') + ' <span style="color:var(--mu);font-size:11px">(' + biletSayisi + ' kişi)</span></td>' +
+      '<td style="color:var(--gn);font-weight:600">' + fmtMoney(t.toplam||0) + '</td>' +
+      '<td style="font-size:11px;color:var(--mu);font-family:var(--mo)">' + (t.saat||'—') + '</td>' +
+      '<td><button class="btn btn-sm btn-r" data-id="' + t.id + '" onclick="vitoSatisSil(this.dataset.id)">Sil</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function vitoSatisSil(satisId) {
+  if(!confirm('Bu transfer satışını silmek istediğinizden emin misiniz?')) return;
+  ticketsRef.child(satisId).remove(function(err) {
+    if(err) {
+      toast('Silme başarısız', 'err');
+    } else {
+      toast('Satış silindi', 'ok');
+      renderVitoSatislar();
+    }
+  });
 }
 
 </script>
