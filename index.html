@@ -548,11 +548,10 @@ td{padding:10px 14px}
 
       <!-- KOMİSYON RAPORU -->
       <div id="vpanel-komisyon" style="display:none;padding:1.5rem">
-        <div class="kpi-grid" style="margin-bottom:1.5rem">
-          <div class="kpi-card"><div class="kpi-label">Bekleyen Ödeme</div><div class="kpi-val" id="vito-kpi-bekle" style="color:var(--ac)">0₺</div></div>
-          <div class="kpi-card"><div class="kpi-label">Bugün Toplam Tur</div><div class="kpi-val" id="vito-kpi-tur">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Bugün Toplam Kişi</div><div class="kpi-val" id="vito-kpi-kisi">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Ödenen (Bugün)</div><div class="kpi-val" id="vito-kpi-odenen" style="color:var(--gn)">0₺</div></div>
+        <div class="kpi-grid" style="margin-bottom:1.5rem;grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card"><div class="kpi-label">Toplam Tur</div><div class="kpi-val" id="vito-kpi-tur">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Toplam Kişi</div><div class="kpi-val" id="vito-kpi-kisi">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Toplam Hakediş</div><div class="kpi-val" id="vito-kpi-hakedis" style="color:var(--ac)">0₺</div></div>
         </div>
         <div class="panel-card">
           <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
@@ -3053,21 +3052,18 @@ function renderVitoPage() {
     });
 
     // KPI hesapla
-    var bekleyen = 0, odenen = 0, toplamKisi = 0;
+    var toplamHakedis = 0, toplamKisi = 0;
     turler.forEach(function(tr){
-      if(tr.odendi) odenen += tr.hakedis;
-      else bekleyen += tr.hakedis;
+      toplamHakedis += tr.hakedis;
       toplamKisi += tr.kisi;
     });
 
-    var bekEl=document.getElementById('vito-kpi-bekle');
     var turEl=document.getElementById('vito-kpi-tur');
     var kisiEl=document.getElementById('vito-kpi-kisi');
-    var odEl=document.getElementById('vito-kpi-odenen');
-    if(bekEl) bekEl.textContent = fmtMoney(bekleyen);
+    var hakEl=document.getElementById('vito-kpi-hakedis');
     if(turEl) turEl.textContent = turler.length;
     if(kisiEl) kisiEl.textContent = toplamKisi + ' kişi';
-    if(odEl) odEl.textContent = fmtMoney(odenen);
+    if(hakEl) hakEl.textContent = fmtMoney(toplamHakedis);
 
     // Sürücü listesi (vpanel-surucu için)
     renderVitoSurucuList();
