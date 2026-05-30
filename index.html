@@ -2592,9 +2592,9 @@ async function gunlukRaporGonder(){
   function fmtM(n){return Number(n).toLocaleString('tr-TR')+'₺';}
 
   // Yardımcılar
-  function seksiyonBaslik(emoji,baslik){
-    return '<div style="padding:12px 20px;background:#f5f5f5;border-left:4px solid #e8c547;margin:0">'+
-      '<span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase">'+emoji+' '+baslik+'</span></div>';
+  function sec(emoji,baslik){
+    return '<div style="padding:12px 20px;background:#1a1a1a;border-left:4px solid #e8c547">'+
+      '<span style="font-size:10px;font-weight:700;letter-spacing:2px;color:#888;text-transform:uppercase">'+emoji+' '+baslik+'</span></div>';
   }
 
   // Bilet türü satırları
@@ -2606,124 +2606,158 @@ async function gunlukRaporGonder(){
 
   var biletTurRows=biletTurleri.map(function(b){
     var p=pct(b.sayi,toplamBilet);
-    return '<tr><td style="padding:8px 16px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+b.renk+';margin-right:8px"></span><span style="font-size:13px;color:#333">'+b.ad+'</span></td>'+
-      '<td style="padding:8px 16px;text-align:center;font-size:13px;font-weight:600;color:#1a1a1a">'+b.sayi+'</td>'+
-      '<td style="padding:8px 16px;text-align:right"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">'+
-      '<div style="width:80px;height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="width:'+p+'%;height:100%;background:'+b.renk+';border-radius:4px"></div></div>'+
-      '<span style="font-size:12px;color:#888;width:36px;text-align:right">%'+p+'</span></div></td></tr>';
+    var filled=Math.round(p/5);var empty=20-filled;
+    var bar='';
+    for(var i=0;i<filled;i++)bar+='<span style="color:'+b.renk+'">▓</span>';
+    for(var i=0;i<empty;i++)bar+='<span style="color:#333">░</span>';
+    return '<tr style="border-bottom:1px solid #222">'+
+      '<td style="padding:10px 16px;width:100px">'+
+        '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+b.renk+';margin-right:8px;vertical-align:middle"></span>'+
+        '<span style="font-size:13px;color:#ccc">'+b.ad+'</span></td>'+
+      '<td style="padding:10px 16px;text-align:center;font-size:14px;font-weight:700;color:#fff;font-family:monospace">'+b.sayi+'</td>'+
+      '<td style="padding:10px 16px;font-family:monospace;font-size:12px;letter-spacing:0">'+bar+'</td>'+
+      '<td style="padding:10px 16px;text-align:right;font-size:12px;color:#666">%'+p+'</td></tr>';
   }).join('');
 
   // Seans satırları
   var seansRows=Object.entries(seansMap).sort().map(function(e){
-    return '<tr><td style="padding:10px 16px;font-family:monospace;font-size:14px;color:#1a1a1a;font-weight:600">'+e[0]+'</td>'+
-      '<td style="padding:10px 16px;text-align:center;font-size:14px;color:#1a1a1a">'+e[1].bilet+' kişi</td>'+
-      '<td style="padding:10px 16px;text-align:right;font-size:14px;color:#2e7d32;font-weight:600">'+fmtM(e[1].ciro)+'</td></tr>';
+    return '<tr style="border-bottom:1px solid #222">'+
+      '<td style="padding:10px 16px;font-family:monospace;font-size:14px;color:#e8c547;font-weight:700">'+e[0]+'</td>'+
+      '<td style="padding:10px 16px;text-align:center;font-size:14px;color:#fff;font-weight:600">'+e[1].bilet+' kişi</td>'+
+      '<td style="padding:10px 16px;text-align:right;font-size:14px;color:#4ade80;font-weight:700">'+fmtM(e[1].ciro)+'</td></tr>';
   }).join('');
 
   // Vito satırları
   var vitoRows=Object.values(vitoSuruculer).map(function(s){
-    return '<tr><td style="padding:8px 16px;font-size:13px;font-weight:600;color:#1a1a1a">'+s.ad+'</td>'+
-      '<td style="padding:8px 16px;font-size:12px;color:#666;font-family:monospace">'+s.plaka+'</td>'+
-      '<td style="padding:8px 16px;text-align:center;font-size:13px">'+s.tur+'</td>'+
-      '<td style="padding:8px 16px;text-align:center;font-size:13px">'+s.kisi+'</td>'+
-      '<td style="padding:8px 16px;text-align:right;font-size:13px;font-weight:600;color:#e65100">'+fmtM(s.hakedis)+'</td></tr>';
+    return '<tr style="border-bottom:1px solid #222">'+
+      '<td style="padding:10px 16px;font-size:13px;font-weight:700;color:#fff">'+s.ad+'</td>'+
+      '<td style="padding:10px 16px;font-size:12px;color:#666;font-family:monospace">'+s.plaka+'</td>'+
+      '<td style="padding:10px 16px;text-align:center;font-size:13px;color:#fff">'+s.tur+'</td>'+
+      '<td style="padding:10px 16px;text-align:center;font-size:13px;color:#fff">'+s.kisi+'</td>'+
+      '<td style="padding:10px 16px;text-align:right;font-size:13px;font-weight:700;color:#f97316">'+fmtM(s.hakedis)+'</td></tr>';
   }).join('');
 
   // Kod satırları
   var kodRows=Object.keys(batchKullanim).length>0
     ?Object.entries(batchKullanim).map(function(e){
-      return '<tr><td style="padding:8px 16px;font-size:13px;color:#1a1a1a">'+e[0]+'</td>'+
-        '<td style="padding:8px 16px;text-align:center;font-size:13px;font-weight:600;color:#1565c0">'+e[1].count+'</td>'+
-        '<td style="padding:8px 16px;text-align:right;font-size:12px;color:#888">%'+e[1].indirim+' indirim</td></tr>';
+      return '<tr style="border-bottom:1px solid #222">'+
+        '<td style="padding:10px 16px;font-size:13px;color:#ccc">'+e[0]+'</td>'+
+        '<td style="padding:10px 16px;text-align:center;font-size:14px;font-weight:700;color:#60a5fa;font-family:monospace">'+e[1].count+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-size:12px;color:#555">%'+e[1].indirim+' indirim</td></tr>';
     }).join('')
-    :'<tr><td colspan="3" style="padding:12px 16px;text-align:center;color:#aaa;font-size:13px">Bugün kod kullanımı yok</td></tr>';
+    :'<tr><td colspan="3" style="padding:14px 16px;text-align:center;color:#444;font-size:13px">Bugün kod kullanımı yok</td></tr>';
 
   var mailHtml=
-    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif">'+
-    '<div style="max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)">'+
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'+
+    '<body style="margin:0;padding:0;background:#111;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif">'+
+    '<div style="max-width:600px;margin:24px auto;background:#0f0f0f;border-radius:12px;overflow:hidden;border:1px solid #222">'+
+
     // HEADER
-    '<div style="background:#0f0f0f;padding:28px 24px;text-align:center">'+
-      '<div style="font-size:11px;letter-spacing:4px;color:#e8c547;font-weight:700">✦ STARDUST ✦</div>'+
-      '<div style="font-size:22px;font-weight:700;color:#fff;margin-top:8px">Astra Lumina İstanbul</div>'+
-      '<div style="font-size:13px;color:#888;margin-top:6px">Günlük Rapor — '+gunAdi+', '+today+'</div>'+
+    '<div style="background:#0a0a0a;padding:32px 24px;text-align:center;border-bottom:1px solid #1a1a1a">'+
+      '<div style="font-size:10px;letter-spacing:5px;color:#e8c547;font-weight:700">✦ STARDUST ✦</div>'+
+      '<div style="font-size:24px;font-weight:700;color:#fff;margin-top:10px">Astra Lumina İstanbul</div>'+
+      '<div style="font-size:13px;color:#555;margin-top:6px">Günlük Rapor — '+gunAdi+', '+today+'</div>'+
     '</div>'+
+
     // KPI
-    '<div style="padding:20px;background:#fafafa;border-bottom:1px solid #eee">'+
-      '<table style="width:100%;border-collapse:collapse"><tr>'+
-        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
-          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Toplam Bilet</div>'+
-          '<div style="font-size:30px;font-weight:700;color:#e8c547;font-family:monospace">'+toplamBilet+'</div></div></td>'+
-        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
-          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Toplam Ciro</div>'+
-          '<div style="font-size:22px;font-weight:700;color:#2e7d32;font-family:monospace">'+fmtM(toplamCiro)+'</div></div></td>'+
-        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
-          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Aktif Seans</div>'+
-          '<div style="font-size:30px;font-weight:700;color:#1a1a1a;font-family:monospace">'+Object.keys(seansMap).length+'</div></div></td>'+
-        '<td style="padding:4px"><div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:14px;text-align:center">'+
-          '<div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Kod Kullanımı</div>'+
-          '<div style="font-size:30px;font-weight:700;color:#1565c0;font-family:monospace">'+bugunKodlar.length+'</div></div></td>'+
-      '</tr></table>'+
-    '</div>'+
+    '<table style="width:100%;border-collapse:collapse;background:#0f0f0f;border-bottom:1px solid #1a1a1a"><tr>'+
+      '<td style="padding:20px 8px 20px 16px;text-align:center;border-right:1px solid #1a1a1a">'+
+        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toplam Bilet</div>'+
+        '<div style="font-size:34px;font-weight:700;color:#e8c547;font-family:monospace">'+toplamBilet+'</div>'+
+      '</td>'+
+      '<td style="padding:20px 8px;text-align:center;border-right:1px solid #1a1a1a">'+
+        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toplam Ciro</div>'+
+        '<div style="font-size:24px;font-weight:700;color:#4ade80;font-family:monospace">'+fmtM(toplamCiro)+'</div>'+
+      '</td>'+
+      '<td style="padding:20px 8px;text-align:center;border-right:1px solid #1a1a1a">'+
+        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Aktif Seans</div>'+
+        '<div style="font-size:34px;font-weight:700;color:#fff;font-family:monospace">'+Object.keys(seansMap).length+'</div>'+
+      '</td>'+
+      '<td style="padding:20px 16px 20px 8px;text-align:center">'+
+        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Kod Kullanımı</div>'+
+        '<div style="font-size:34px;font-weight:700;color:#60a5fa;font-family:monospace">'+bugunKodlar.length+'</div>'+
+      '</td>'+
+    '</tr></table>'+
+
     // BİLET TÜRÜ
-    seksiyonBaslik('🎟️','Bilet Türü Dağılımı')+
-    '<table style="width:100%;border-collapse:collapse">'+
-      '<thead><tr style="background:#fafafa">'+
-        '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Tür</th>'+
-        '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Adet</th>'+
-        '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Oran</th>'+
-      '</tr></thead><tbody>'+(biletTurRows||'<tr><td colspan="3" style="padding:12px;text-align:center;color:#aaa">Veri yok</td></tr>')+'</tbody></table>'+
-    // SEANS
-    seksiyonBaslik('🕐','Seans Bazlı Satış')+
-    '<table style="width:100%;border-collapse:collapse">'+
-      '<thead><tr style="background:#fafafa">'+
-        '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Seans</th>'+
-        '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Kişi</th>'+
-        '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Ciro</th>'+
-      '</tr></thead><tbody>'+(seansRows||'<tr><td colspan="3" style="padding:12px;text-align:center;color:#aaa">Satış yok</td></tr>')+'</tbody>'+
-      '<tfoot><tr style="background:#f5f5f5;border-top:2px solid #eee">'+
-        '<td style="padding:10px 16px;font-size:13px;font-weight:700">TOPLAM</td>'+
-        '<td style="padding:10px 16px;text-align:center;font-size:13px;font-weight:700">'+toplamBilet+' kişi</td>'+
-        '<td style="padding:10px 16px;text-align:right;font-size:13px;font-weight:700;color:#2e7d32">'+fmtM(toplamCiro)+'</td>'+
-      '</tr></tfoot></table>'+
-    // VİTO
-    seksiyonBaslik('🚐','Vito Transfer')+
-    (vitoSurucuSayisi>0
-      ?'<table style="width:100%;border-collapse:collapse"><tr style="border-bottom:1px solid #eee">'+
-          '<td style="padding:14px;text-align:center;border-right:1px solid #eee"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Sürücü</div><div style="font-size:22px;font-weight:700">'+vitoSurucuSayisi+'</div></td>'+
-          '<td style="padding:14px;text-align:center;border-right:1px solid #eee"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Tur</div><div style="font-size:22px;font-weight:700">'+vitoToplamTur+'</div></td>'+
-          '<td style="padding:14px;text-align:center;border-right:1px solid #eee"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Kişi</div><div style="font-size:22px;font-weight:700">'+vitoToplamKisi+'</div></td>'+
-          '<td style="padding:14px;text-align:center"><div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px">Hakediş</div><div style="font-size:18px;font-weight:700;color:#e65100">'+fmtM(vitoToplamHakedis)+'</div></td>'+
-        '</tr></table>'+
-        '<table style="width:100%;border-collapse:collapse">'+
-          '<thead><tr style="background:#fafafa">'+
-            '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Sürücü</th>'+
-            '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Plaka</th>'+
-            '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Tur</th>'+
-            '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Kişi</th>'+
-            '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Hakediş</th>'+
-          '</tr></thead><tbody>'+vitoRows+'</tbody></table>'
-      :'<div style="padding:16px;text-align:center;color:#aaa;font-size:13px">Bugün Vito satışı yok</div>')+
-    // İNDİRİM
-    seksiyonBaslik('🏷️','İndirim Kodu Kullanımı')+
-    '<table style="width:100%;border-collapse:collapse">'+
-      '<thead><tr style="background:#fafafa">'+
-        '<th style="padding:8px 16px;text-align:left;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Grup</th>'+
-        '<th style="padding:8px 16px;text-align:center;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Kullanım</th>'+
-        '<th style="padding:8px 16px;text-align:right;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">İndirim</th>'+
-      '</tr></thead><tbody>'+kodRows+'</tbody>'+
-      (bugunKodlar.length>0?'<tfoot><tr style="background:#f5f5f5;border-top:2px solid #eee">'+
-        '<td style="padding:10px 16px;font-size:13px;font-weight:700">TOPLAM</td>'+
-        '<td style="padding:10px 16px;text-align:center;font-size:13px;font-weight:700;color:#1565c0">'+bugunKodlar.length+' kod</td>'+
-        '<td></td></tr></tfoot>':'')+
+    sec('🎟️','Bilet Türü Dağılımı')+
+    '<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
+      '<thead><tr style="background:#111">'+
+        '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Tür</th>'+
+        '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Adet</th>'+
+        '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Dağılım</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">%</th>'+
+      '</tr></thead>'+
+      '<tbody>'+(biletTurRows||'<tr><td colspan="4" style="padding:14px;text-align:center;color:#444;font-size:13px">Veri yok</td></tr>')+'</tbody>'+
     '</table>'+
+
+    // SEANS
+    sec('🕐','Seans Bazlı Satış')+
+    '<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
+      '<thead><tr style="background:#111">'+
+        '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Seans</th>'+
+        '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Kişi</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Ciro</th>'+
+      '</tr></thead>'+
+      '<tbody>'+(seansRows||'<tr><td colspan="3" style="padding:14px;text-align:center;color:#444;font-size:13px">Satış yok</td></tr>')+'</tbody>'+
+      '<tfoot><tr style="background:#1a1a1a;border-top:1px solid #333">'+
+        '<td style="padding:12px 16px;font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px">Toplam</td>'+
+        '<td style="padding:12px 16px;text-align:center;font-size:15px;font-weight:700;color:#fff;font-family:monospace">'+toplamBilet+' kişi</td>'+
+        '<td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">'+fmtM(toplamCiro)+'</td>'+
+      '</tr></tfoot>'+
+    '</table>'+
+
+    // VİTO
+    sec('🚐','Vito Transfer')+
+    (vitoSurucuSayisi>0
+      ?'<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
+          '<tr style="border-bottom:1px solid #1a1a1a">'+
+            '<td style="padding:16px;text-align:center;border-right:1px solid #1a1a1a">'+
+              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sürücü</div>'+
+              '<div style="font-size:28px;font-weight:700;color:#fff;font-family:monospace">'+vitoSurucuSayisi+'</div></td>'+
+            '<td style="padding:16px;text-align:center;border-right:1px solid #1a1a1a">'+
+              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Tur</div>'+
+              '<div style="font-size:28px;font-weight:700;color:#fff;font-family:monospace">'+vitoToplamTur+'</div></td>'+
+            '<td style="padding:16px;text-align:center;border-right:1px solid #1a1a1a">'+
+              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Kişi</div>'+
+              '<div style="font-size:28px;font-weight:700;color:#fff;font-family:monospace">'+vitoToplamKisi+'</div></td>'+
+            '<td style="padding:16px;text-align:center">'+
+              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Hakediş</div>'+
+              '<div style="font-size:22px;font-weight:700;color:#f97316;font-family:monospace">'+fmtM(vitoToplamHakedis)+'</div></td>'+
+          '</tr></table>'+
+          '<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
+            '<thead><tr style="background:#111">'+
+              '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Sürücü</th>'+
+              '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Plaka</th>'+
+              '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Tur</th>'+
+              '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Kişi</th>'+
+              '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Hakediş</th>'+
+            '</tr></thead><tbody>'+vitoRows+'</tbody></table>'
+      :'<div style="padding:16px;text-align:center;color:#444;font-size:13px">Bugün Vito satışı yok</div>')+
+
+    // İNDİRİM
+    sec('🏷️','İndirim Kodu Kullanımı')+
+    '<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
+      '<thead><tr style="background:#111">'+
+        '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Grup</th>'+
+        '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Kullanım</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">İndirim</th>'+
+      '</tr></thead><tbody>'+kodRows+'</tbody>'+
+      (bugunKodlar.length>0
+        ?'<tfoot><tr style="background:#1a1a1a;border-top:1px solid #333">'+
+            '<td style="padding:12px 16px;font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px">Toplam</td>'+
+            '<td style="padding:12px 16px;text-align:center;font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">'+bugunKodlar.length+' kod</td>'+
+            '<td></td></tr></tfoot>':'')+
+    '</table>'+
+
     // FOOTER
-    '<div style="padding:20px;text-align:center;background:#fafafa;border-top:1px solid #eee">'+
-      '<div style="font-size:11px;color:#bbb;letter-spacing:.5px">Astra Lumina İstanbul · Stardust Box Office</div>'+
-      '<div style="font-size:11px;color:#ddd;margin-top:4px">Otomatik Günlük Rapor · '+today+'</div>'+
+    '<div style="padding:20px;text-align:center;background:#0a0a0a;border-top:1px solid #1a1a1a">'+
+      '<div style="font-size:10px;color:#333;letter-spacing:2px;text-transform:uppercase">Astra Lumina İstanbul · Stardust Box Office</div>'+
+      '<div style="font-size:10px;color:#222;margin-top:4px;letter-spacing:1px">Otomatik Günlük Rapor · '+today+'</div>'+
     '</div>'+
     '</div></body></html>';
 
-  var slackSeansText=Object.entries(seansMap).sort().map(function(e){return '• '+e[0]+' — '+e[1].bilet+' kişi, '+fmtM(e[1].ciro);}).join('\n')||'Satış yok';
+    var slackSeansText=Object.entries(seansMap).sort().map(function(e){return '• '+e[0]+' — '+e[1].bilet+' kişi, '+fmtM(e[1].ciro);}).join('\n')||'Satış yok';
   var slackKodText=Object.keys(batchKullanim).length>0?Object.entries(batchKullanim).map(function(e){return '• '+e[0]+': '+e[1].count+' kullanım (%'+e[1].indirim+')';}).join('\n'):'Bugün kullanım yok';
   var slackVitoText=vitoSurucuSayisi>0?Object.values(vitoSuruculer).map(function(s){return '• '+s.ad+' ('+s.plaka+'): '+s.tur+' tur, '+s.kisi+' kişi → '+fmtM(s.hakedis);}).join('\n'):'Bugün Vito satışı yok';
 
