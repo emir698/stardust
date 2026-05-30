@@ -77,13 +77,13 @@ td{padding:10px 14px}
 .sw input:focus{border-color:var(--ac)}
 .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);pointer-events:none}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
-.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;text-align:center}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1rem;text-align:center}
 .kpi-label{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .kpi-val{font-size:28px;font-weight:600;font-family:var(--mo);line-height:1}
 .kpi-sub{font-size:12px;color:var(--mu);margin-top:6px}
 .kpi-val.ac{color:var(--ac)}.kpi-val.gn{color:var(--gn)}.kpi-val.rd{color:var(--rd)}.kpi-val.bl{color:var(--bl)}
 .dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:1.5rem}
-.panel{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem}
+.panel{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1rem;margin-bottom:1rem}
 .panel-title{font-size:13px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1.25rem}
 .mini-bars{display:flex;align-items:flex-end;gap:4px;height:100px}
 .mini-bar-wrap{display:flex;flex-direction:column;align-items:center;flex:1;gap:3px;cursor:pointer}
@@ -102,25 +102,9 @@ td{padding:10px 14px}
 .date-filter label{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
 .date-input{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;color:var(--tx);font-family:var(--mo);font-size:13px;outline:none;cursor:pointer}
 .date-input:focus{border-color:var(--ac)}
-.page-section{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-.section-title{font-size:12px;font-weight:600;margin-bottom:1.25rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.page-section{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.section-title{font-size:12px;font-weight:600;margin-bottom:.6rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
 .tarih-row{display:flex;gap:8px;flex-wrap:wrap}
-.tarih-picker{display:flex;align-items:center;gap:10px}
-.tarih-picker-buton{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--ac);background:var(--ac);color:#000;transition:all .15s}
-.tarih-picker-buton.pasif{background:var(--sf2);color:var(--tx);border-color:var(--bd)}
-.tarih-picker-buton.pasif:hover{border-color:var(--ac);color:var(--ac)}
-.tarih-picker-date{position:relative;display:flex;align-items:center}
-.tarih-picker-date input[type=date]{padding:7px 36px 7px 12px;border-radius:8px;font-size:13px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-family:var(--mo);letter-spacing:.5px;appearance:none;-webkit-appearance:none;min-width:140px}
-.tarih-picker-date input[type=date]:focus{outline:none;border-color:var(--ac)}
-.tarih-picker-date::after{content:'📅';position:absolute;right:10px;pointer-events:none;font-size:14px}
-.tarih-picker{display:flex;align-items:center;gap:10px}
-.tarih-picker-buton{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--ac);background:var(--ac);color:#000;transition:all .15s}
-.tarih-picker-buton.pasif{background:var(--sf2);color:var(--tx);border-color:var(--bd)}
-.tarih-picker-buton.pasif:hover{border-color:var(--ac);color:var(--ac)}
-.tarih-picker-date{position:relative;display:flex;align-items:center}
-.tarih-picker-date input[type=date]{padding:7px 36px 7px 12px;border-radius:8px;font-size:13px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);cursor:pointer;font-family:var(--mo);letter-spacing:.5px;appearance:none;-webkit-appearance:none;min-width:140px}
-.tarih-picker-date input[type=date]:focus{outline:none;border-color:var(--ac)}
-.tarih-picker-date::after{content:'📅';position:absolute;right:10px;pointer-events:none;font-size:14px}
 .tarih-picker{display:flex;align-items:center;gap:10px}
 .tarih-picker-buton{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--ac);background:var(--ac);color:#000;transition:all .15s}
 .tarih-picker-buton.pasif{background:var(--sf2);color:var(--tx);border-color:var(--bd)}
@@ -337,13 +321,26 @@ td{padding:10px 14px}
     <!-- KAPI -->
     <div id="page-kapi" style="display:none">
 
-      <!-- Tarih Seçici -->
+      <!-- Tarih Seçici + Sorgula -->
       <div class="page-section">
-        <div class="section-title">Gün Seç</div>
-        <div class="tarih-picker">
-          <button class="tarih-picker-buton" id="kapi-bugun-btn" onclick="selectKapiTarihBugun()">Bugün</button>
-          <div class="tarih-picker-date">
-            <input type="date" id="kapiTarihBtns" onchange="selectKapiTarihFromPicker(this.value)">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:.4rem">
+            <div class="section-title" style="margin:0">Gün Seç</div>
+            <div class="tarih-picker">
+              <button class="tarih-picker-buton" id="kapi-bugun-btn" onclick="selectKapiTarihBugun()">Bugün</button>
+              <div class="tarih-picker-date">
+                <input type="date" id="kapiTarihBtns" onchange="selectKapiTarihFromPicker(this.value)">
+              </div>
+            </div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--bd);margin:0 4px"></div>
+          <div style="display:flex;flex-direction:column;gap:.4rem">
+            <div class="section-title" style="margin:0">Sorgula</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="pnrInput" class="form-input" placeholder="PNR veya ad soyad..." style="font-size:13px;width:220px" onkeydown="if(event.key==='Enter')sorgulaEvrensel()">
+              <input type="text" id="isimInput" style="display:none">
+              <button class="btn btn-ac" onclick="sorgulaEvrensel()" style="padding:7px 14px;font-size:12px;white-space:nowrap">Sorgula</button>
+            </div>
           </div>
         </div>
       </div>
@@ -354,15 +351,7 @@ td{padding:10px 14px}
         <div class="kpi"><div class="kpi-label">Giriş Yapıldı</div><div class="kpi-val gn" id="kapiGiris">0</div></div>
       </div>
 
-      <!-- Birleşik Sorgulama -->
-      <div class="page-section" style="margin-bottom:1.5rem">
-        <div class="section-title">Sorgula</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="pnrInput" class="form-input" placeholder="PNR veya ad soyad..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter')sorgulaEvrensel()">
-          <input type="text" id="isimInput" style="display:none">
-          <button class="btn btn-ac" onclick="sorgulaEvrensel()" style="padding:8px 16px;font-size:12px;white-space:nowrap">Sorgula</button>
-        </div>
-      </div>
+
 
       <!-- Seçili Günün Biletleri -->
       <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Seçili Günün Biletleri</div>
@@ -380,12 +369,12 @@ td{padding:10px 14px}
     <!-- DASHBOARD -->
     <div id="page-dashboard" style="display:none">
       <!-- Tarih filtresi -->
-      <div class="date-filter">
-        <label>Tarih Aralığı:</label>
-        <input type="date" class="date-input" id="dashStart">
+      <div class="date-filter" style="margin-bottom:1rem;padding:.6rem 1rem">
+        <label style="font-size:12px">Tarih Aralığı:</label>
+        <input type="date" class="date-input" id="dashStart" style="padding:5px 8px;font-size:12px">
         <span style="color:var(--mu)">—</span>
-        <input type="date" class="date-input" id="dashEnd">
-        <button class="btn btn-ac" onclick="renderDashboard()">Filtrele</button>
+        <input type="date" class="date-input" id="dashEnd" style="padding:5px 8px;font-size:12px">
+        <button class="btn btn-ac" onclick="renderDashboard()" style="padding:5px 14px;font-size:12px">Filtrele</button>
       </div>
 
       <!-- KPI Kartları -->
@@ -422,10 +411,10 @@ td{padding:10px 14px}
             <option value="">Tüm Sürücüler</option>
           </select>
         </div>
-        <div class="kpi-grid" style="margin:.75rem 0;grid-template-columns:repeat(3,1fr)">
-          <div class="kpi-card"><div class="kpi-label">Toplam Tur</div><div class="kpi-val" id="dash-vito-kpi-tur">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Toplam Kişi</div><div class="kpi-val" id="dash-vito-kpi-kisi">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Toplam Hakediş</div><div class="kpi-val" id="dash-vito-kpi-hakedis" style="color:var(--ac)">0₺</div></div>
+        <div style="display:flex;margin:.75rem 0;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;overflow:hidden">
+          <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--bd)"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Toplam Tur</div><div style="font-size:26px;font-weight:700;color:var(--tx);font-family:var(--mo)" id="dash-vito-kpi-tur">0</div></div>
+          <div style="flex:1;padding:14px;text-align:center;border-right:1px solid var(--bd)"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Toplam Kişi</div><div style="font-size:26px;font-weight:700;color:var(--tx);font-family:var(--mo)" id="dash-vito-kpi-kisi">0</div></div>
+          <div style="flex:1;padding:14px;text-align:center"><div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Toplam Hakediş</div><div style="font-size:22px;font-weight:700;color:var(--ac);font-family:var(--mo)" id="dash-vito-kpi-hakedis">0₺</div></div>
         </div>
         <div class="tw"><table>
           <thead><tr><th>Sürücü</th><th>Tarih</th><th>Seans</th><th>Kişi</th><th>Hakediş</th><th>Ödeme</th></tr></thead>
