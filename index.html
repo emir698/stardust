@@ -436,7 +436,7 @@ td{padding:10px 14px}
 
     <!-- İNDİRİM KODLARI -->
     <div id="page-indirim" style="display:none">
-      <div class="kpi-grid" style="margin-bottom:1rem;grid-template-columns:repeat(3,1fr)" id="indirim-kpi-grid"></div>
+      <div class="kpi-grid" style="margin-bottom:1.25rem;grid-template-columns:repeat(3,1fr);background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1rem;gap:0" id="indirim-kpi-grid"></div>
       <div class="toolbar">
         <div class="sw"><span class="si">🔍</span><input type="text" id="si1" placeholder="Kod ara..." oninput="applyFilter()"></div>
         <select id="sf1" onchange="applyFilter()"><option value="hepsi">Tüm Kodlar</option><option value="aktif">Sadece Aktif</option><option value="deaktif">Sadece Deaktif</option></select>
@@ -2573,9 +2573,9 @@ function renderIndirim(){
     var aktifKod = codes.filter(function(c){return c&&c.status==='aktif';}).length;
     var kullanilan = toplamKod - aktifKod;
     kpiEl.innerHTML =
-      '<div class="kpi-card"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+toplamKod.toLocaleString('tr-TR')+'</div></div>'+
-      '<div class="kpi-card"><div class="kpi-label">Aktif Kod</div><div class="kpi-val gn">'+aktifKod.toLocaleString('tr-TR')+'</div></div>'+
-      '<div class="kpi-card"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+kullanilan.toLocaleString('tr-TR')+'</div></div>';
+      '<div style="flex:1;padding:12px 16px;text-align:center;border-right:1px solid var(--bd)"><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Toplam Kod</div><div style="font-size:28px;font-weight:700;color:var(--ac);font-family:var(--mo)">'+toplamKod.toLocaleString('tr-TR')+'</div></div>'+
+      '<div style="flex:1;padding:12px 16px;text-align:center;border-right:1px solid var(--bd)"><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Aktif Kod</div><div style="font-size:28px;font-weight:700;color:var(--gn);font-family:var(--mo)">'+aktifKod.toLocaleString('tr-TR')+'</div></div>'+
+      '<div style="flex:1;padding:12px 16px;text-align:center"><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Kullanılan</div><div style="font-size:28px;font-weight:700;color:var(--rd);font-family:var(--mo)">'+kullanilan.toLocaleString('tr-TR')+'</div></div>';
   }
   var tb=document.getElementById('tbody'),start=(pg-1)*PG,page=fil.slice(start,start+PG);
   if(!page.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--mu)">Sonuç bulunamadı</td></tr>';updatePag();return;}
