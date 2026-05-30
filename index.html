@@ -2659,25 +2659,23 @@ async function gunlukRaporGonder(){
       '<div style="font-size:13px;color:#555;margin-top:6px">Günlük Rapor — '+gunAdi+', '+today+'</div>'+
     '</div>'+
 
-    // KPI
+// KPI - 2 büyük kart
     '<table style="width:100%;border-collapse:collapse;background:#0f0f0f;border-bottom:1px solid #1a1a1a"><tr>'+
-      '<td style="padding:20px 8px 20px 16px;text-align:center;border-right:1px solid #1a1a1a">'+
-        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toplam Bilet</div>'+
-        '<div style="font-size:34px;font-weight:700;color:#e8c547;font-family:monospace">'+toplamBilet+'</div>'+
+      '<td style="padding:28px 16px;text-align:center;border-right:1px solid #1a1a1a">'+
+        '<div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px">Toplam Bilet</div>'+
+        '<div style="font-size:56px;font-weight:700;color:#e8c547;font-family:monospace;line-height:1">'+toplamBilet+'</div>'+
+        '<div style="font-size:12px;color:#444;margin-top:8px">kişi</div>'+
       '</td>'+
-      '<td style="padding:20px 8px;text-align:center;border-right:1px solid #1a1a1a">'+
-        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toplam Ciro</div>'+
-        '<div style="font-size:24px;font-weight:700;color:#4ade80;font-family:monospace">'+fmtM(toplamCiro)+'</div>'+
-      '</td>'+
-      '<td style="padding:20px 8px;text-align:center;border-right:1px solid #1a1a1a">'+
-        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Aktif Seans</div>'+
-        '<div style="font-size:34px;font-weight:700;color:#fff;font-family:monospace">'+Object.keys(seansMap).length+'</div>'+
-      '</td>'+
-      '<td style="padding:20px 16px 20px 8px;text-align:center">'+
-        '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Kod Kullanımı</div>'+
-        '<div style="font-size:34px;font-weight:700;color:#60a5fa;font-family:monospace">'+bugunKodlar.length+'</div>'+
+      '<td style="padding:28px 16px;text-align:center">'+
+        '<div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px">Toplam Ciro</div>'+
+        '<div style="font-size:42px;font-weight:700;color:#4ade80;font-family:monospace;line-height:1">'+fmtM(toplamCiro)+'</div>'+
+        '<div style="font-size:12px;color:#444;margin-top:8px">&nbsp;</div>'+
       '</td>'+
     '</tr></table>'+
+    '<div style="background:#0a0a0a;padding:10px 20px;border-bottom:1px solid #1a1a1a;text-align:center">'+
+      '<span style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px">Kod Kullanımı: </span>'+
+      '<span style="font-size:13px;color:#60a5fa;font-weight:700;font-family:monospace">'+bugunKodlar.length+' adet</span>'+
+    '</div>'+
 
     // BİLET TÜRÜ
     sec('🎟️','Bilet Türü Dağılımı')+
@@ -2709,30 +2707,18 @@ async function gunlukRaporGonder(){
 
     // VİTO
     sec('🚐','Vito Transfer')+
-    (vitoSurucuSayisi>0
-      ?'<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
-          '<tr style="border-bottom:1px solid #1a1a1a">'+
-            '<td style="padding:16px;text-align:center;border-right:1px solid #1a1a1a">'+
-              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sürücü</div>'+
-              '<div style="font-size:28px;font-weight:700;color:#fff;font-family:monospace">'+vitoSurucuSayisi+'</div></td>'+
-            '<td style="padding:16px;text-align:center;border-right:1px solid #1a1a1a">'+
-              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Tur</div>'+
-              '<div style="font-size:28px;font-weight:700;color:#fff;font-family:monospace">'+vitoToplamTur+'</div></td>'+
-            '<td style="padding:16px;text-align:center;border-right:1px solid #1a1a1a">'+
-              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Kişi</div>'+
-              '<div style="font-size:28px;font-weight:700;color:#fff;font-family:monospace">'+vitoToplamKisi+'</div></td>'+
-            '<td style="padding:16px;text-align:center">'+
-              '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Hakediş</div>'+
-              '<div style="font-size:22px;font-weight:700;color:#f97316;font-family:monospace">'+fmtM(vitoToplamHakedis)+'</div></td>'+
-          '</tr></table>'+
-          '<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
-            '<thead><tr style="background:#111">'+
-              '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Sürücü</th>'+
-              '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Plaka</th>'+
-              '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Tur</th>'+
-              '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Kişi</th>'+
-              '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Hakediş</th>'+
-            '</tr></thead><tbody>'+vitoRows+'</tbody></table>'
+(vitoSurucuSayisi>0
+      ?'<table style="width:100%;border-collapse:collapse;background:#0f0f0f"><tr>'+
+          '<td style="padding:20px 16px;text-align:center;border-right:1px solid #1a1a1a">'+
+            '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toplam Tur</div>'+
+            '<div style="font-size:36px;font-weight:700;color:#fff;font-family:monospace">'+vitoToplamTur+'</div></td>'+
+          '<td style="padding:20px 16px;text-align:center;border-right:1px solid #1a1a1a">'+
+            '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toplam Kişi</div>'+
+            '<div style="font-size:36px;font-weight:700;color:#fff;font-family:monospace">'+vitoToplamKisi+'</div></td>'+
+          '<td style="padding:20px 16px;text-align:center">'+
+            '<div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ödenen Komisyon</div>'+
+            '<div style="font-size:28px;font-weight:700;color:#f97316;font-family:monospace">'+fmtM(vitoToplamHakedis)+'</div></td>'+
+        '</tr></table>'
       :'<div style="padding:16px;text-align:center;color:#444;font-size:13px">Bugün Vito satışı yok</div>')+
 
     // İNDİRİM
@@ -2740,14 +2726,13 @@ async function gunlukRaporGonder(){
     '<table style="width:100%;border-collapse:collapse;background:#0f0f0f">'+
       '<thead><tr style="background:#111">'+
         '<th style="padding:8px 16px;text-align:left;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Grup</th>'+
-        '<th style="padding:8px 16px;text-align:center;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Kullanım</th>'+
-        '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">İndirim</th>'+
+        '<th style="padding:8px 16px;text-align:right;font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:1px">Kullanım</th>'+
       '</tr></thead><tbody>'+kodRows+'</tbody>'+
       (bugunKodlar.length>0
         ?'<tfoot><tr style="background:#1a1a1a;border-top:1px solid #333">'+
             '<td style="padding:12px 16px;font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px">Toplam</td>'+
-            '<td style="padding:12px 16px;text-align:center;font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">'+bugunKodlar.length+' kod</td>'+
-            '<td></td></tr></tfoot>':'')+
+            '<td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">'+bugunKodlar.length+' kod</td>'+
+          '</tr></tfoot>':'')+
     '</table>'+
 
     // FOOTER
@@ -2768,8 +2753,7 @@ async function gunlukRaporGonder(){
       {type:'section',fields:[
         {type:'mrkdwn',text:'*Toplam Bilet*\n'+toplamBilet+' kişi'},
         {type:'mrkdwn',text:'*Toplam Ciro*\n'+fmtM(toplamCiro)},
-        {type:'mrkdwn',text:'*Kod Kullanımı*\n'+bugunKodlar.length+' adet'},
-        {type:'mrkdwn',text:'*Aktif Seans*\n'+Object.keys(seansMap).length+' seans'}
+        {type:'mrkdwn',text:'*Kod Kullanımı*\n'+bugunKodlar.length+' adet'}
       ]},
       {type:'divider'},
       {type:'section',text:{type:'mrkdwn',text:'*🎟️ Bilet Türleri*\n🟡 Tam: '+tamT+'  🔵 Çocuk: '+cocukT+'  🟢 Yabancı: '+yabanciT+'  🟠 Davetli: '+davetliT+'  🟣 Kurumsal: '+kurumsalT}},
