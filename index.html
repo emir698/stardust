@@ -121,8 +121,8 @@ td{padding:10px 14px}
 .tarih-ay-btnler{display:flex;flex-wrap:wrap;gap:8px}
 .tarih-custom{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;cursor:pointer}
 .tarih-custom:focus{border-color:var(--ac)}
-.seans-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.seans-card{background:var(--sf2);border:2px solid var(--bd);border-radius:10px;padding:1rem;cursor:pointer;transition:all .2s;text-align:center}
+.seans-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.seans-card{background:var(--sf2);border:2px solid var(--bd);border-radius:10px;padding:.6rem .5rem;cursor:pointer;transition:all .2s;text-align:center}
 .seans-card:hover{border-color:var(--ac)}
 .seans-card.selected{border-color:var(--ac);background:rgba(232,197,71,.08)}
 .seans-no{font-size:28px;font-weight:600;font-family:var(--mo);color:var(--ac)}
@@ -229,17 +229,15 @@ td{padding:10px 14px}
 
     <!-- BİLET SAT -->
     <div id="page-sat">
-      <div class="page-section">
-        <div class="section-title">Tarih Seç</div>
-        <div class="tarih-picker">
-          <button class="tarih-picker-buton" id="sat-bugun-btn" onclick="selectTarihBugun()">Bugün</button>
-          <div class="tarih-picker-date">
-            <input type="date" id="tarihBtns" onchange="selectTarihFromPicker(this.value)">
-          </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:.6rem 1rem;background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:1rem">
+        <span style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Tarih</span>
+        <button class="tarih-picker-buton" id="sat-bugun-btn" onclick="selectTarihBugun()">Bugün</button>
+        <div class="tarih-picker-date">
+          <input type="date" id="tarihBtns" onchange="selectTarihFromPicker(this.value)">
         </div>
       </div>
-      <div class="page-section" id="seansSection" style="display:none">
-        <div class="section-title">Seans Seç — <span id="secilenTarihLabel" style="color:var(--ac);text-transform:none"></span></div>
+      <div style="background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem" id="seansSection" style="display:none">
+        <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Seans Seç — <span id="secilenTarihLabel" style="color:var(--ac);text-transform:none"></span></div>
         <div class="seans-grid" id="seansGrid"></div>
       </div>
       <div class="page-section" id="biletSection" style="display:none">
@@ -467,18 +465,16 @@ td{padding:10px 14px}
         </div>
 
         <!-- Tarih Seç -->
-        <div class="page-section">
-          <div class="section-title">Tarih Seç</div>
-          <div class="tarih-picker">
-            <button class="tarih-picker-buton" id="vito-bugun-btn" onclick="vitoSelectTarihBugun()">Bugün</button>
-            <div class="tarih-picker-date">
-              <input type="date" id="vito-tarihBtns" onchange="vitoSelectTarihFromPicker(this.value)">
-            </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:.6rem 1rem;background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:1rem">
+          <span style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Tarih</span>
+          <button class="tarih-picker-buton" id="vito-bugun-btn" onclick="vitoSelectTarihBugun()">Bugün</button>
+          <div class="tarih-picker-date">
+            <input type="date" id="vito-tarihBtns" onchange="vitoSelectTarihFromPicker(this.value)">
           </div>
         </div>
         <!-- Seans Seç -->
-        <div class="page-section" id="vito-seansSection" style="display:none">
-          <div class="section-title">Seans Seç — <span id="vito-secilenTarihLabel" style="color:var(--ac);text-transform:none"></span></div>
+        <div style="background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem" id="vito-seansSection" style="display:none">
+          <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Seans Seç — <span id="vito-secilenTarihLabel" style="color:var(--ac);text-transform:none"></span></div>
           <div class="seans-grid" id="vito-seansGrid"></div>
         </div>
         <!-- Bilet Bilgileri -->
