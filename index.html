@@ -320,27 +320,14 @@ td{padding:10px 14px}
         <div class="kpi"><div class="kpi-label">Giriş Yapıldı</div><div class="kpi-val gn" id="kapiGiris">0</div></div>
       </div>
 
-      <!-- Sorgulama Bölümleri -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem">
-
-        <!-- PNR Sorgula -->
-        <div class="page-section" style="margin-bottom:0">
-          <div class="section-title">PNR ile Sorgula</div>
-          <div style="display:flex;gap:8px;flex-direction:column">
-            <input type="text" id="pnrInput" class="form-input" placeholder="PNR-XXXXXXXX" style="font-family:var(--mo);font-size:13px;letter-spacing:1px" onkeydown="if(event.key==='Enter')sorgulaPNRModal()">
-            <button class="btn btn-ac" onclick="sorgulaPNRModal()">Sorgula</button>
-          </div>
+      <!-- Birleşik Sorgulama -->
+      <div class="page-section" style="margin-bottom:1.5rem">
+        <div class="section-title">Sorgula</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="pnrInput" class="form-input" placeholder="PNR veya ad soyad..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter')sorgulaEvrensel()">
+          <input type="text" id="isimInput" style="display:none">
+          <button class="btn btn-ac" onclick="sorgulaEvrensel()" style="padding:8px 16px;font-size:12px;white-space:nowrap">Sorgula</button>
         </div>
-
-        <!-- Ad Soyad Sorgula -->
-        <div class="page-section" style="margin-bottom:0">
-          <div class="section-title">Ad Soyad ile Sorgula</div>
-          <div style="display:flex;gap:8px;flex-direction:column">
-            <input type="text" id="isimInput" class="form-input" placeholder="Ad veya soyad..." onkeydown="if(event.key==='Enter')sorgulaIsimModal()">
-            <button class="btn btn-ac" onclick="sorgulaIsimModal()">Sorgula</button>
-          </div>
-        </div>
-
       </div>
 
       <!-- Seçili Günün Biletleri -->
@@ -392,10 +379,30 @@ td{padding:10px 14px}
         <div class="panel-title">Grup Bazlı İndirim Kodu Durumu</div>
         <div id="dashKodGrafik" style="margin-top:.5rem"></div>
       </div>
+
+      <!-- Vito Komisyon Raporu -->
+      <div class="panel" id="dashVitoPanel" style="margin-top:1.5rem">
+        <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🚐 Vito Komisyon Raporu</span>
+          <select class="form-input" id="dash-vito-filtre-surucu" onchange="renderDashVitoRapor()" style="font-size:12px;padding:4px 8px;width:auto">
+            <option value="">Tüm Sürücüler</option>
+          </select>
+        </div>
+        <div class="kpi-grid" style="margin:.75rem 0;grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card"><div class="kpi-label">Toplam Tur</div><div class="kpi-val" id="dash-vito-kpi-tur">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Toplam Kişi</div><div class="kpi-val" id="dash-vito-kpi-kisi">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Toplam Hakediş</div><div class="kpi-val" id="dash-vito-kpi-hakedis" style="color:var(--ac)">0₺</div></div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Sürücü</th><th>Tarih</th><th>Seans</th><th>Kişi</th><th>Hakediş</th><th>Ödeme</th></tr></thead>
+          <tbody id="dash-vito-rapor-list"></tbody>
+        </table></div>
+      </div>
     </div>
 
     <!-- İNDİRİM KODLARI -->
     <div id="page-indirim" style="display:none">
+      <div class="kpi-grid" style="margin-bottom:1rem;grid-template-columns:repeat(3,1fr)" id="indirim-kpi-grid"></div>
       <div class="toolbar">
         <div class="sw"><span class="si">🔍</span><input type="text" id="si1" placeholder="Kod ara..." oninput="applyFilter()"></div>
         <select id="sf1" onchange="applyFilter()"><option value="hepsi">Tüm Kodlar</option><option value="aktif">Sadece Aktif</option><option value="deaktif">Sadece Deaktif</option></select>
@@ -413,7 +420,6 @@ td{padding:10px 14px}
       <div style="display:flex;gap:6px;padding:12px 16px 0;border-bottom:1px solid var(--bd);background:var(--sf)">
         <button class="tab active" id="vtab-bilet" onclick="switchVTab('bilet')" style="font-size:12px">Bilet Sat</button>
         <button class="tab" id="vtab-surucu" onclick="switchVTab('surucu')" style="font-size:12px">Sürücüler</button>
-        <button class="tab" id="vtab-komisyon" onclick="switchVTab('komisyon')" style="font-size:12px">Komisyon Raporu</button>
         <button class="tab" id="vtab-satislar" onclick="switchVTab('satislar')" style="font-size:12px">Satılan Biletler</button>
       </div>
 
@@ -547,32 +553,6 @@ td{padding:10px 14px}
       </div>
 
       <!-- KOMİSYON RAPORU -->
-      <div id="vpanel-komisyon" style="display:none;padding:1.5rem">
-        <div class="kpi-grid" style="margin-bottom:1.5rem;grid-template-columns:repeat(3,1fr)">
-          <div class="kpi-card"><div class="kpi-label">Toplam Tur</div><div class="kpi-val" id="vito-kpi-tur">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Toplam Kişi</div><div class="kpi-val" id="vito-kpi-kisi">0</div></div>
-          <div class="kpi-card"><div class="kpi-label">Toplam Hakediş</div><div class="kpi-val" id="vito-kpi-hakedis" style="color:var(--ac)">0₺</div></div>
-        </div>
-        <div class="panel-card">
-          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
-            <span>Tur Bazlı Hakediş</span>
-            <div style="display:flex;gap:8px">
-              <select class="form-input" id="vito-rapor-filtre-surucu" onchange="renderVitoPage()" style="font-size:12px;padding:4px 8px;width:auto">
-                <option value="">Tüm Sürücüler</option>
-              </select>
-              <select class="form-input" id="vito-rapor-filtre-gun" onchange="renderVitoPage()" style="font-size:12px;padding:4px 8px;width:auto">
-                <option value="bugun">Bugün</option>
-                <option value="hafta">Bu Hafta</option>
-                <option value="hepsi">Tümü</option>
-              </select>
-            </div>
-          </div>
-          <div class="tw"><table>
-            <thead><tr><th>Sürücü</th><th>Tarih</th><th>Seans</th><th>Kişi</th><th>Hakediş</th><th>Ödeme</th></tr></thead>
-            <tbody id="vito-rapor-list"></tbody>
-          </table></div>
-        </div>
-      </div>
 
     </div>
 
@@ -1532,10 +1512,10 @@ function buildKapiTarihBtns(){
   if(!container)return;
   container.innerHTML='';
   var gunler=[];
-  for(var i=-3;i<=90;i++){
+  for(var i=-60;i<=90;i++){
     var d=addDays(today,i);
     if(isEtkinlikGunu(d)) gunler.push(d);
-    if(gunler.length>=20) break;
+    if(gunler.length>=80) break;
   }
   // Ay gruplarına böl
   var ayGruplari={};var aySirasi=[];
@@ -1980,6 +1960,20 @@ function hizliGiris(pnr){
   });
 }
 
+function sorgulaEvrensel(){
+  var val = document.getElementById('pnrInput').value.trim();
+  if(!val){ toast('Bir değer girin','err'); return; }
+  // PNR formatı: büyük harf + rakam içeriyorsa PNR, değilse isim
+  var isPNR = /^[A-Z0-9\-]{6,}$/i.test(val.replace(/\s/g,'')) && val.length >= 6 && !/\s/.test(val);
+  if(isPNR){
+    document.getElementById('pnrInput').value = val.toUpperCase();
+    sorgulaPNRModal();
+  } else {
+    document.getElementById('isimInput').value = val;
+    sorgulaIsimModal();
+  }
+}
+
 function sorgulaPNRModal(){
   var val=document.getElementById('pnrInput').value.trim().toUpperCase();
   if(!val){toast('PNR giriniz','err');return;}
@@ -2320,6 +2314,78 @@ function renderKapiLog(){
 var selectedAy=null;
 var AYLAR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
+function renderDashVitoRapor(){
+  var range = getDateRange();
+  var filtreEl = document.getElementById('dash-vito-filtre-surucu');
+
+  // Sürücü dropdown güncelle
+  if(filtreEl){
+    var secili = filtreEl.value;
+    filtreEl.innerHTML = '<option value="">Tüm Sürücüler</option>';
+    Object.values(vitoDrivers).filter(function(d){return d.aktif;}).forEach(function(d){
+      var opt = document.createElement('option');
+      opt.value = d.id; opt.textContent = d.ad;
+      if(d.id === secili) opt.selected = true;
+      filtreEl.appendChild(opt);
+    });
+  }
+  var filtreSurucu = filtreEl ? filtreEl.value : '';
+
+  // Tarih aralığına göre filtrele
+  var turler = tickets.filter(function(t){
+    if(!t || !t.surucu) return false;
+    if(!t.tarih) return false;
+    if(!dateInRange(t.tarih, range.start, range.end)) return false;
+    if(filtreSurucu && t.surucu !== filtreSurucu) return false;
+    return true;
+  }).map(function(t){
+    var d = vitoDrivers[t.surucu];
+    if(!d) return null;
+    var kisi = (t.tam||0)+(t.cocuk||0)+(t.yabanci||0)+(t.davetli||0)+(t.kurumsal||0);
+    return { satisId:t.id, surucu:d, tarih:t.tarih, saat:t.saat||'--:--', seans:t.seans, kisi:kisi, hakedis:d.kom||500, odendi:t.vitoOdendi===true };
+  }).filter(Boolean);
+
+  turler.sort(function(a,b){
+    var ap=a.tarih.split('.');var bp=b.tarih.split('.');
+    var ad=new Date(ap[2],ap[1]-1,ap[0]);var bd=new Date(bp[2],bp[1]-1,bp[0]);
+    if(bd-ad!==0)return bd-ad;
+    return (b.saat||'').localeCompare(a.saat||'');
+  });
+
+  var toplamHakedis=0, toplamKisi=0;
+  turler.forEach(function(tr){ toplamHakedis+=tr.hakedis; toplamKisi+=tr.kisi; });
+
+  var turEl=document.getElementById('dash-vito-kpi-tur');
+  var kisiEl=document.getElementById('dash-vito-kpi-kisi');
+  var hakEl=document.getElementById('dash-vito-kpi-hakedis');
+  if(turEl) turEl.textContent = turler.length;
+  if(kisiEl) kisiEl.textContent = toplamKisi+' kişi';
+  if(hakEl) hakEl.textContent = fmtMoney(toplamHakedis);
+
+  var listEl = document.getElementById('dash-vito-rapor-list');
+  if(!listEl) return;
+  if(turler.length===0){
+    listEl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:20px">Seçili dönemde kayıt yok</td></tr>';
+    return;
+  }
+
+  var html='';
+  turler.forEach(function(tr){
+    var gp=tr.tarih.split('.');
+    var tarihGoster=getDayName(tr.tarih)+' '+parseInt(gp[0])+'.'+parseInt(gp[1]);
+    html+='<tr>'+
+      '<td><div style="font-weight:600;color:var(--tx)">'+tr.surucu.ad+'</div><div style="font-size:11px;font-family:var(--mo);color:var(--ac)">'+tr.surucu.plaka+'</div></td>'+
+      '<td style="font-size:13px">'+tarihGoster+'</td>'+
+      '<td style="font-family:var(--mo);color:var(--ac)">'+tr.seans+'</td>'+
+      '<td><span style="font-size:16px;font-weight:700;color:var(--tx)">'+tr.kisi+'</span><span style="font-size:11px;color:var(--mu);margin-left:3px">kişi</span></td>'+
+      '<td style="color:var(--gn);font-weight:700;font-size:15px">'+fmtMoney(tr.hakedis)+'</td>'+
+      '<td><span data-satisid="'+tr.satisId+'" onclick="vitoOdemeToggle(this.dataset.satisid)" style="cursor:pointer;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;'+(tr.odendi?'background:#0d2a1a;color:var(--gn)':'background:#2a2200;color:var(--ac)')+'">'+
+      (tr.odendi?'✓ Ödendi':'⏳ Öde')+'</span></td>'+
+      '</tr>';
+  });
+  listEl.innerHTML = html;
+}
+
 function renderDashboard(){
   var range=getDateRange();
   // satisTarihi varsa satış tarihine, yoksa seans tarihine (tarih) göre filtrele
@@ -2371,6 +2437,7 @@ function renderDashboard(){
   });
 
   renderDashKodlar();
+  renderDashVitoRapor();
 }
 
 function renderDashKodlar(){
@@ -2486,14 +2553,7 @@ function renderDonut(tam,cocuk,yab,dav,kur){
 }
 
 // İNDİRİM
-function renderIndirimStats(){
-  var t=codes.length,a=codes.filter(function(c){return c&&c.status==='aktif';}).length,d=t-a;
-  document.getElementById('indirim-stats').innerHTML=
-    '<div class="kpi"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+t.toLocaleString('tr-TR')+'</div></div>'+
-    '<div class="kpi"><div class="kpi-label">Aktif</div><div class="kpi-val gn">'+a.toLocaleString('tr-TR')+'</div></div>'+
-    '<div class="kpi"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+d.toLocaleString('tr-TR')+'</div></div>'+
-    '<div class="kpi"><div class="kpi-label">Bugün Kullanılan</div><div class="kpi-val bl">'+codes.filter(function(c){return c&&c.date===todayStr();}).length+'</div></div>';
-}
+function renderIndirimStats(){}
 function applyFilter(){
   var q=document.getElementById('si1').value.trim().toUpperCase();
   var s=document.getElementById('sf1').value;
@@ -2509,6 +2569,17 @@ function applyFilter(){
   pg=1;renderIndirim();
 }
 function renderIndirim(){
+  // İndirim KPI kartları
+  var kpiEl = document.getElementById('indirim-kpi-grid');
+  if(kpiEl){
+    var toplamKod = codes.length;
+    var aktifKod = codes.filter(function(c){return c&&c.status==='aktif';}).length;
+    var kullanilan = toplamKod - aktifKod;
+    kpiEl.innerHTML =
+      '<div class="kpi-card"><div class="kpi-label">Toplam Kod</div><div class="kpi-val ac">'+toplamKod.toLocaleString('tr-TR')+'</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label">Aktif Kod</div><div class="kpi-val gn">'+aktifKod.toLocaleString('tr-TR')+'</div></div>'+
+      '<div class="kpi-card"><div class="kpi-label">Kullanılan</div><div class="kpi-val rd">'+kullanilan.toLocaleString('tr-TR')+'</div></div>';
+  }
   var tb=document.getElementById('tbody'),start=(pg-1)*PG,page=fil.slice(start,start+PG);
   if(!page.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--mu)">Sonuç bulunamadı</td></tr>';updatePag();return;}
   var rows='';
@@ -3238,6 +3309,7 @@ function vitoOdemeToggle(satisId) {
     var yeni = !snap.val();
     db.ref('tickets/'+satisId).update({vitoOdendi: yeni}, function() {
       toast(yeni ? 'Ödeme yapıldı ✓' : 'Ödeme geri alındı', yeni ? 'ok' : 'err');
+      if(document.getElementById('page-dashboard').style.display!=='none') renderDashboard();
       renderVitoPage();
     });
   });
@@ -3245,13 +3317,12 @@ function vitoOdemeToggle(satisId) {
 
 // ─── VİTO ALT SEKME & BİLET FONK ────────────────────────────────
 function switchVTab(name) {
-  ['bilet','surucu','komisyon','satislar'].forEach(function(t) {
+  ['bilet','surucu','satislar'].forEach(function(t) {
     var tb = document.getElementById('vtab-'+t);
     var pn = document.getElementById('vpanel-'+t);
     if(tb) tb.classList.toggle('active', t===name);
     if(pn) pn.style.display = t===name ? '' : 'none';
   });
-  if(name==='komisyon') renderVitoPage();
   if(name==='surucu') renderVitoSurucuList();
   if(name==='bilet') { buildVitoTarihBtns(); renderVitoBiletSurucuSel2(); }
   if(name==='satislar') { buildVitoSatisTarihBtns(); renderVitoSatislar(); }
