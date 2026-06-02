@@ -401,6 +401,12 @@ td{padding:10px 14px}
         <div id="dashKodGrafik" style="margin-top:.5rem"></div>
       </div>
 
+      <!-- Kurumsal Paketler -->
+      <div class="panel" style="margin-top:1.5rem">
+        <div class="panel-title">🏢 Kurumsal Paketler</div>
+        <div id="dashKurumsalPanel"><div style="color:var(--mu);font-size:13px">Yükleniyor...</div></div>
+      </div>
+
       <!-- Vito Komisyon Raporu -->
       <div class="panel" id="dashVitoPanel" style="margin-top:1.5rem">
         <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
@@ -615,6 +621,15 @@ td{padding:10px 14px}
         </div>
       </div>
 
+      <!-- KURUMSAL PAKETLER -->
+      <div class="page-section" style="margin-top:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+          <div class="section-title" style="margin-bottom:0">🏢 Kurumsal Paketler</div>
+          <button class="btn btn-ac" onclick="openKurumsalModal()">+ Yeni Paket</button>
+        </div>
+        <div id="kurumsalList"><div style="color:var(--mu);font-size:13px;padding:1rem 0">Henüz paket yok</div></div>
+      </div>
+
       <!-- KOD GRUPLARI -->
       <div class="page-section" style="margin-top:1.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
@@ -651,6 +666,26 @@ td{padding:10px 14px}
     <div class="mbtns">
       <button class="btn" onclick="closeBiletModal()">Kapat</button>
       <button class="btn btn-ac" onclick="window.print()">🖨️ Yazdır</button>
+    </div>
+  </div>
+</div>
+
+<!-- KURUMSAL PAKET MODAL -->
+<div class="overlay" id="ov-kurumsal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:480px">
+    <h3>🏢 Yeni Kurumsal Paket</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem">
+      <div><label class="form-label">Firma Adı</label><input class="form-input" type="text" id="kp-firma" placeholder="Örn: Koru Sigorta"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="form-label">Başlangıç Tarihi</label><input class="form-input" type="date" id="kp-baslangic"></div>
+        <div><label class="form-label">Bitiş Tarihi</label><input class="form-input" type="date" id="kp-bitis"></div>
+      </div>
+      <div><label class="form-label">Bilet Adedi</label><input class="form-input" type="number" id="kp-adet" placeholder="100" min="1" max="500"></div>
+    </div>
+    <div id="kp-sonuc" style="font-size:13px;margin-bottom:12px;min-height:16px"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="document.getElementById('ov-kurumsal').classList.remove('open')">İptal</button>
+      <button class="btn btn-ac" onclick="kurumsalOlustur()" id="kp-btn">✓ Oluştur ve İndir</button>
     </div>
   </div>
 </div>
@@ -762,6 +797,16 @@ firebase.initializeApp(firebaseConfig);
 emailjs.init('bxTBrj4JyPTee19s_');
 var auth=firebase.auth(),db=firebase.database();
 var codesRef=db.ref('codes'),usersRef=db.ref('users'),ticketsRef=db.ref('tickets'),biletlerRef=db.ref('biletler'),batchesRef=db.ref('codeBatches');
+var kurumsalRef=db.ref('kurumsalPaketler');
+var kurumsalPaketler={};
+kurumsalRef.on('value',function(snap){
+  kurumsalPaketler=snap.val()||{};
+  if(document.getElementById('page-admin')&&document.getElementById('page-admin').style.display!=='none') renderKurumsalList();
+  if(document.getElementById('page-dashboard')&&document.getElementById('page-dashboard').style.display!=='none') renderDashboard();
+});
+var kurumsalRef=db.ref('kurumsalPaketler');
+var kurumsalPaketler={};
+kurumsalRef.on('value',function(snap){kurumsalPaketler=snap.val()||{};if(document.getElementById('page-admin')&&document.getElementById('page-admin').style.display!=='none')renderKurumsalList();if(document.getElementById('page-dashboard')&&document.getElementById('page-dashboard').style.display!=='none')renderDashboard();});
 var PRICES={tam:1500,cocuk:1200,yabanci:2250,davetli:0,kurumsal:0},CAPACITY=0;
 
 function pad(x){return x<10?'0'+x:String(x);}
@@ -1488,10 +1533,26 @@ function kameraAc(){
   qrScanner.start(
     {facingMode:'environment'},
     {fps:10,qrbox:{width:250,height:250}},
-    function(decodedText){
-      // QR okununca
+    async function(decodedText){
+      // QR okununca — önce kurumsal kontrol
       kameraKapat();
-      document.getElementById('pnrInput').value=decodedText.trim().toUpperCase();
+      var kod=decodedText.trim().toUpperCase();
+      var kurumsalSonuc=await kurumsalScanKontrol(kod);
+      if(kurumsalSonuc!==null){
+        // Kurumsal bilet
+        var res=document.getElementById('scanResult');
+        if(res){
+          res.style.display='block';
+          res.className='scan-result '+(kurumsalSonuc.ok?'valid':'invalid');
+          document.getElementById('scanIcon').textContent=kurumsalSonuc.ok?'✓':'✗';
+          document.getElementById('scanMsg').textContent=kurumsalSonuc.ok?'Giriş Onaylandı':'Geçersiz Bilet';
+          document.getElementById('scanDetail').textContent=kurumsalSonuc.msg;
+        }
+        toast(kurumsalSonuc.msg,kurumsalSonuc.ok?'ok':'err');
+        return;
+      }
+      // Normal bilet
+      document.getElementById('pnrInput').value=kod;
       sorgulaPNR();
       toast('QR kod okundu!','ok');
     },
@@ -2420,6 +2481,7 @@ function renderDashboard(){
 
   renderDashKodlar();
   renderDashVitoRapor();
+  renderKurumsalDashboard();
 }
 
 function renderDashKodlar(){
@@ -2868,6 +2930,309 @@ function loadBatches(){
     if(document.getElementById('page-admin').style.display!=='none') renderBatchList();
     if(document.getElementById('page-indirim').style.display!=='none'){renderIndirim();}
   });
+}
+
+// ── KURUMSAL PAKETLER ────────────────────────────────────────────
+function openKurumsalModal(){
+  document.getElementById('kp-firma').value='';
+  document.getElementById('kp-baslangic').value='';
+  document.getElementById('kp-bitis').value='';
+  document.getElementById('kp-adet').value='';
+  document.getElementById('kp-sonuc').textContent='';
+  document.getElementById('kp-btn').disabled=false;
+  document.getElementById('kp-btn').textContent='✓ Oluştur ve İndir';
+  document.getElementById('ov-kurumsal').classList.add('open');
+}
+
+function genKurumsalKod(prefix){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var kod=prefix+'-';
+  for(var i=0;i<8;i++) kod+=chars[Math.floor(Math.random()*chars.length)];
+  return kod;
+}
+
+async function kurumsalOlustur(){
+  var firma=document.getElementById('kp-firma').value.trim();
+  var bas=document.getElementById('kp-baslangic').value;
+  var bit=document.getElementById('kp-bitis').value;
+  var adet=parseInt(document.getElementById('kp-adet').value)||0;
+  var sonuc=document.getElementById('kp-sonuc');
+  var btn=document.getElementById('kp-btn');
+
+  if(!firma||!bas||!bit||adet<1){sonuc.innerHTML='<span style="color:var(--rd)">Tüm alanları doldurun</span>';return;}
+  if(adet>500){sonuc.innerHTML='<span style="color:var(--rd)">Maksimum 500 bilet</span>';return;}
+
+  btn.disabled=true;btn.textContent='Oluşturuluyor...';sonuc.textContent='';
+
+  // Tarih formatı DD.MM.YYYY
+  function isoToDMY(iso){var p=iso.split('-');return p[2]+'.'+p[1]+'.'+p[0];}
+  var basStr=isoToDMY(bas);
+  var bitStr=isoToDMY(bit);
+
+  // Prefix: firma adının ilk 2 harfi büyük
+  var prefix=firma.replace(/\s/g,'').substring(0,3).toUpperCase();
+
+  // Benzersiz kodlar üret
+  var kodlar=[];
+  var kullanilan=new Set();
+  while(kodlar.length<adet){
+    var k=genKurumsalKod(prefix);
+    if(!kullanilan.has(k)){kullanilan.add(k);kodlar.push(k);}
+  }
+
+  // Firebase'e kaydet
+  var paketKey=kurumsalRef.push().key;
+  var paketData={
+    id:paketKey, firma:firma,
+    baslangic:basStr, bitis:bitStr,
+    adet:adet, kullanilan:0,
+    olusturulma:todayStr()
+  };
+  var biletlerObj={};
+  kodlar.forEach(function(k,i){
+    var bKey=kurumsalRef.child(paketKey+'/biletler').push().key;
+    biletlerObj[bKey]={kod:k,kullanildi:false,kullanimTarihi:null,sira:i+1};
+  });
+  paketData.biletler=biletlerObj;
+  await kurumsalRef.child(paketKey).set(paketData);
+
+  sonuc.innerHTML='<span style="color:var(--gn)">✓ '+adet+' bilet oluşturuldu, ZIP hazırlanıyor...</span>';
+
+  // ZIP oluştur
+  await kurumsalZipIndir(paketData, kodlar, firma, basStr, bitStr, adet);
+
+  btn.disabled=false;btn.textContent='✓ Oluştur ve İndir';
+  document.getElementById('ov-kurumsal').classList.remove('open');
+  toast(firma+' için '+adet+' bilet oluşturuldu','ok');
+}
+
+async function kurumsalZipIndir(paket, kodlar, firma, basStr, bitStr, adet){
+  var zip=new JSZip();
+  var {jsPDF}=window.jspdf;
+  var firmaKisa=firma.replace(/\s/g,'_').substring(0,15);
+
+  for(var i=0;i<kodlar.length;i++){
+    var kod=kodlar[i];
+    var no=String(i+1).padStart(3,'0');
+
+    // QR canvas oluştur
+    var qrDiv=document.createElement('div');
+    qrDiv.style.cssText='position:absolute;left:-9999px;width:200px;height:200px';
+    document.body.appendChild(qrDiv);
+    await new Promise(function(res){
+      try{
+        new QRCode(qrDiv,{text:kod,width:200,height:200,colorDark:'#000000',colorLight:'#ffffff'});
+        setTimeout(res,150);
+      }catch(e){res();}
+    });
+    var canvas=qrDiv.querySelector('canvas');
+    var qrImg=canvas?canvas.toDataURL('image/png'):null;
+    document.body.removeChild(qrDiv);
+
+    // PDF oluştur
+    var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
+    // Arka plan
+    doc.setFillColor(15,15,15);
+    doc.rect(0,0,148,210,'F');
+
+    // Altın çizgi üst
+    doc.setFillColor(232,197,71);
+    doc.rect(0,0,148,2,'F');
+    doc.rect(0,208,148,2,'F');
+
+    // Başlık
+    doc.setTextColor(232,197,71);
+    doc.setFontSize(9);
+    doc.setFont('helvetica','bold');
+    doc.text('✦ STARDUST ✦',74,18,{align:'center'});
+
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(14);
+    doc.text('Astra Lumina İstanbul',74,28,{align:'center'});
+
+    // Firma adı
+    doc.setFillColor(30,30,30);
+    doc.roundedRect(14,36,120,14,3,3,'F');
+    doc.setTextColor(232,197,71);
+    doc.setFontSize(11);
+    doc.setFont('helvetica','bold');
+    doc.text(firma,74,46,{align:'center'});
+
+    // QR kod
+    if(qrImg){
+      doc.addImage(qrImg,'PNG',39,58,70,70);
+    }
+
+    // Kod
+    doc.setTextColor(200,200,200);
+    doc.setFontSize(8);
+    doc.setFont('helvetica','normal');
+    doc.text(kod,74,136,{align:'center'});
+
+    // Geçerlilik
+    doc.setFillColor(25,25,25);
+    doc.roundedRect(14,142,120,18,3,3,'F');
+    doc.setTextColor(150,150,150);
+    doc.setFontSize(7);
+    doc.text('GEÇERLİLİK TARİHİ',74,150,{align:'center'});
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','bold');
+    doc.text(basStr+' — '+bitStr,74,158,{align:'center'});
+
+    // Bilet no
+    doc.setTextColor(80,80,80);
+    doc.setFontSize(7);
+    doc.setFont('helvetica','normal');
+    doc.text(no+' / '+adet,74,170,{align:'center'});
+
+    // Alt
+    doc.setTextColor(60,60,60);
+    doc.setFontSize(6);
+    doc.text('Bu bilet devredilemez · Tek kullanımlıktır',74,185,{align:'center'});
+
+    var pdfBytes=doc.output('arraybuffer');
+    zip.file(firmaKisa+'_'+no+'.pdf',pdfBytes);
+
+    // İlerleme
+    if((i+1)%10===0||i===kodlar.length-1){
+      var sonucEl=document.getElementById('kp-sonuc');
+      if(sonucEl) sonucEl.innerHTML='<span style="color:var(--gn)">Hazırlanıyor: '+(i+1)+'/'+adet+'</span>';
+      await new Promise(function(r){setTimeout(r,0);});
+    }
+  }
+
+  var blob=await zip.generateAsync({type:'blob'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=firmaKisa+'_Biletler.zip';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+function renderKurumsalList(){
+  var el=document.getElementById('kurumsalList');
+  if(!el) return;
+  var paketler=Object.values(kurumsalPaketler);
+  if(paketler.length===0){
+    el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:.5rem 0">Henüz kurumsal paket yok</div>';
+    return;
+  }
+  paketler.sort(function(a,b){return (b.olusturulma||'').localeCompare(a.olusturulma||'');});
+  var html='<div class="tw"><table><thead><tr><th>Firma</th><th>Geçerlilik</th><th>Bilet</th><th>Kullanılan</th><th>Kalan</th><th>İşlem</th></tr></thead><tbody>';
+  paketler.forEach(function(p){
+    var kalan=p.adet-(p.kullanilan||0);
+    var pct=p.adet>0?Math.round((p.kullanilan||0)/p.adet*100):0;
+    html+='<tr>'+
+      '<td style="font-weight:600">'+p.firma+'</td>'+
+      '<td style="font-size:12px;color:var(--mu)">'+p.baslangic+' — '+p.bitis+'</td>'+
+      '<td style="text-align:center">'+p.adet+'</td>'+
+      '<td style="text-align:center;color:var(--gn);font-weight:600">'+(p.kullanilan||0)+'<span style="font-size:10px;color:var(--mu);margin-left:3px">(%'+pct+')</span></td>'+
+      '<td style="text-align:center;color:'+(kalan<10?'var(--rd)':'var(--tx)')+'">'+kalan+'</td>'+
+      '<td><button class="btn btn-sm" onclick="kurumsalTekrarIndir(\''+p.id+'\')">⬇ Tekrar İndir</button></td>'+
+      '</tr>';
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+async function kurumsalTekrarIndir(paketId){
+  var p=kurumsalPaketler[paketId];
+  if(!p||!p.biletler){toast('Paket bulunamadı','err');return;}
+  var kodlar=Object.values(p.biletler).sort(function(a,b){return a.sira-b.sira;}).map(function(b){return b.kod;});
+  toast('ZIP hazırlanıyor...','ok');
+  await kurumsalZipIndir(p,kodlar,p.firma,p.baslangic,p.bitis,p.adet);
+}
+
+// ── KURUMSAL PAKET SCAN ───────────────────────────────────────────
+async function kurumsalScanKontrol(kod){
+  // Tüm paketlerde bu kodu ara
+  var paketler=Object.values(kurumsalPaketler);
+  for(var i=0;i<paketler.length;i++){
+    var p=paketler[i];
+    if(!p.biletler) continue;
+    var biletEntries=Object.entries(p.biletler);
+    for(var j=0;j<biletEntries.length;j++){
+      var bKey=biletEntries[j][0];
+      var b=biletEntries[j][1];
+      if(b.kod===kod){
+        // Tarih kontrolü
+        var today=todayStr();
+        var parts=today.split('.');
+        var todayDate=new Date(parts[2],parseInt(parts[1])-1,parseInt(parts[0]));
+        var bp=p.baslangic.split('.');
+        var basDate=new Date(bp[2],parseInt(bp[1])-1,parseInt(bp[0]));
+        var btp=p.bitis.split('.');
+        var bitDate=new Date(btp[2],parseInt(btp[1])-1,parseInt(btp[0]));
+
+        if(todayDate<basDate) return {ok:false,msg:'Bilet henüz geçerli değil',firma:p.firma,tip:'kurumsal'};
+        if(todayDate>bitDate) return {ok:false,msg:'Bilet süresi dolmuş ('+p.bitis+')',firma:p.firma,tip:'kurumsal'};
+        if(b.kullanildi) return {ok:false,msg:'Bu bilet zaten kullanıldı ('+b.kullanimTarihi+')',firma:p.firma,tip:'kurumsal'};
+
+        // Kullanıldı olarak işaretle
+        await kurumsalRef.child(p.id+'/biletler/'+bKey).update({kullanildi:true,kullanimTarihi:today});
+        await kurumsalRef.child(p.id+'/kullanilan').set((p.kullanilan||0)+1);
+
+        return {
+          ok:true,
+          msg:p.firma+' — '+(((p.kullanilan||0)+1))+'/'+p.adet+' kullanıldı',
+          firma:p.firma,
+          tip:'kurumsal',
+          kalan:p.adet-((p.kullanilan||0)+1)
+        };
+      }
+    }
+  }
+  return null; // Bu kod kurumsal değil
+}
+
+function renderKurumsalDashboard(){
+  var el=document.getElementById('dashKurumsalPanel');
+  if(!el) return;
+  var paketler=Object.values(kurumsalPaketler);
+  if(paketler.length===0){
+    el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:.5rem 0">Kurumsal paket yok</div>';
+    return;
+  }
+  var html='';
+  paketler.forEach(function(p){
+    var kul=p.kullanilan||0;
+    var pct=p.adet>0?Math.round(kul/p.adet*100):0;
+    var kalan=p.adet-kul;
+    // Gün bazlı kullanım
+    var gunMap={};
+    if(p.biletler){
+      Object.values(p.biletler).forEach(function(b){
+        if(b.kullanildi&&b.kullanimTarihi){
+          gunMap[b.kullanimTarihi]=(gunMap[b.kullanimTarihi]||0)+1;
+        }
+      });
+    }
+    var gunRows=Object.entries(gunMap).sort().map(function(e){
+      return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--bd)">'+
+        '<span style="color:var(--mu)">'+e[0]+'</span>'+
+        '<span style="color:var(--tx);font-weight:600">'+e[1]+' bilet</span></div>';
+    }).join('');
+
+    html+='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<span style="font-weight:700;color:var(--tx)">'+p.firma+'</span>'+
+        '<span style="font-size:11px;color:var(--mu)">'+p.baslangic+' — '+p.bitis+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:12px;margin-bottom:8px">'+
+        '<div style="text-align:center"><div style="font-size:10px;color:var(--mu)">TOPLAM</div><div style="font-size:18px;font-weight:700;color:var(--tx)">'+p.adet+'</div></div>'+
+        '<div style="text-align:center"><div style="font-size:10px;color:var(--mu)">KULLANILAN</div><div style="font-size:18px;font-weight:700;color:var(--gn)">'+kul+'</div></div>'+
+        '<div style="text-align:center"><div style="font-size:10px;color:var(--mu)">KALAN</div><div style="font-size:18px;font-weight:700;color:'+(kalan<10?'var(--rd)':'var(--ac)')+'">'+kalan+'</div></div>'+
+        '<div style="flex:1"><div style="font-size:10px;color:var(--mu);margin-bottom:4px">KULLANIM (%'+pct+')</div>'+
+          '<div style="background:var(--bd);border-radius:4px;height:8px;overflow:hidden">'+
+            '<div style="width:'+pct+'%;height:100%;background:var(--gn);border-radius:4px"></div>'+
+          '</div></div>'+
+      '</div>'+
+      (gunRows?'<div style="margin-top:6px"><div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Gün Bazlı Kullanım</div>'+gunRows+'</div>':'')+
+    '</div>';
+  });
+  el.innerHTML=html;
 }
 
 function renderBatchList(){
