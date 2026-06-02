@@ -3029,67 +3029,91 @@ async function kurumsalZipIndir(paket, kodlar, firma, basStr, bitStr, adet){
     var qrImg=canvas?canvas.toDataURL('image/png'):null;
     document.body.removeChild(qrDiv);
 
-    // PDF oluştur
-    var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a5'});
-    // Arka plan
-    doc.setFillColor(15,15,15);
-    doc.rect(0,0,148,210,'F');
+    // PDF oluştur — beyaz, normal bilet tasarımına benzer
+    var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var W=210,H=297;
 
-    // Altın çizgi üst
-    doc.setFillColor(232,197,71);
-    doc.rect(0,0,148,2,'F');
-    doc.rect(0,208,148,2,'F');
+    // Beyaz arka plan
+    doc.setFillColor(255,255,255);
+    doc.rect(0,0,W,H,'F');
 
-    // Başlık
+    // Üst siyah header
+    doc.setFillColor(20,20,20);
+    doc.rect(0,0,W,38,'F');
+
+    // Header yazılar - ASCII safe
     doc.setTextColor(232,197,71);
     doc.setFontSize(9);
     doc.setFont('helvetica','bold');
-    doc.text('✦ STARDUST ✦',74,18,{align:'center'});
-
+    doc.text('+ STARDUST +',W/2,14,{align:'center'});
     doc.setTextColor(255,255,255);
-    doc.setFontSize(14);
-    doc.text('Astra Lumina İstanbul',74,28,{align:'center'});
+    doc.setFontSize(18);
+    doc.text('Astra Lumina Istanbul',W/2,27,{align:'center'});
 
     // Firma adı
-    doc.setFillColor(30,30,30);
-    doc.roundedRect(14,36,120,14,3,3,'F');
-    doc.setTextColor(232,197,71);
-    doc.setFontSize(11);
-    doc.setFont('helvetica','bold');
-    doc.text(firma,74,46,{align:'center'});
-
-    // QR kod
-    if(qrImg){
-      doc.addImage(qrImg,'PNG',39,58,70,70);
-    }
-
-    // Kod
-    doc.setTextColor(200,200,200);
-    doc.setFontSize(8);
+    doc.setTextColor(60,60,60);
+    doc.setFontSize(13);
     doc.setFont('helvetica','normal');
-    doc.text(kod,74,136,{align:'center'});
+    doc.text(firma,W/2,55,{align:'center'});
 
     // Geçerlilik
-    doc.setFillColor(25,25,25);
-    doc.roundedRect(14,142,120,18,3,3,'F');
-    doc.setTextColor(150,150,150);
-    doc.setFontSize(7);
-    doc.text('GEÇERLİLİK TARİHİ',74,150,{align:'center'});
-    doc.setTextColor(255,255,255);
+    doc.setTextColor(120,120,120);
+    doc.setFontSize(10);
+    doc.text(basStr+' - '+bitStr,W/2,67,{align:'center'});
+
+    // Ayraç
+    doc.setDrawColor(220,220,220);
+    doc.setLineWidth(0.3);
+    doc.line(20,73,190,73);
+
+    // QR kod - ortada büyük
+    if(qrImg){
+      doc.addImage(qrImg,'PNG',65,80,80,80);
+    }
+
+    // Kod altı
+    doc.setTextColor(160,160,160);
+    doc.setFontSize(8);
+    doc.setFont('helvetica','normal');
+    doc.text(kod,W/2,170,{align:'center'});
+
+    // Bilet tipi badge
+    doc.setFillColor(255,248,220);
+    doc.setDrawColor(232,197,71);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(75,176,60,12,3,3,'FD');
+    doc.setTextColor(160,120,0);
     doc.setFontSize(10);
     doc.setFont('helvetica','bold');
-    doc.text(basStr+' — '+bitStr,74,158,{align:'center'});
+    doc.text('Kurumsal',W/2,184,{align:'center'});
+
+    // Ayraç 2
+    doc.setDrawColor(220,220,220);
+    doc.setLineWidth(0.3);
+    doc.line(20,196,190,196);
 
     // Bilet no
-    doc.setTextColor(80,80,80);
-    doc.setFontSize(7);
+    doc.setTextColor(180,180,180);
+    doc.setFontSize(8);
     doc.setFont('helvetica','normal');
-    doc.text(no+' / '+adet,74,170,{align:'center'});
+    doc.text(no+' / '+adet,W/2,206,{align:'center'});
 
-    // Alt
+    // Kural kutusu
+    doc.setDrawColor(200,200,200);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15,215,180,30,3,3,'D');
     doc.setTextColor(60,60,60);
-    doc.setFontSize(6);
-    doc.text('Bu bilet devredilemez · Tek kullanımlıktır',74,185,{align:'center'});
+    doc.setFontSize(8);
+    doc.setFont('helvetica','bold');
+    doc.text('Kural:',20,224);
+    doc.setFont('helvetica','normal');
+    doc.text('Kareodun taranmasiyla etkinlige sadece 1 (bir) kisi girebilir.',20,231);
+    doc.text('Bu biletin kopyalanmasi ya da satilmasi giris hakkinizi engeller.',20,238);
+
+    // Alt not
+    doc.setTextColor(140,140,140);
+    doc.setFontSize(7);
+    doc.text('PDF biletinizi yanimizdaki veya mobil cihazinizda bulundurmayi unutmayin.',W/2,258,{align:'center'});
 
     var pdfBytes=doc.output('arraybuffer');
     zip.file(firmaKisa+'_'+no+'.pdf',pdfBytes);
