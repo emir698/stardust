@@ -258,6 +258,12 @@ var scanApp=firebase.initializeApp({
 },'scan-app');
 var auth=scanApp.auth(),db=scanApp.database();
 var biletlerRef=db.ref('biletler'),ticketsRef=db.ref('tickets'),usersRef=db.ref('users');
+var kurumsalRef=db.ref('kurumsalPaketler');
+var kurumsalPaketler={};
+kurumsalRef.on('value',function(snap){kurumsalPaketler=snap.val()||{};});
+var kurumsalRef=db.ref('kurumsalPaketler');
+var kurumsalPaketler={};
+kurumsalRef.on('value',function(snap){kurumsalPaketler=snap.val()||{};});
 
 function pad(x){return x<10?'0'+x:String(x);}
 function todayStr(){var n=new Date();return pad(n.getDate())+'.'+pad(n.getMonth()+1)+'.'+n.getFullYear();}
@@ -484,9 +490,15 @@ function kameraAc(){
   qrScanner.start(
     {facingMode:'environment'},
     {fps:10,qrbox:{width:260,height:260}},
-    function(text){
+    async function(text){
       var val=text.trim().toUpperCase();
-      kameraKapat(function(){
+      kameraKapat(async function(){
+        // Önce kurumsal kontrol
+        var kSonuc=await kurumsalScanKontrol(val);
+        if(kSonuc!==null){
+          showKurumsalResult(kSonuc);
+          return;
+        }
         if(val.startsWith('SD-')){document.getElementById('biletNoInput').value=val;sorgulaBiletNo();}
         else{document.getElementById('pnrInput').value=val;sorgulaPNR();}
       });
@@ -581,6 +593,54 @@ function showSheet(icon,title,cls,name,info,biletHTML,giris){
   document.getElementById('girisBtn').style.display=giris?'block':'none';
   document.getElementById('girisBtn').disabled=false;
   document.getElementById('resultOverlay').classList.add('open');
+}
+
+// ── KURUMSAL SCAN ──────────────────────────────────────────
+async function kurumsalScanKontrol(kod){
+  var paketler=Object.values(kurumsalPaketler);
+  for(var i=0;i<paketler.length;i++){
+    var p=paketler[i];
+    if(!p.biletler) continue;
+    var biletEntries=Object.entries(p.biletler);
+    for(var j=0;j<biletEntries.length;j++){
+      var bKey=biletEntries[j][0];
+      var b=biletEntries[j][1];
+      if(b.kod===kod){
+        var today=todayStr();
+        function dmyToDate(s){var pp=s.split('.');return new Date(pp[2],parseInt(pp[1])-1,parseInt(pp[0]));}
+        var todayD=dmyToDate(today);
+        var basD=dmyToDate(p.baslangic);
+        var bitD=dmyToDate(p.bitis);
+        if(todayD<basD) return {ok:false,msg:'Bilet henüz geçerli değil',firma:p.firma};
+        if(todayD>bitD) return {ok:false,msg:'Bilet süresi dolmuş ('+p.bitis+')',firma:p.firma};
+        if(b.kullanildi) return {ok:false,msg:'Bu bilet zaten kullanıldı',firma:p.firma};
+        // Kullanıldı işaretle
+        var saat=new Date().toTimeString().slice(0,8);
+        await kurumsalRef.child(p.id+'/biletler/'+bKey).update({kullanildi:true,kullanimTarihi:today,kullanimSaat:saat});
+        await kurumsalRef.child(p.id+'/kullanilan').set((p.kullanilan||0)+1);
+        return {
+          ok:true,
+          firma:p.firma,
+          msg:p.firma,
+          kullanilan:(p.kullanilan||0)+1,
+          toplam:p.adet,
+          kalan:p.adet-((p.kullanilan||0)+1),
+          bitis:p.bitis
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function showKurumsalResult(r){
+  if(r.ok){
+    var info='<div style="font-size:13px;margin-bottom:4px">'+r.kullanilan+' / '+r.toplam+' bilet kullanıldı</div>'+
+      '<div style="font-size:12px;color:var(--mu)">'+r.kalan+' bilet kaldı · Geçerlilik: '+r.bitis+'</div>';
+    showSheet('✓','Giriş Onaylandı','ok',r.firma,info,'',false);
+  } else {
+    showSheet('✗','Geçersiz Bilet','err',r.firma,r.msg,'',false);
+  }
 }
 
 function sorgulaPNR(valParam){
