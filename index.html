@@ -3138,11 +3138,17 @@ function renderKurumsalList(){
       '<td style="text-align:center">'+p.adet+'</td>'+
       '<td style="text-align:center;color:var(--gn);font-weight:600">'+(p.kullanilan||0)+'<span style="font-size:10px;color:var(--mu);margin-left:3px">(%'+pct+')</span></td>'+
       '<td style="text-align:center;color:'+(kalan<10?'var(--rd)':'var(--tx)')+'">'+kalan+'</td>'+
-      '<td><button class="btn btn-sm" onclick="kurumsalTekrarIndir(\''+p.id+'\')">⬇ Tekrar İndir</button></td>'+
+      '<td><button class="btn btn-sm" onclick="kurumsalTekrarIndir(\''+p.id+'\')">⬇ Tekrar İndir</button> <button class="btn btn-sm" style="background:#2a0a0a;color:#e24b4a;border:1px solid #e24b4a33" onclick="kurumsalSil(\''+p.id+'\',\''+p.firma+'\')">🗑 Sil</button></td>'+
       '</tr>';
   });
   html+='</tbody></table></div>';
   el.innerHTML=html;
+}
+
+function kurumsalSil(paketId, firma){
+  if(!confirm(firma+' paketini tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+  kurumsalRef.child(paketId).remove();
+  toast(firma+' paketi silindi','ok');
 }
 
 async function kurumsalTekrarIndir(paketId){
