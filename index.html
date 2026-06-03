@@ -352,7 +352,10 @@ td{padding:10px 14px}
 
 
       <!-- Seçili Günün Biletleri -->
-      <div style="font-size:12px;font-weight:600;margin-bottom:1rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Seçili Günün Biletleri</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div style="font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px">Seçili Günün Biletleri</div>
+        <button class="btn btn-sm" style="background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa44" onclick="tumunuZipIndir()" id="tumZipBtn">⬇ Tümünü ZIP İndir</button>
+      </div>
       <div class="tw" style="margin-bottom:1.5rem">
         <table>
           <thead><tr><th>PNR</th><th>Ad Soyad</th><th>Telefon</th><th>Seans</th><th>Tam</th><th>Çocuk</th><th>Yabancı</th><th>Kurumsal</th><th>Satış Saati</th><th>Durum</th><th>İşlem</th></tr></thead>
@@ -1649,20 +1652,20 @@ function renderKapiGunBiletler(){
     if(t.pnr){
       var mb=document.createElement('button');
       mb.className='btn btn-sm';
-      mb.innerHTML='✉️ Bileti Getir';
+      mb.innerHTML='📄 Bileti Getir';
       mb.dataset.pnr=t.pnr;
       mb.dataset.ad=t.musteriAd||'';
       mb.addEventListener('click',function(){openBiletiGetir(this.dataset.pnr,this.dataset.ad);});
       islemTd.appendChild(mb);
 
-      var sgb=document.createElement('button');
-      sgb.className='btn btn-sm';
-      sgb.style.cssText='background:#1a0a2a;color:#c084fc;border:1px solid #c084fc33';
-      sgb.innerHTML='📧 PDF Gönder';
-      sgb.dataset.pnr=t.pnr;
-      sgb.dataset.ad=t.musteriAd||'';
-      sgb.addEventListener('click',function(){openPDFGonderModal(this.dataset.pnr,this.dataset.ad);});
-      islemTd.appendChild(sgb);
+      var zb=document.createElement('button');
+      zb.className='btn btn-sm';
+      zb.style.cssText='background:#0a1a2a;color:#60a5fa;border:1px solid #60a5fa33';
+      zb.innerHTML='⬇ ZIP';
+      zb.dataset.pnr=t.pnr;
+      zb.dataset.ad=t.musteriAd||'';
+      zb.addEventListener('click',function(){tekZipIndir(this.dataset.pnr,this.dataset.ad,this);});
+      islemTd.appendChild(zb);
     }
     if(t.pnr&&currentRole==='admin'){
       var db2=document.createElement('button');
@@ -1681,6 +1684,74 @@ function renderKapiGunBiletler(){
   });
   // rows rendered via DOM above
 }
+
+async function tekZipIndir(pnr, ad, btn){
+  btn.disabled=true; btn.innerHTML='⏳';
+  try {
+    await tekPDFIndir(pnr, ad, btn);
+  } catch(e){ toast('Hata: '+e.message,'err'); }
+  btn.disabled=false; btn.innerHTML='⬇ ZIP';
+}
+
+async function tumunuZipIndir(){
+  var btn = document.getElementById('tumZipBtn');
+  if(!kapiSelectedTarih){ toast('Önce gün seçin','err'); return; }
+  var gunBiletler = tickets.filter(function(t){ return t && t.tarih===kapiSelectedTarih; });
+  if(gunBiletler.length===0){ toast('Bu gün için bilet yok','err'); return; }
+  btn.disabled=true; btn.innerHTML='⏳ Hazırlanıyor...';
+  try {
+    var zip = new JSZip();
+    var {jsPDF} = window.jspdf;
+    var turRenk={'Tam':'#e8c547','Çocuk':'#60a5fa','Yabancı':'#4ade80','Davetli':'#4ade80','Kurumsal Satış':'#a855f7'};
+    var toplamBilet = 0;
+
+    for(var i=0;i<gunBiletler.length;i++){
+      var t = gunBiletler[i];
+      if(!t.pnr || !t.biletler) continue;
+      var psnap = await db.ref('pnrler/'+t.pnr).once('value');
+      var p = psnap.val();
+      if(!p || !p.biletler) continue;
+      var biletNoList = p.biletler||[];
+      var biletDataList = await Promise.all(biletNoList.map(function(bno){
+        return biletlerRef.child(bno).once('value').then(function(bs){return{no:bno,data:bs.val()||{}};});
+      }));
+      for(var j=0;j<biletDataList.length;j++){
+        var b = biletDataList[j];
+        var bd = b.data;
+        var doc = new jsPDF({unit:'mm',format:[80,120]});
+        var el = document.createElement('div');
+        el.style.cssText='position:fixed;left:-9999px;top:0;width:300px;background:#fff';
+        el.innerHTML =
+          '<div style="background:#fff;padding:20px;width:280px;font-family:Arial,sans-serif;border-radius:10px">'+
+          '<div style="text-align:center;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:4px">✦ STARDUST ✦</div>'+
+          '<div style="text-align:center;font-size:16px;font-weight:700;margin-bottom:2px">Astra Lumina İstanbul</div>'+
+          '<div style="text-align:center;font-size:11px;color:#555;margin-bottom:6px">'+(bd.tarih||p.tarih)+' — Seans '+(bd.seans||p.seans)+'</div>'+
+          '<div style="text-align:center;font-size:13px;font-weight:600;margin-bottom:6px">'+(p.musteriAd||'')+'</div>'+
+          '<div style="text-align:center;font-size:9px;color:#888;margin-bottom:6px;font-family:monospace">PNR: '+t.pnr+'</div>'+
+          '<div style="text-align:center;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:'+(turRenk[bd.tur]||'#e8c547')+'22;color:'+(turRenk[bd.tur]||'#e8c547')+';margin-bottom:6px">'+(bd.tur||'Bilet')+'</div>'+
+          '<div style="text-align:center;font-size:9px;color:#aaa;font-family:monospace">'+b.no+'</div>'+
+          '</div>';
+        document.body.appendChild(el);
+        var canvas = await html2canvas(el,{scale:1.5,backgroundColor:'#ffffff',useCORS:true});
+        document.body.removeChild(el);
+        var imgData = canvas.toDataURL('image/jpeg',0.75);
+        doc.addImage(imgData,'JPEG',0,0,80,120);
+        var pdfBytes = doc.output('arraybuffer');
+        var dosyaAdi = (p.musteriAd||t.pnr).replace(/[^a-zA-Z0-9]/g,'_')+'_bilet-'+(j+1)+'.pdf';
+        zip.file(dosyaAdi, pdfBytes);
+        toplamBilet++;
+      }
+      btn.innerHTML='⏳ '+toplamBilet+' bilet...';
+    }
+
+    var zipBlob = await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    saveAs(zipBlob, 'Biletler_'+kapiSelectedTarih+'.zip');
+    toast(toplamBilet+' bilet ZIP indirildi','ok');
+  } catch(e){ toast('Hata: '+e.message,'err'); console.error(e); }
+  btn.disabled=false; btn.innerHTML='⬇ Tümünü ZIP İndir';
+}
+
+async function biletPDFBytes(b, p){ return null; } // placeholder
 
 async function tekPDFIndir(pnr, ad, btn){
   btn.disabled=true;
