@@ -281,6 +281,19 @@ var selectedGun=null,selectedSeans=null;
 var tickets=[],biletler={},logs=[];
 var currentSorgu=null,qrScanner=null;
 
+// Native app bridge (no-op on regular web/Chrome) — the Android WebView
+// wrapper exposes window.Android.hideKeyboard() via addJavascriptInterface.
+// Calling it right after focusing the barcode input lets native Android
+// dismiss an already-shown soft keyboard without touching how the
+// Honeywell scanner's hardware key events reach the input.
+function focusBarkod(el){
+  if(!el) return;
+  el.focus();
+  if(window.Android && typeof window.Android.hideKeyboard==='function'){
+    window.Android.hideKeyboard();
+  }
+}
+
 // BARKOD OKUYUCU BUFFER SİSTEMİ
 // El terminali barkod okuyucusu tetiklenince gizli input'a yazar
 var barcodeBuffer='';
@@ -293,7 +306,7 @@ function setupBarcodeInput(){
   function refocus(){
     if(document.getElementById('scanScreen').style.display==='none') return;
     if(document.getElementById('resultOverlay').classList.contains('open')) return;
-    hidden.focus();
+    focusBarkod(hidden);
   }
 
   function kontrol(){
@@ -453,7 +466,7 @@ function selectSeans(saat){
   setupBarcodeInput();
   // Kullanıcı tıklama anında focus — Android'de çalışır
   var hidden=document.getElementById('barcodeHidden');
-  if(hidden) hidden.focus();
+  if(hidden) focusBarkod(hidden);
   updateStats();logs=[];renderLogs();
 }
 
@@ -579,7 +592,7 @@ function kapatSheet(){
   document.getElementById('biletNoInput').value='';
   setTimeout(function(){
     var hidden=document.getElementById('barcodeHidden');
-    if(hidden){hidden.value='';hidden.focus();}
+    if(hidden){hidden.value='';focusBarkod(hidden);}
   }, 200);
 }
 
